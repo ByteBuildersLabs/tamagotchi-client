@@ -1,4 +1,3 @@
-// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ['class'],
@@ -13,15 +12,15 @@ module.exports = {
     },
     extend: {
       colors: {
-        emerald: '#10B981',
-        gold:    '#FBBF24',
-        magenta: '#D946EF',
-        cyan:    '#06B6D4',
-        cream:   '#E6DCC7',
-        'text-primary': '#FFFFFF',
+        emerald:  'rgb(var(--color-emerald))',
+        gold:     'rgb(var(--color-gold))',
+        magenta:  'rgb(var(--color-magenta))',
+        cyan:     'rgb(var(--color-cyan))',
+        cream:    'rgb(var(--color-cream))',
+        'text-primary':   '#FFFFFF',
         'text-secondary': '#F3F4F6',
-        screen:  '#1E293B',
-        surface: '#F3F4F6',
+        screen:   'rgb(var(--bg-screen))',
+        surface:  'rgb(var(--surface-rgb))',
       },
       fontFamily: {
         luckiest: ["'Luckiest Guy'", 'cursive'],
@@ -34,26 +33,19 @@ module.exports = {
         xl: '24px',
       },
       boxShadow: {
-        'soft-lg': '0 4px 6px rgba(0,0,0,0.1)',
-        'hard-cr': '0 4px 0 rgba(0,0,0,0.2)',
+        'soft-lg': '0 4px 6px rgba(0, 0, 0, 0.1)',
+        'hard-cr': '0 4px 0 rgba(0, 0, 0, 0.2)',
       },
-      spacing: {
-        2: '0.5rem',
-        4: '1rem',
+      backgroundImage: {
+        'golem-gradient': 'linear-gradient(90deg, rgb(var(--color-gold)), rgb(var(--color-gold)))',
+        'emerald-gradient': 'linear-gradient(to right, rgba(var(--color-emerald), 1), rgba(var(--color-emerald), 0.5))',
+        'gold-gradient': 'linear-gradient(to right, rgba(var(--color-gold), 1), rgba(var(--color-gold), 0.5))',
+        'magenta-gradient': 'linear-gradient(to right, rgba(var(--color-magenta), 1), rgba(var(--color-magenta), 0.5))',
+        'cyan-gradient': 'linear-gradient(to right, rgba(var(--color-cyan), 1), rgba(var(--color-cyan), 0.5))',
       },
-      backgroundImage: theme => ({
-        // Core Golem Runner gradient
-        'golem-gradient': 'linear-gradient(90deg, #FF6B00, #FFC800)',
-
-        // Custom gradients for each color
-        'emerald-gradient':`linear-gradient(to right, ${theme('colors.emerald.dark')}, ${theme('colors.emerald.light')})`,
-        'gold-gradient':`linear-gradient(to right, ${theme('colors.gold.dark')}, ${theme('colors.gold.light')})`,
-        'magenta-gradient':`linear-gradient(to right, ${theme('colors.magenta.dark')}, ${theme('colors.magenta.light')})`,
-        'cyan-gradient':`linear-gradient(to right, ${theme('colors.cyan.dark')}, ${theme('colors.cyan.light')})`,
-      }),
     },
   },
   plugins: [
     require('tailwindcss-animate'),
   ],
-}
+};
