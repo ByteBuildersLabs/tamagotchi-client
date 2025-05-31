@@ -1,12 +1,10 @@
-import React from "react";
-
 type Screen = "login" | "cover" | "home" | "sleep" | "feed" | "clean" | "play";
 
 interface FeedScreenProps {
   onNavigation: (screen: Screen) => void;
 }
 
-export const FeedScreen: React.FC<FeedScreenProps> = ({ onNavigation }) => {
+export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-100 p-4">
       <div className="text-center">

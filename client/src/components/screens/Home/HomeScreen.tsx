@@ -1,5 +1,3 @@
-import React from "react";
-
 type Screen = "login" | "cover" | "home" | "sleep" | "feed" | "clean" | "play";
 
 interface HomeScreenProps {
@@ -7,10 +5,10 @@ interface HomeScreenProps {
   playerAddress: string;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ 
-  onNavigation, 
+export const HomeScreen = ({ 
+  onNavigation: _, 
   playerAddress 
-}) => {
+}: HomeScreenProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="text-center max-w-md w-full">
