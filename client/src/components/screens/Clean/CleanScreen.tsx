@@ -1,12 +1,10 @@
-import React from "react";
-
 type Screen = "login" | "cover" | "home" | "sleep" | "feed" | "clean" | "play";
 
 interface CleanScreenProps {
   onNavigation: (screen: Screen) => void;
 }
 
-export const CleanScreen: React.FC<CleanScreenProps> = ({ onNavigation }) => {
+export const CleanScreen = ({ onNavigation: _ }: CleanScreenProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-yellow-100 p-4">
       <div className="text-center">

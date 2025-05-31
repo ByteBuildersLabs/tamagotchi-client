@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 interface CoverScreenProps {
   onLoadingComplete: () => void;
 }
 
-export const CoverScreen: React.FC<CoverScreenProps> = ({ onLoadingComplete }) => {
+export const CoverScreen = ({ onLoadingComplete }: CoverScreenProps) => {
   useEffect(() => {
     // Simulate loading time
     const timer = setTimeout(() => {

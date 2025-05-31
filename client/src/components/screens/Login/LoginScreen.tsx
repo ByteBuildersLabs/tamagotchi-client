@@ -1,10 +1,8 @@
-import React from "react";
-
 interface LoginScreenProps {
   onLoginSuccess: () => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
+export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center">

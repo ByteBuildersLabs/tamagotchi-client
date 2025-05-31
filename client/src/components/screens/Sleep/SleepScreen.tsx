@@ -1,12 +1,10 @@
-import React from "react";
-
 type Screen = "login" | "cover" | "home" | "sleep" | "feed" | "clean" | "play";
 
 interface SleepScreenProps {
   onNavigation: (screen: Screen) => void;
 }
 
-export const SleepScreen: React.FC<SleepScreenProps> = ({ onNavigation }) => {
+export const SleepScreen = ({ onNavigation: _ }: SleepScreenProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-indigo-100 p-4">
       <div className="text-center">
