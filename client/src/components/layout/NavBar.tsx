@@ -41,7 +41,7 @@ export function NavBar({
     <motion.nav
       className="
         fixed bottom-0 inset-x-0 h-16
-        bg-cream shadow-lg
+        bg-cream shadow-soft-lg
         flex divide-x divide-gray-500/20
         z-20
       "
@@ -57,11 +57,11 @@ export function NavBar({
           className={`
             flex-1 h-full
             flex flex-col items-center justify-center
-            transition-colors duration-200
+            transition-all duration-300 ease-in-out
             ${
               active === item.id
-                ? 'bg-primary-hover text-surface'      
-                : 'bg-transparent hover:bg-primary-hover/10 text-text-primary'
+                ? 'bg-gold-gradient text-screen shadow-soft-lg'      
+                : 'bg-transparent hover:bg-gold/10 text-text-primary'
             }
           `}
           aria-label={item.label}
@@ -69,10 +69,10 @@ export function NavBar({
           <img
             src={item.src}
             alt={item.label}
-            className="w-12 h-12"
+            className="w-14 h-14"
           />
           {active === item.id && (
-            <span className="text-s font-luckiest text-dark">
+            <span className="text-sm font-luckiest text-screen pb-1">
               {item.label}
             </span>
           )}
