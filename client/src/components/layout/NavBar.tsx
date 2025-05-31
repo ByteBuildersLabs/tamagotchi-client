@@ -1,75 +1,83 @@
-import React from "react";
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+
+import SleepIcon  from '../../assets/icons/navBar/icon-sleep.webp';
+import FeedIcon    from '../../assets/icons/navBar/icon-feed.webp';
+import HomeIcon from '../../assets/icons/navBar/icon-home.webp';
+import CleanIcon from '../../assets/icons/navBar/icon-clean.webp';
+import PlayIcon from '../../assets/icons/navBar/icon-play.webp';
+
+type Screen = "login" | "cover" | "home" | "sleep" | "feed" | "clean" | "play";
 
 interface NavBarProps {
-  activeTab: "home" | "sleep" | "feed" | "clean" | "play";
-  onNavigation: (screen: "home" | "sleep" | "feed" | "clean" | "play") => void;
+  onNavigation?: (screen: Screen) => void;
+  activeTab?: Screen;
 }
 
-export const NavBar: React.FC<NavBarProps> = ({ activeTab, onNavigation }) => {
-  const navItems = [
-    {
-      id: "sleep" as const,
-      icon: "😴",
-      label: "Dormir",
-      color: "text-blue-500",
-      activeColor: "bg-blue-500 text-white",
-    },
-    {
-      id: "feed" as const,
-      icon: "🍎",
-      label: "Alimentar",
-      color: "text-green-500",
-      activeColor: "bg-green-500 text-white",
-    },
-    {
-      id: "home" as const,
-      icon: "🏠",
-      label: "Home",
-      color: "text-purple-500",
-      activeColor: "bg-purple-500 text-white",
-    },
-    {
-      id: "clean" as const,
-      icon: "🧼",
-      label: "Limpiar",
-      color: "text-yellow-500",
-      activeColor: "bg-yellow-500 text-white",
-    },
-    {
-      id: "play" as const,
-      icon: "🎮",
-      label: "Jugar",
-      color: "text-pink-500",
-      activeColor: "bg-pink-500 text-white",
-    },
+export function NavBar({
+  onNavigation,
+  activeTab = 'home',
+}: NavBarProps) {
+  const [active, setActive] = useState<Screen>(activeTab);
+
+  useEffect(() => {
+    setActive(activeTab);
+  }, [activeTab]);
+
+  const navItems: { id: Screen; src: string; label: string }[] = [
+    { id: 'sleep',  src: SleepIcon,  label: 'Sleep'  },
+    { id: 'feed',    src: FeedIcon,    label: 'Feed'    },
+    { id: 'home', src: HomeIcon, label: 'Home' },
+    { id: 'clean', src: CleanIcon, label: 'Clean' },
+    { id: 'play', src: PlayIcon, label: 'Play' },
   ];
 
+  const handleClick = (id: Screen) => {
+    setActive(id);
+    onNavigation?.(id);
+  };
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-lg">
-      <div className="flex justify-around items-center py-2 px-4 max-w-md mx-auto">
-        {navItems.map((item) => {
-          const isActive = activeTab === item.id;
-          
-          return (
-            <button
-              key={item.id}
-              onClick={() => onNavigation(item.id)}
-              className={`
-                flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200
-                ${isActive 
-                  ? `${item.activeColor} shadow-lg scale-110` 
-                  : `${item.color} hover:bg-gray-100`
-                }
-              `}
-            >
-              <span className="text-2xl mb-1">{item.icon}</span>
-              <span className={`text-xs font-medium ${isActive ? 'text-white' : 'text-gray-600'}`}>
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
+    <motion.nav
+      className="
+        fixed bottom-0 inset-x-0 h-16
+        bg-cream shadow-soft-lg
+        flex divide-x divide-gray-500/20
+        z-20
+      "
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      transition={{ delay: 0.6, type: 'spring', stiffness: 200, damping: 20 }}
+    >
+      {navItems.map(item => (
+        <motion.button
+          key={item.id}
+          layout
+          onClick={() => handleClick(item.id)}
+          className={`
+            flex-1 h-full
+            flex flex-col items-center justify-center
+            transition-all duration-300 ease-in-out
+            ${
+              active === item.id
+                ? 'bg-gold-gradient text-screen shadow-soft-lg'      
+                : 'bg-transparent hover:bg-gold/10 text-text-primary'
+            }
+          `}
+          aria-label={item.label}
+        >
+          <img
+            src={item.src}
+            alt={item.label}
+            className="w-14 h-14"
+          />
+          {active === item.id && (
+            <span className="text-sm font-luckiest text-screen pb-1">
+              {item.label}
+            </span>
+          )}
+        </motion.button>
+      ))}
+    </motion.nav>
   );
-};
+}
