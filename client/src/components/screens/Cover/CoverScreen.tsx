@@ -9,7 +9,7 @@ export const CoverScreen = ({ onLoadingComplete }: CoverScreenProps) => {
     // Simulate loading time
     const timer = setTimeout(() => {
       onLoadingComplete();
-    }, 3000);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [onLoadingComplete]);

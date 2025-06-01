@@ -7,14 +7,12 @@ import { CleanScreen } from "../components/screens/Clean/CleanScreen";
 import { PlayScreen } from "../components/screens/Play/PlayScreen";
 import { LoginScreen } from "../components/screens/Login/LoginScreen";
 import { NavBar } from "../components/layout/NavBar";
-
-type Screen = "login" | "cover" | "home" | "sleep" | "feed" | "clean" | "play";
+import type { Screen } from "../components/types/screens";
 
 function AppContent() {
   const [currentScreen, setCurrentScreenState] = useState<Screen>("login");
-  const [playerAddress] = useState("0x123"); // Temporal address for testing
+  const [playerAddress] = useState("0x123"); // Dirección temporal
 
-  // Handlers
   const handleNavigation = (screen: Screen) => {
     setCurrentScreenState(screen);
   };
@@ -32,7 +30,9 @@ function AppContent() {
       )}
 
       {currentScreen === "cover" && (
-        <CoverScreen onLoadingComplete={handleLoadingComplete} />
+        <CoverScreen
+          onLoadingComplete={handleLoadingComplete}
+        />
       )}
 
       {currentScreen === "home" && (
@@ -75,6 +75,7 @@ function AppContent() {
       )}
     </div>
   );
+
 }
 
 export default function App() {

@@ -23,17 +23,11 @@
 }
 
 /* Base resets */
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
+body {
   background: rgb(var(--bg-screen));
-  color: #fff;
-  font-family: Rubik, sans-serif;
+  overflow: hidden;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  overflow-x: hidden;
 }
 
 * {
