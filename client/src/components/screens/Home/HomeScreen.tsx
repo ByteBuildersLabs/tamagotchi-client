@@ -15,8 +15,8 @@ export const HomeScreen = ({
     <div className="min-h-screen bg-gray-50">
       {/* TopBar */}
       <TamagotchiTopBar 
-        coins={500}
-        gems={50}
+        coins={1230}
+        gems={150}
         status={{
           energy: 85,
           hunger: 60,
