@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { TamagotchiTopBar } from "../../layout/TopBar";
+import type { Screen } from "../../types/screens";
 
 import bannerImg from "../../../assets/banners/banner-dragon.png";
 import treeOfLifeIcon from "../../../assets/icons/age/icon-age-tree-of-life.webp";
@@ -10,33 +11,33 @@ import shopIcon from "../../../assets/icons/shop/icon-general-shop.webp";
 import babyWorlfBeast from "../../../assets/beasts/baby-wolf.png";
 import forestBackground from "../../../assets/backgrounds/bg-home.png";
 
-type Screen = | "login" | "cover" | "home" | "sleep" | "feed"| "clean" | "play" | "profile" | "market";
-
 interface HomeScreenProps {
   onNavigation: (screen: Screen) => void;
   playerAddress: string;
 }
 
-export const HomeScreen = ({ playerAddress }: HomeScreenProps) => {
+export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => {
   const [age] = useState(1);
   const playerName = "0xluis";
 
   const handleProfileClick = () => {
     console.log("Profile clicked:", playerAddress);
-    // onNavigation("profile");
+    onNavigation("profile");
   };
 
   const handleDropdownMenuClick = () => {
     console.log("Dropdown menu clicked");
+    onNavigation("home");
   };
 
   const handleShopClick = () => {
     console.log("Shop clicked");
-    // onNavigation("market");
+    onNavigation("market");
   };
 
   const handleDailyQuestsClick = () => {
     console.log("Daily Quests clicked");
+    onNavigation("home");
   };
 
   const buttonInteractionProps = {
