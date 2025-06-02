@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { TamagotchiTopBar } from "../../layout/TopBar";
 import type { Screen } from "../../types/screens";
+import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 
 import bannerImg from "../../../assets/banners/banner-dragon.png";
 import treeOfLifeIcon from "../../../assets/icons/age/icon-age-tree-of-life.webp";
@@ -75,6 +76,10 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
         backgroundRepeat: "no-repeat",
       }}
     >
+      {/* Magical Sparkle Particles */}
+      <MagicalSparkleParticles />
+       
+      {/* Top Bar with Coins, Gems, and Status */}
       <TamagotchiTopBar
         coins={12345}
         gems={678}
