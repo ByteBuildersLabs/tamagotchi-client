@@ -3,10 +3,11 @@ import { motion } from "framer-motion";
 import { TamagotchiTopBar } from "../../layout/TopBar";
 import type { Screen } from "../../types/screens";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
+import { DropdownMenu } from "./DropDownMenu";
+
 
 import bannerImg from "../../../assets/banners/banner-dragon.png";
 import treeOfLifeIcon from "../../../assets/icons/age/icon-age-tree-of-life.webp";
-import dropdownMenuIcon from "../../../assets/icons/menu/icon-menu.webp";
 import dailyQuestIcon from "../../../assets/icons/daily-quests/icon-daily-quests.png";
 import shopIcon from "../../../assets/icons/shop/icon-general-shop.webp";
 import babyWorlfBeast from "../../../assets/beasts/baby-wolf.png";
@@ -21,14 +22,23 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
   const [age] = useState(1);
   const playerName = "0xluis";
 
+  // Beast data for sharing - hardcoded values for now
+  const beastData = {
+    age: 3, // days
+    energy: 85,
+    hunger: 40,
+    happiness: 92,
+    cleanliness: 68,
+  };
+
   const handleProfileClick = () => {
     console.log("Profile clicked:", playerAddress);
     onNavigation("profile");
   };
 
-  const handleDropdownMenuClick = () => {
-    console.log("Dropdown menu clicked");
-    onNavigation("home");
+  const handleNavigateLogin = () => {
+    console.log("Navigating to login");
+    onNavigation("login");
   };
 
   const handleShopClick = () => {
@@ -119,16 +129,16 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
             </span>
           </motion.div>
 
-          <motion.button
-            onClick={handleDropdownMenuClick}
+          <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0, transition: { delay: 0.35, duration: 0.5, ease: "easeOut" } }}
-            {...buttonInteractionProps}
-            className="focus:outline-none active:scale-90"
-            aria-label="Game Menu"
+            className="z-50"
           >
-            <img src={dropdownMenuIcon} alt="Menu" className="h-10 w-10 lg:h-12 lg:w-12" />
-          </motion.button>
+            <DropdownMenu 
+              onNavigateLogin={handleNavigateLogin}
+              selectedBeast={beastData}
+            />
+          </motion.div>
         </div>
       </div>
 
