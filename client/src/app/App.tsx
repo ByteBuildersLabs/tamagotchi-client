@@ -24,8 +24,8 @@ function AppContent() {
   return (
     <div className="relative min-h-screen pb-16">
       {currentScreen === "login" && (
-        <LoginScreen
-          onLoginSuccess={() => handleNavigation("cover")}
+        <LoginScreen 
+          onLoginSuccess={() => handleNavigation("cover")}  
         />
       )}
 
