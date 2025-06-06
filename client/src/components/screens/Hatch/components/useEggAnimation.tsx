@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { EGG_ANIMATIONS, EGG_ANIMATION_CONFIG, type EggType } from './eggAnimation';
 
-export type EggState = 'idle' | 'hatching' | 'completed';
+export type EggState = 'idle' | 'hatching' | 'completed' | 'revealing';
 
 interface UseEggAnimationReturn {
   currentFrame: string;
@@ -11,6 +11,8 @@ interface UseEggAnimationReturn {
   startHatching: () => void;
   canClick: boolean;
   beastType: string;
+  beastAsset: string;
+  showBeast: boolean; // Nueva prop para mostrar la bestia
 }
 
 export const useEggAnimation = (
@@ -19,8 +21,10 @@ export const useEggAnimation = (
   const [frameIndex, setFrameIndex] = useState(0);
   const [eggState, setEggState] = useState<EggState>('idle');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showBeast, setShowBeast] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const eggAnimation = EGG_ANIMATIONS[eggType];
   
@@ -32,6 +36,7 @@ export const useEggAnimation = (
     setEggState('hatching');
     setIsAnimating(true);
     setFrameIndex(0);
+    setShowBeast(false);
     
     let currentFrame = 0;
     
@@ -51,7 +56,13 @@ export const useEggAnimation = (
         
         console.log(`✨ ${eggType} egg hatching completed! ${eggAnimation.beastType} born!`);
         
-        // Ya no llamamos onHatchComplete automáticamente
+        // Esperar un poco y luego revelar la bestia
+        timeoutRef.current = setTimeout(() => {
+          console.log(`🐺 Revealing ${eggAnimation.beastType}...`);
+          setEggState('revealing');
+          setShowBeast(true);
+        }, EGG_ANIMATION_CONFIG.BEAST_REVEAL_DELAY);
+        
         return;
       }
       
@@ -65,6 +76,9 @@ export const useEggAnimation = (
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
     };
   });
@@ -84,6 +98,8 @@ export const useEggAnimation = (
     isAnimating,
     startHatching,
     canClick,
-    beastType: eggAnimation.beastType
+    beastType: eggAnimation.beastType,
+    beastAsset: eggAnimation.beastAsset,
+    showBeast
   };
 };
