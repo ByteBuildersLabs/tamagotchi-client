@@ -46,8 +46,7 @@ a:focus {
   .btn-cr-yellow {
     @apply relative inline-flex items-center justify-center
            px-6 py-2 rounded-[6px] font-luckiest text-cream tracking-wide
-           shadow-hard-cr;
-    background-image: linear-gradient(to bottom, #FF6B00, #FF6B00);
+           shadow-hard-cr bg-gold-gradient;
   }
 
   /* Gray disabled-style button */

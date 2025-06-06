@@ -1,21 +1,34 @@
+import { useLoginAnimations } from './components/useLoginAnimations';
+import { UniverseView, GameView } from './components/CoverViews';
+import { VennDiagram } from './components/VennDiagram';
+
 interface LoginScreenProps {
   onLoginSuccess: () => void;
 }
 
+/**
+ * Main Login/Cover component that handles the intro sequence
+ * and redirects to cover screen when connect button is clicked
+ */
+
 export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">
-          Login Screen
-        </h1>
-        <button
-          onClick={onLoginSuccess}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-        >
-          Login
-        </button>
-      </div>
-    </div>
-  );
+  const { view, currentCircle } = useLoginAnimations();
+
+  const handleConnect = () => {
+    console.log('Connecting wallet...');
+    // Navegar al CoverScreen
+    onLoginSuccess();
+  };
+
+  // Render different views based on animation state
+  switch (view) {
+    case 'universe':
+      return <UniverseView />;
+    case 'game':
+      return <GameView />;
+    case 'cover':
+      return <VennDiagram currentCircle={currentCircle} onConnect={handleConnect} />;
+    default:
+      return null;
+  }
 };

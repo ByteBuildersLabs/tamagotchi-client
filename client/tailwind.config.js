@@ -45,6 +45,52 @@ module.exports = {
         'magenta-gradient': 'linear-gradient(to right, rgba(var(--color-magenta), 1), rgba(var(--color-magenta), 0.5))',
         'cyan-gradient': 'linear-gradient(to right, rgba(var(--color-cyan), 1), rgba(var(--color-cyan), 0.5))',
       },
+      // 🎯 Custom animations for login
+      keyframes: {
+        fadeInUp: {
+          'from': {
+            opacity: '0',
+            transform: 'translateY(30px)'
+          },
+          'to': {
+            opacity: '1',
+            transform: 'translateY(0)'
+          }
+        },
+        softGlow: {
+          '0%': { 
+            opacity: '0.6', 
+            filter: 'drop-shadow(0 0 3px rgb(var(--color-magenta)))' 
+          },
+          '50%': { 
+            opacity: '1', 
+            filter: 'drop-shadow(0 0 8px rgb(var(--color-magenta)))' 
+          },
+          '100%': { 
+            opacity: '0.6', 
+            filter: 'drop-shadow(0 0 3px rgb(var(--color-magenta)))' 
+          }
+        },
+        subtleTwinkle: {
+          '0%': { 
+            opacity: '0.7', 
+            filter: 'brightness(0.8)' 
+          },
+          '50%': { 
+            opacity: '1', 
+            filter: 'brightness(1.2)' 
+          },
+          '100%': { 
+            opacity: '0.7', 
+            filter: 'brightness(0.8)' 
+          }
+        }
+      },
+      animation: {
+        fadeInUp: 'fadeInUp 1s ease-out forwards',
+        softGlow: 'softGlow 3.5s infinite ease-in-out alternate',
+        subtleTwinkle: 'subtleTwinkle 4s infinite ease-in-out'
+      }
     },
   },
   plugins: [
