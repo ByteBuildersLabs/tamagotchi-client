@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { CoverScreen } from "../components/screens/Cover/CoverScreen";
+import { HatchEggScreen } from "../components/screens/Hatch/HatchEggScreen";
 import { HomeScreen } from "../components/screens/Home/HomeScreen";
 import { SleepScreen } from "../components/screens/Sleep/SleepScreen";
 import { FeedScreen } from "../components/screens/Feed/FeedScreen";
@@ -17,7 +18,13 @@ function AppContent() {
     setCurrentScreenState(screen);
   };
 
-  const handleLoadingComplete = useCallback(() => {
+  // 🎯 Callback específico para cuando HatchEgg termina
+  const handleHatchComplete = useCallback(() => {
+    setCurrentScreenState("cover");
+  }, []);
+
+  // 🎯 Callback específico para cuando Cover termina
+  const handleCoverComplete = useCallback(() => {
     setCurrentScreenState("home");
   }, []);
 
@@ -25,13 +32,19 @@ function AppContent() {
     <div className="relative min-h-screen pb-16">
       {currentScreen === "login" && (
         <LoginScreen 
-          onLoginSuccess={() => handleNavigation("cover")}  
+          onLoginSuccess={() => handleNavigation("hatch")} 
+        />
+      )}
+
+      {currentScreen === "hatch" && (
+        <HatchEggScreen
+          onLoadingComplete={handleHatchComplete}  
         />
       )}
 
       {currentScreen === "cover" && (
         <CoverScreen
-          onLoadingComplete={handleLoadingComplete}
+          onLoadingComplete={handleCoverComplete}  
         />
       )}
 
@@ -46,7 +59,6 @@ function AppContent() {
         <SleepScreen
           onNavigation={handleNavigation}
           playerAddress={playerAddress}
-
         />
       )}
 
@@ -69,7 +81,7 @@ function AppContent() {
       )}
 
       {/* NavBar */}
-      {currentScreen !== "cover" && currentScreen !== "login" && (
+      {currentScreen !== "cover" && currentScreen !== "login" && currentScreen !== "hatch" && (
         <NavBar
           activeTab={currentScreen as "home" | "sleep" | "feed" | "clean" | "play"}
           onNavigation={handleNavigation}
@@ -77,7 +89,6 @@ function AppContent() {
       )}
     </div>
   );
-
 }
 
 export default function App() {
