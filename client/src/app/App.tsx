@@ -45,6 +45,8 @@ function AppContent() {
       {currentScreen === "sleep" && (
         <SleepScreen
           onNavigation={handleNavigation}
+          playerAddress={playerAddress}
+
         />
       )}
 
