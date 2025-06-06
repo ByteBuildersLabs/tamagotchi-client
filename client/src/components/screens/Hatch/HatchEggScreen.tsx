@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
-import { useEggAnimation, type EggState } from "./components/useEggAnimation";
+import { useEggAnimation } from "./components/useEggAnimation";
 import type { EggType } from "./components/eggAnimation";
 
 // Assets - ajusta la ruta según tu estructura de carpetas
@@ -28,22 +28,6 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
   const handleContinue = () => {
     console.log(`🎮 Continuing to home with ${beastType}...`);
     onLoadingComplete();
-  };
-
-  // Determinar el texto según el estado del huevo
-  const getInstructionText = (state: EggState): string => {
-    switch (state) {
-      case 'idle':
-        return 'Tap the egg to begin hatching!';
-      case 'hatching':
-        return 'Hatching in progress...';
-      case 'completed':
-        return 'Breaking out of the shell...';
-      case 'revealing':
-        return `Meet your ${beastType}!`;
-      default:
-        return 'Tap the egg to begin hatching!';
-    }
   };
 
   // Función para obtener el nombre del tipo de huevo para mostrar
@@ -216,11 +200,6 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-luckiest text-cream drop-shadow-lg">
             {showBeast ? `Your ${beastType.charAt(0).toUpperCase() + beastType.slice(1)}!` : 'Hatch Your Beast'}
           </h1>
-          {!showBeast && (
-            <p className="text-lg font-rubik text-cream/70">
-              {getEggTypeName(eggType)} Egg
-            </p>
-          )}
         </motion.div>
 
         {/* Subtitle - Cambia según el estado */}
@@ -231,22 +210,18 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
           <p className="text-lg sm:text-xl font-rubik text-cream/90 drop-shadow-md leading-relaxed">
             {showBeast ? (
               <>
-                Congratulations! Your mystical companion has emerged.
                 <br />
                 <span className="text-emerald font-semibold">
-                  Ready to start your adventure together?
                 </span>
               </>
             ) : (
               <>
-                Your mystical companion awaits inside this ancient egg. 
                 <br />
                 <span className={`font-semibold transition-colors duration-300 ${
                   eggState === 'hatching' ? 'text-magenta' : 
                   eggState === 'completed' ? 'text-cyan' :
                   eggState === 'revealing' ? 'text-emerald' : 'text-gold'
                 }`}>
-                  {getInstructionText(eggState)}
                 </span>
               </>
             )}
