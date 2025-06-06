@@ -39,6 +39,7 @@ function AppContent() {
       {currentScreen === "hatch" && (
         <HatchEggScreen
           onLoadingComplete={handleHatchComplete}  
+          eggType="shadow"
         />
       )}
 
