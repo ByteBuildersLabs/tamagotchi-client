@@ -72,8 +72,6 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
       },
     },
     whileHover: { scale: 1.03, rotate: 2 },
-    dragConstraints: { left: -30, right: 30, top: -20, bottom: 20 },
-    dragElastic: 0.1,
   };
 
   return (
@@ -151,9 +149,6 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
           initial={beastAnimation.initial}
           animate={beastAnimation.animate}
           whileHover={beastAnimation.whileHover}
-          drag
-          dragConstraints={beastAnimation.dragConstraints}
-          dragElastic={beastAnimation.dragElastic}
         />
       </div>
 
