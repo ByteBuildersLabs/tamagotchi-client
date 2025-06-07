@@ -45,7 +45,7 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [draggedFood, setDraggedFood] = useState<FoodItem | null>(null);
   const [portalPosition, setPortalPosition] = useState({ x: 0, y: 0 });
-  
+
   // Refs
   const constraintsRef = useRef(null);
   const sliderRef = useRef<Slider>(null);
@@ -62,7 +62,7 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
     div.style.zIndex = "99999";
     document.body.appendChild(div);
     portalRoot.current = div;
-    
+
     return () => {
       if (portalRoot.current && document.body.contains(portalRoot.current)) {
         document.body.removeChild(portalRoot.current);
@@ -70,14 +70,14 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
     };
   }, []);
 
-  // Carousel settings - disable interactions during drag
+  // Carousel settings - always show 3 items, better spacing on larger screens
   const sliderSettings = {
     dots: true,
     infinite: true,
     speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    centerMode: true,
+    slidesToShow: 3,
+    slidesToScroll: 3,
+    centerMode: false,
     centerPadding: "0px",
     arrows: false,
     autoplay: false,
@@ -98,8 +98,8 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
 
   // Update food count when feeding beast
   const updateFoodCount = (foodId: string) => {
-    setFoods(prevFoods => 
-      prevFoods.map(food => 
+    setFoods(prevFoods =>
+      prevFoods.map(food =>
         food.id === foodId && food.count > 0
           ? { ...food, count: food.count - 1 }
           : food
@@ -121,10 +121,10 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
 
   const handleDragEnd = (_event: any, info: any) => {
     setIsDragging(false);
-    
+
     const currentDraggedFood = draggedFoodRef.current;
     const beastElement = document.getElementById('beast-drop-zone');
-    
+
     if (!beastElement || !currentDraggedFood) {
       setDraggedFood(null);
       draggedFoodRef.current = null;
@@ -145,7 +145,7 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
     if (distance < tolerance && currentDraggedFood.count > 0) {
       // Success! Feed the beast
       updateFoodCount(currentDraggedFood.id);
-      
+
       toast.success(`🎉 Beast fed with ${currentDraggedFood.name}!`, {
         duration: 3000,
         position: 'top-center',
@@ -213,7 +213,7 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
     >
       {/* Toast Container */}
       <div style={{ position: 'fixed', top: 0, left: 0, zIndex: 100000 }}>
-        <Toaster 
+        <Toaster
           position="top-center"
           toastOptions={{
             duration: 4000,
@@ -273,7 +273,7 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
         transition={{ delay: 0.4, duration: 0.5 }}
         className="fixed bottom-[calc(theme(spacing.16)+0.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30"
       >
-        <div className="flex items-center justify-center space-x-4 px-4">
+        <div className="flex items-center justify-center space-x-2 px-4">
           {/* Previous Button */}
           <motion.button
             onClick={goToPrevious}
@@ -281,14 +281,14 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
             whileTap={{ scale: 0.95 }}
             className="p-2 bg-cream/90 rounded-full shadow-lg z-40"
           >
-            <ChevronLeft className="h-5 w-5 text-white" />
+            <ChevronLeft className="h-4 w-4 text-white" />
           </motion.button>
 
-          {/* Carousel Container */}
-          <div className="w-32 h-28">
+          {/* Carousel Container - Maximum width for 3 items */}
+          <div className="w-[22rem] h-28 max-w-[calc(100vw-120px)]">
             <Slider ref={sliderRef} {...sliderSettings}>
               {foods.map((food) => (
-                <div key={food.id} className="px-1">
+                <div key={food.id} className="px-0.5">
                   <div className="flex flex-col items-center justify-center">
                     {/* Food Container */}
                     <div className="relative flex flex-col items-center">
@@ -304,7 +304,6 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
                           dragMomentum={false}
                           dragSnapToOrigin={true}
                           dragPropagation={false}
-                          
                           onDragStart={(event) => {
                             event.stopPropagation();
                             handleDragStart(food);
@@ -317,16 +316,13 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
                             event.stopPropagation();
                             handleDragEnd(event, info);
                           }}
-                          
-                          className={`h-12 w-12 object-contain relative ${
-                            food.count > 0 
-                              ? 'cursor-grab active:cursor-grabbing' 
+                          className={`h-12 w-12 object-contain relative ${food.count > 0
+                              ? 'cursor-grab active:cursor-grabbing'
                               : 'cursor-not-allowed opacity-50'
-                          }`}
-                          
+                            }`}
                           initial={{ scale: 0, rotate: -180, x: 0, y: 0 }}
-                          animate={{ 
-                            scale: 1, 
+                          animate={{
+                            scale: 1,
                             rotate: 0,
                             x: 0,
                             y: 0,
@@ -340,13 +336,11 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
                           whileHover={food.count > 0 ? { scale: 1.2, rotate: 5 } : {}}
                           whileTap={food.count > 0 ? { scale: 0.9 } : {}}
                           whileDrag={{ scale: 1.3, rotate: 10, zIndex: 99999 }}
-                          
                           transition={{
                             type: "spring",
                             stiffness: 500,
                             damping: 30
                           }}
-                          
                           style={{
                             position: 'relative',
                             zIndex: isDragging && draggedFood?.id === food.id ? 99999 : 'auto',
@@ -354,9 +348,9 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
                           }}
                         />
                       )}
-                      
+
                       {/* Count Badge */}
-                      <div 
+                      <div
                         className="mt-1 h-5 w-5 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-md"
                         style={{ backgroundColor: food.color }}
                       >
@@ -383,7 +377,7 @@ export const FeedScreen = ({ onNavigation: _ }: FeedScreenProps) => {
             whileTap={{ scale: 0.95 }}
             className="p-2 bg-cream/90 rounded-full shadow-lg z-40"
           >
-            <ChevronRight className="h-5 w-5 text-white" />
+            <ChevronRight className="h-4 w-4 text-white" />
           </motion.button>
         </div>
 
