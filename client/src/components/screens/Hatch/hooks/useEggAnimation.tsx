@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { EGG_ANIMATIONS, EGG_ANIMATION_CONFIG, type EggType } from './eggAnimation';
+import { EGG_ANIMATIONS, EGG_ANIMATION_CONFIG, type EggType } from '../components/eggAnimation';
 
 export type EggState = 'idle' | 'hatching' | 'completed' | 'revealing';
 
