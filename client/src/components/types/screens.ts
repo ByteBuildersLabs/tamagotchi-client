@@ -1,6 +1,7 @@
 export type Screen =
   | "login"
   | "cover"
+  | "hatch"
   | "home"
   | "sleep"
   | "feed"
