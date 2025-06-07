@@ -8,25 +8,25 @@ import EggShadowFrame5 from "../../../../assets/eggs/egg-wolf/egg-wolf-frame-5.p
 
 // Beast assets
 import BabyWolf from "../../../../assets/beasts/baby-wolf.png";
-// TODO: Agregar más bestias cuando estén listas
+// TODO: Add more beasts when they are ready
 // import BabyDragon from "../assets/beasts/baby-dragon.png";
 // import BabySnake from "../assets/beasts/baby-snake.png";
 
-// TODO: Agregar frames de dragon y water cuando estén listos
+// TODO: Add dragon and water frames when they are ready
 // import EggDragonFrame0 from "../assets/eggs/egg-dragon/egg-dragon-frame-0.png";
 // import EggWaterFrame0 from "../assets/eggs/egg-water/egg-water-frame-0.png";
 
 export type EggType = 'shadow' | 'dragon' | 'water';
 export type BeastType = 'wolf' | 'dragon' | 'snake';
 
-// Mapeo de tipos de huevo a bestias
+// Mapping from egg types to beasts
 export const EGG_TO_BEAST_MAP: Record<EggType, BeastType> = {
   shadow: 'wolf',
-  dragon: 'dragon', 
+  dragon: 'dragon',
   water: 'snake'
 };
 
-// Assets de las bestias
+// Beast assets
 export const BEAST_ASSETS: Record<BeastType, string> = {
   wolf: BabyWolf,
   dragon: BabyWolf, // Placeholder
@@ -56,7 +56,7 @@ export const EGG_ANIMATIONS: Record<EggType, EggAnimation> = {
     ],
     beastAsset: BabyWolf
   },
-  // TODO: Implementar cuando tengamos los assets
+  // TODO: Implement when we have the assets
   dragon: {
     eggType: 'dragon',
     beastType: 'dragon',
@@ -87,9 +87,9 @@ export const EGG_ANIMATIONS: Record<EggType, EggAnimation> = {
   }
 };
 
-// Configuración de la animación
+// Animation configuration
 export const EGG_ANIMATION_CONFIG = {
-  FRAME_DURATION: 150, // ms por frame
+  FRAME_DURATION: 150, // ms per frame
   TOTAL_DURATION: 900, // 6 frames * 150ms
-  BEAST_REVEAL_DELAY: 800, // Delay antes de mostrar la bestia
+  BEAST_REVEAL_DELAY: 800, // Delay before showing the beast
 } as const;

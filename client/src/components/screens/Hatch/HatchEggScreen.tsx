@@ -3,7 +3,7 @@ import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import { useEggAnimation } from "./components/useEggAnimation";
 import type { EggType } from "./components/eggAnimation";
 
-// Assets - ajusta la ruta según tu estructura de carpetas
+// Assets - adjust the path according to your folder structure
 import forestBackground from "../../../assets/backgrounds/bg-home.png";
 import { useState, useEffect } from "react";
 import MegaBurstParticles from "./components/MegaBurstParticles";
@@ -14,12 +14,12 @@ interface HatchEggScreenProps {
 }
 
 export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchEggScreenProps) => {
-  
-  // 🥚 Hook con efectos progresivos
-  const { 
-    currentFrame, 
-    eggState, 
-    startHatching, 
+
+  // 🥚 Hook with progressive effects
+  const {
+    currentFrame,
+    eggState,
+    startHatching,
     canClick,
     beastType,
     beastAsset,
@@ -27,49 +27,49 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     glowLevel
   } = useEggAnimation(eggType);
 
-  // 🌟💥 Estados para efectos mega-burst
+  // 🌟💥 States for mega-burst effects
   const [showMegaBurst, setShowMegaBurst] = useState(false);
   const [showFullScreenFlash, setShowFullScreenFlash] = useState(false);
 
-  // Función para manejar el click del botón "Continue"
+  // Function to handle the "Continue" button click
   const handleContinue = () => {
     console.log(`🎮 Continuing to home with ${beastType}...`);
     onLoadingComplete();
   };
 
-  // Función para obtener el nombre del tipo de huevo
+  // Function to get the egg type name
   const getEggTypeName = (type: EggType): string => {
     const names = {
       shadow: 'Shadow',
-      dragon: 'Dragon', 
+      dragon: 'Dragon',
       water: 'Water'
     };
     return names[type];
   };
 
-  // 🌟💥 EFECTO MEGA-BURST cuando el huevo completa
+  // 🌟💥 MEGA-BURST EFFECT when the egg completes
   useEffect(() => {
     if (eggState === 'completed') {
-      console.log("🌟💥 ACTIVANDO MEGA-BURST DE DESTELLOS SATURADOS!");
-      
-      // Activar flash fullscreen inmediatamente
+      console.log("🌟💥 ACTIVATING SATURATED BURST OF FLASHES!");
+
+      // Activate fullscreen flash immediately
       setShowFullScreenFlash(true);
-      
-      // Activar mega-burst simultáneamente
+
+      // Activate mega-burst simultaneously
       setShowMegaBurst(true);
-      
-      // Desactivar flash después de 2.5s
+
+      // Deactivate flash after 2.5s
       const flashTimeout = setTimeout(() => {
         setShowFullScreenFlash(false);
-        console.log("🌟 Flash completado");
+        console.log("🌟 Flash completed");
       }, 2500);
-      
-      // Desactivar mega-burst después de 4s
+
+      // Deactivate mega-burst after 4s
       const burstTimeout = setTimeout(() => {
         setShowMegaBurst(false);
-        console.log("💥 Mega-burst completado");
+        console.log("💥 Mega-burst completed");
       }, 4000);
-      
+
       return () => {
         clearTimeout(flashTimeout);
         clearTimeout(burstTimeout);
@@ -77,34 +77,34 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     }
   }, [eggState]);
 
-  // Animaciones base
+  // Base animations
   const titleAnimation = {
     initial: { opacity: 0, y: -30 },
-    animate: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { 
-        delay: 0.2, 
-        duration: 0.6, 
-        ease: "easeOut" 
-      } 
+    animate: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: 0.2,
+        duration: 0.6,
+        ease: "easeOut"
+      }
     }
   };
 
   const subtitleAnimation = {
     initial: { opacity: 0, y: 20 },
-    animate: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { 
-        delay: 0.4, 
-        duration: 0.5, 
-        ease: "easeOut" 
-      } 
+    animate: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: 0.4,
+        duration: 0.5,
+        ease: "easeOut"
+      }
     }
   };
 
-  // 🎯 Animación del huevo con efectos de glow progresivos
+  // 🎯 Egg animation with progressive glow effects
   const eggAnimation = {
     initial: { scale: 0.3, opacity: 0, rotate: -15 },
     animate: {
@@ -116,15 +116,15 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
         stiffness: 100,
         damping: 10,
         delay: 0.6,
-        scale: eggState === 'idle' ? { 
-          delay: 0.8, 
-          repeat: Infinity, 
+        scale: eggState === 'idle' ? {
+          delay: 0.8,
+          repeat: Infinity,
           duration: 2.5,
-          ease: "easeInOut" 
+          ease: "easeInOut"
         } : { delay: 0.6, duration: 0.7 },
-        opacity: { 
-          delay: showBeast ? 0 : 0.6, 
-          duration: showBeast ? 0.5 : 0.5 
+        opacity: {
+          delay: showBeast ? 0 : 0.6,
+          duration: showBeast ? 0.5 : 0.5
         },
         rotate: eggState === 'hatching' ? {
           repeat: Infinity,
@@ -133,13 +133,13 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
         } : { delay: 0.6, duration: 0.3 }
       },
     },
-    whileHover: canClick ? { 
-      scale: 1.15, 
+    whileHover: canClick ? {
+      scale: 1.15,
       rotate: [0, -3, 3, 0],
-      transition: { 
+      transition: {
         scale: { duration: 0.3 },
-        rotate: { repeat: Infinity, duration: 1.5, ease: "easeInOut" } 
-      } 
+        rotate: { repeat: Infinity, duration: 1.5, ease: "easeInOut" }
+      }
     } : {},
     whileTap: canClick ? {
       scale: 0.95,
@@ -147,21 +147,21 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     } : {}
   };
 
-  // 🐺 Animación de la bestia
+  // 🐺 Beast animation
   const beastAnimation = {
     initial: { scale: 0.3, opacity: 0, rotate: -10, y: 30 },
-    animate: { 
-      scale: 1, 
-      opacity: 1, 
+    animate: {
+      scale: 1,
+      opacity: 1,
       rotate: 0,
       y: 0,
-      transition: { 
-        type: "spring", 
-        stiffness: 200, 
+      transition: {
+        type: "spring",
+        stiffness: 200,
         damping: 15,
         delay: 0.2,
         duration: 0.8
-      } 
+      }
     },
     whileInView: {
       scale: [1, 1.02, 1],
@@ -173,16 +173,16 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     }
   };
 
-  // 🎯 Animación del botón Continue
+  // 🎯 Continue button animation
   const buttonAnimation = {
     initial: { opacity: 0, y: 50, scale: 0.8 },
-    animate: { 
-      opacity: 1, 
+    animate: {
+      opacity: 1,
       y: [0, -5, 0],
       scale: 1,
-      transition: { 
+      transition: {
         delay: 0.5,
-        duration: 0.8, 
+        duration: 0.8,
         ease: "easeOut",
         type: "spring",
         stiffness: 300,
@@ -192,43 +192,43 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
           duration: 2,
           ease: "easeInOut"
         }
-      } 
+      }
     }
   };
 
   const buttonInteractionProps = {
-    whileHover: { 
+    whileHover: {
       scale: 1.1,
       y: -8,
-      transition: { 
-        type: "spring", 
-        stiffness: 400, 
-        damping: 15 
-      } 
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 15
+      }
     },
-    whileTap: { 
+    whileTap: {
       scale: 0.95,
       y: 0,
-      transition: { 
-        type: "spring", 
-        stiffness: 400, 
-        damping: 20 
-      } 
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 20
+      }
     },
   };
 
-  // 🌟💥 Animación del Full-Screen Flash Prolongado
+  // 🌟💥 Full-Screen Flash Animation
   const fullScreenFlashAnimation = {
     initial: { opacity: 0 },
-    animate: { 
+    animate: {
       opacity: [0, 1, 1, 0],
-      transition: { 
-        times: [0, 0.1, 0.9, 1], // Flash rápido, mantener, fade out lento
+      transition: {
+        times: [0, 0.1, 0.9, 1], // Fast flash, hold, slow fade out
         duration: 2.5,
         ease: "easeInOut"
-      } 
+      }
     },
-    exit: { 
+    exit: {
       opacity: 0,
       transition: { duration: 0.3 }
     }
@@ -247,20 +247,20 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
       {/* Base Magical Sparkle Particles */}
       <MagicalSparkleParticles />
 
-      {/* 🌟💥 MEGA-BURST DE DESTELLOS SATURADOS */}
-      <MegaBurstParticles 
-        trigger={showMegaBurst} 
+      {/* 🌟💥 MEGA-BURST OF SATURATED FLASHES */}
+      <MegaBurstParticles
+        trigger={showMegaBurst}
         eggPosition={{ x: 50, y: 50 }}
-        onComplete={() => console.log("🎇 Mega-burst de destellos completado!")}
+        onComplete={() => console.log("🎇 Mega-burst of flashes completed!")}
       />
 
-      {/* 🌟💥 FULL-SCREEN FLASH PROLONGADO */}
+      {/* 🌟💥 FULL-SCREEN PROLONGED FLASH */}
       <AnimatePresence>
         {showFullScreenFlash && (
           <motion.div
             className="absolute inset-0 z-40 pointer-events-none"
             style={{
-              backgroundColor: 'rgba(255, 255, 240, 0.95)' // Apagón luminoso
+              backgroundColor: 'rgba(255, 255, 240, 0.95)' // Bright blackout
             }}
             {...fullScreenFlashAnimation}
             key="mega-flash-effect"
@@ -270,7 +270,7 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
 
       {/* Content Container */}
       <div className="flex flex-col items-center justify-center space-y-8 z-50 px-4">
-        
+
         {/* Title */}
         <motion.div
           className="text-center space-y-2"
@@ -294,22 +294,21 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
             ) : (
               <>
                 <br />
-                <span className={`font-semibold transition-colors duration-300 ${
-                  eggState === 'hatching' ? 'text-magenta' : 
-                  eggState === 'completed' ? 'text-cyan' :
-                  eggState === 'revealing' ? 'text-emerald' : 'text-gold'
-                }`}>
+                <span className={`font-semibold transition-colors duration-300 ${eggState === 'hatching' ? 'text-magenta' :
+                    eggState === 'completed' ? 'text-cyan' :
+                      eggState === 'revealing' ? 'text-emerald' : 'text-gold'
+                  }`}>
                   {eggState === 'idle' ? '' :
-                   eggState === 'hatching' ? '' :
-                   eggState === 'completed' ? '' :
-                   ''}
+                    eggState === 'hatching' ? '' :
+                      eggState === 'completed' ? '' :
+                        ''}
                 </span>
               </>
             )}
           </p>
         </motion.div>
 
-        {/* Egg Asset con efectos de glow progresivos */}
+        {/* Egg Asset with progressive glow effects */}
         {!showBeast && (
           <motion.div
             className={`relative ${canClick ? 'cursor-pointer' : 'cursor-default'}`}
@@ -321,34 +320,34 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
               alt={`${getEggTypeName(eggType)} Beast Egg - ${eggState}`}
               className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.4)] select-none"
             />
-            
-            {/* 🌟 Sistema de Glow Progresivo */}
+
+            {/* 🌟 Progressive Glow System */}
             {glowLevel > 0 && (
               <>
-                {/* Glow Level 1: Suave */}
+                {/* Glow Level 1: Soft */}
                 {glowLevel >= 1 && (
                   <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-gold/20 animate-pulse blur-lg -z-10" />
                 )}
-                
-                {/* Glow Level 2: Medio */}
+
+                {/* Glow Level 2: Medium */}
                 {glowLevel >= 2 && (
                   <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-gold/30 animate-pulse blur-xl -z-10" />
                 )}
-                
-                {/* Glow Level 3: Intenso */}
+
+                {/* Glow Level 3: Intense */}
                 {glowLevel >= 3 && (
                   <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-yellow-400/40 animate-pulse blur-2xl -z-10" />
                 )}
-                
-                {/* Glow Level 4: Muy Intenso */}
+
+                {/* Glow Level 4: Very Intense */}
                 {glowLevel >= 4 && (
                   <>
                     <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-orange-300/50 animate-pulse blur-3xl -z-10" />
                     <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-white/20 animate-ping -z-10" />
                   </>
                 )}
-                
-                {/* Glow Level 5: MÁXIMO POWER */}
+
+                {/* Glow Level 5: MAXIMUM POWER */}
                 {glowLevel >= 5 && (
                   <>
                     <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-white/60 animate-pulse blur-[40px] -z-10" />
@@ -372,8 +371,8 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
               alt={`Baby ${beastType}`}
               className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.4)] select-none"
             />
-            
-            {/* Aura mágica alrededor de la bestia */}
+
+            {/* Magical aura around the beast */}
             <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-emerald/30 animate-pulse blur-xl -z-10" />
             <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-gold/20 animate-pulse blur-2xl -z-10" />
           </motion.div>

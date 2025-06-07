@@ -14,10 +14,10 @@ interface MegaBurstParticlesProps {
   onComplete?: () => void;
 }
 
-function MegaBurstParticles({ 
-  trigger, 
+function MegaBurstParticles({
+  trigger,
   eggPosition = { x: 50, y: 50 },
-  onComplete 
+  onComplete
 }: MegaBurstParticlesProps): JSX.Element | null {
   const [engineLoaded, setEngineLoaded] = useState(false);
   const [burstActive, setBurstActive] = useState(false);
@@ -27,18 +27,18 @@ function MegaBurstParticles({
       .then(() => setEngineLoaded(true));
   }, []);
 
-  // Activar mega-burst cuando se dispare el trigger
+  // Activate mega-burst when the trigger fires
   useEffect(() => {
     if (trigger && engineLoaded) {
-      console.log("🌟💥 MEGA-BURST DE DESTELLOS SATURADOS ACTIVADO!");
+      console.log("🌟💥 MEGA-BURST OF SATURATED SPARKLES ACTIVATED!");
       setBurstActive(true);
-      
-      // Desactivar después de la duración completa
+
+      // Deactivate after the full duration
       const timeout = setTimeout(() => {
         setBurstActive(false);
         onComplete?.();
-        console.log("✨ Mega-burst completado!");
-      }, 4000); // 4 segundos para que termine todo el efecto
+        console.log("✨ Mega-burst completed!");
+      }, 3000); // 3 seconds for the whole effect
 
       return () => clearTimeout(timeout);
     }
@@ -49,19 +49,19 @@ function MegaBurstParticles({
       fullScreen: { enable: false },
       background: { color: { value: "transparent" } },
       fpsLimit: 60,
-      
+
       particles: {
         number: {
-          value: 0, // Solo usamos emitters
+          value: 0, // We only use emitters
         },
         color: {
           value: [
-            "#FFD700", // Dorado intenso
-            "#FFFF00", // Amarillo puro
-            "#FFF700", // Amarillo brillante
-            "#FFFFFF", // Blanco brillante
-            "#FFE135", // Amarillo dorado
-            "#FFF59D"  // Amarillo suave
+            "#FFD700", // Intense gold
+            "#FFFF00", // Pure yellow
+            "#FFF700", // Bright yellow
+            "#FFFFFF", // Bright white
+            "#FFE135", // Golden yellow
+            "#FFF59D"  // Soft yellow
           ]
         },
         shape: {
@@ -73,7 +73,7 @@ function MegaBurstParticles({
           },
         },
         size: {
-          value: { min: 6, max: 14 }, // Tamaños grandes variables
+          value: { min: 6, max: 14 }, // Large variable sizes
           animation: {
             enable: true,
             speed: { min: 3, max: 6 },
@@ -85,7 +85,7 @@ function MegaBurstParticles({
           value: { min: 0.8, max: 1 },
           animation: {
             enable: true,
-            speed: 4, // Twinkle rápido
+            speed: 4, // Fast twinkle
             minimumValue: 0,
             sync: false,
             startValue: "max",
@@ -94,8 +94,8 @@ function MegaBurstParticles({
         },
         move: {
           enable: true,
-          direction: MoveDirection.none, // Dispersión radial 360°
-          speed: { min: 6, max: 12 }, // Velocidad alta
+          direction: MoveDirection.none, // 360° radial dispersion
+          speed: { min: 6, max: 12 }, // High speed
           straight: false,
           random: true,
           outModes: {
@@ -103,13 +103,13 @@ function MegaBurstParticles({
           },
           gravity: {
             enable: true,
-            acceleration: 0.5, // Gravedad ligera
+            acceleration: 0.5, // Light gravity
           },
         },
         life: {
           duration: {
             sync: false,
-            value: { min: 1.5, max: 2.5 }, // 2s promedio de duración
+            value: { min: 1.5, max: 2.5 }, // 2s average duration
           },
           count: 1,
         },
@@ -125,19 +125,19 @@ function MegaBurstParticles({
         twinkle: {
           particles: {
             enable: true,
-            frequency: 0.7, // Twinkle muy frecuente
+            frequency: 0.7, // Very frequent twinkle
             opacity: 1,
           },
         },
-        // Trail ligero para estelas
+        // Light trail for streaks
         trail: {
           enable: true,
-          length: 4, // Estelas breves
+          length: 4, // Short streaks
           fillColor: {
             value: "#FFD700",
           },
         },
-        // Stroke brillante para mayor saturación
+        // Bright stroke for more saturation
         stroke: {
           width: { min: 1, max: 2 },
           color: {
@@ -147,13 +147,13 @@ function MegaBurstParticles({
         },
       },
 
-      // MEGA EMITTER - 350 partículas en burst
+      // MEGA EMITTER - 350 particles in burst
       emitters: burstActive ? [
-        // Emitter principal - explosión masiva
+        // Main emitter - massive explosion
         {
           direction: MoveDirection.none,
           rate: {
-            quantity: 350, // 350 partículas en el burst principal
+            quantity: 350, // 350 particles in the main burst
             delay: 0.02,
           },
           size: {
@@ -166,7 +166,7 @@ function MegaBurstParticles({
           },
           life: {
             count: 1,
-            duration: 0.4, // Disparo durante 0.4s
+            duration: 0.4, // Fires for 0.4s
           },
           particles: {
             move: {
@@ -181,7 +181,7 @@ function MegaBurstParticles({
               },
             },
             size: {
-              value: { min: 8, max: 16 }, // Más grandes para el burst
+              value: { min: 8, max: 16 }, // Larger for the burst
               animation: {
                 enable: true,
                 speed: 5,
@@ -221,11 +221,11 @@ function MegaBurstParticles({
               },
             },
             color: {
-              value: ["#FFD700", "#FFFF00", "#FFFFFF"] // Solo los más saturados
+              value: ["#FFD700", "#FFFF00", "#FFFFFF"] // Only the most saturated
             },
           },
         },
-        // Emitter secundario - ráfaga de follow-up
+        // Secondary emitter - follow-up burst
         {
           direction: MoveDirection.none,
           rate: {
@@ -243,7 +243,7 @@ function MegaBurstParticles({
           life: {
             count: 1,
             duration: 0.3,
-            delay: 0.5, // Retardo para segunda oleada
+            delay: 0.5, // Delay for second wave
           },
           particles: {
             move: {
@@ -271,12 +271,12 @@ function MegaBurstParticles({
               type: ["star", "circle"],
               options: {
                 star: {
-                  sides: 6, // Estrellas de 6 puntas para variedad
+                  sides: 6, // 6-pointed stars for variety
                 },
               },
             },
             color: {
-              value: ["#FFFFFF", "#FFF700", "#FFE135"], // Colores más brillantes
+              value: ["#FFFFFF", "#FFF700", "#FFE135"], // Brighter colors
             },
             twinkle: {
               particles: {

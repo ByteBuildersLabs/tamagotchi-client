@@ -13,22 +13,22 @@ interface UseEggAnimationReturn {
   beastType: string;
   beastAsset: string;
   showBeast: boolean;
-  // 🌟 Nuevas props para efectos progresivos
+  // 🌟 New props for progressive effects
   lightIntensity: number; // 0-100
   particleIntensity: number; // 0-100
   shouldBurst: boolean;
-  glowLevel: number; // 0-5 para diferentes niveles de glow
+  glowLevel: number; // 0-5 for different glow levels
 }
 
-// Mapeo de frame a intensidad de efectos
+// Mapping from frame to effect intensity
 const FRAME_EFFECTS_MAP: Record<number, { light: number; particles: number; glow: number }> = {
   0: { light: 0, particles: 0, glow: 0 },    // Idle
-  1: { light: 15, particles: 10, glow: 1 },  // Primer temblor
-  2: { light: 25, particles: 20, glow: 1 },  // Chispeo tenue
-  3: { light: 40, particles: 35, glow: 2 },  // Destellos dorados
-  4: { light: 60, particles: 50, glow: 3 },  // Rayos de luz suaves
-  5: { light: 80, particles: 70, glow: 4 },  // Pulso de iluminación
-  6: { light: 95, particles: 85, glow: 5 },  // Pre-explosión
+  1: { light: 15, particles: 10, glow: 1 },  // First shake
+  2: { light: 25, particles: 20, glow: 1 },  // Faint spark
+  3: { light: 40, particles: 35, glow: 2 },  // Golden flashes
+  4: { light: 60, particles: 50, glow: 3 },  // Soft light rays
+  5: { light: 80, particles: 70, glow: 4 },  // Lighting pulse
+  6: { light: 95, particles: 85, glow: 5 },  // Pre-explosion
 };
 
 export const useEggAnimation = (
@@ -58,14 +58,14 @@ export const useEggAnimation = (
     
     let currentFrame = 0;
     
-    // Animar los frames con efectos progresivos
+    // Animate frames with progressive effects
     intervalRef.current = setInterval(() => {
       currentFrame++;
       
       console.log(`🎯 Frame ${currentFrame} - Effects: Light ${FRAME_EFFECTS_MAP[currentFrame]?.light || 0}, Particles ${FRAME_EFFECTS_MAP[currentFrame]?.particles || 0}`);
       
       if (currentFrame >= eggAnimation.hatchFrames.length) {
-        // Animación completada - BURST!
+        // Animation completed - BURST!
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
@@ -73,17 +73,17 @@ export const useEggAnimation = (
         
         setIsAnimating(false);
         setEggState('completed');
-        setShouldBurst(true); // 🎆 TRIGGER DEL BURST FINAL
+        setShouldBurst(true); // 🎆 TRIGGER FINAL BURST
         
         console.log(`💥 ${eggType} egg BURST! Ultimate effects activated!`);
         
-        // Esperar y luego revelar la bestia
+        // Wait and then reveal the beast
         timeoutRef.current = setTimeout(() => {
           console.log(`🐺 Revealing ${eggAnimation.beastType}...`);
           setEggState('revealing');
           setShowBeast(true);
-          setShouldBurst(false); // Desactivar burst tras revelar
-        }, EGG_ANIMATION_CONFIG.BEAST_REVEAL_DELAY + 1000); // +1s para que termine el burst
+          setShouldBurst(false); // Deactivate burst after reveal
+        }, EGG_ANIMATION_CONFIG.BEAST_REVEAL_DELAY + 1000); // +1s for burst to finish
         
         return;
       }
@@ -93,7 +93,7 @@ export const useEggAnimation = (
     
   }, [eggType, eggAnimation.hatchFrames.length, eggAnimation.beastType, isAnimating, eggState]);
   
-  // Cleanup en unmount
+  // Cleanup on unmount
   useState(() => {
     return () => {
       if (intervalRef.current) {
@@ -105,20 +105,20 @@ export const useEggAnimation = (
     };
   });
   
-  // Frame actual a mostrar
+  // Current frame to display
   const currentFrame = eggState === 'idle' 
     ? eggAnimation.idleFrame 
     : eggAnimation.hatchFrames[frameIndex] || eggAnimation.idleFrame;
   
-  // Solo se puede hacer click si está en idle
+  // Can only click if in idle
   const canClick = eggState === 'idle' && !isAnimating;
   
-  // 🌟 Calcular intensidades de efectos basado en el frame actual
+  // 🌟 Calculate effect intensities based on current frame
   const currentEffects = eggState === 'hatching' 
     ? (FRAME_EFFECTS_MAP[frameIndex] || { light: 0, particles: 0, glow: 0 })
     : { light: 0, particles: 0, glow: 0 };
   
-  // Si está en completed, máxima intensidad antes del burst
+  // If completed, max intensity before burst
   const lightIntensity = eggState === 'completed' ? 100 : currentEffects.light;
   const particleIntensity = eggState === 'completed' ? 100 : currentEffects.particles;
   const glowLevel = eggState === 'completed' ? 5 : currentEffects.glow;
@@ -133,7 +133,7 @@ export const useEggAnimation = (
     beastType: eggAnimation.beastType,
     beastAsset: eggAnimation.beastAsset,
     showBeast,
-    // 🌟 Nuevos valores para efectos
+    // 🌟 New values for effects
     lightIntensity,
     particleIntensity,
     shouldBurst,
