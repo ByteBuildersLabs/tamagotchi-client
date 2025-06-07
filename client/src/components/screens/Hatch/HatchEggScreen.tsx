@@ -1,19 +1,21 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import { useEggAnimation } from "./components/useEggAnimation";
 import type { EggType } from "./components/eggAnimation";
 
 // Assets - ajusta la ruta según tu estructura de carpetas
 import forestBackground from "../../../assets/backgrounds/bg-home.png";
+import { useState, useEffect } from "react";
+import MegaBurstParticles from "./components/MegaBurstParticles";
 
 interface HatchEggScreenProps {
   onLoadingComplete: () => void;
-  eggType?: EggType; // 🎯 Prop para tipo de huevo (futuro backend)
+  eggType?: EggType;
 }
 
 export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchEggScreenProps) => {
   
-  // 🥚 Hook para manejar la animación del huevo
+  // 🥚 Hook con efectos progresivos
   const { 
     currentFrame, 
     eggState, 
@@ -21,8 +23,13 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     canClick,
     beastType,
     beastAsset,
-    showBeast
+    showBeast,
+    glowLevel
   } = useEggAnimation(eggType);
+
+  // 🌟💥 Estados para efectos mega-burst
+  const [showMegaBurst, setShowMegaBurst] = useState(false);
+  const [showFullScreenFlash, setShowFullScreenFlash] = useState(false);
 
   // Función para manejar el click del botón "Continue"
   const handleContinue = () => {
@@ -30,7 +37,7 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     onLoadingComplete();
   };
 
-  // Función para obtener el nombre del tipo de huevo para mostrar
+  // Función para obtener el nombre del tipo de huevo
   const getEggTypeName = (type: EggType): string => {
     const names = {
       shadow: 'Shadow',
@@ -40,7 +47,37 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     return names[type];
   };
 
-  // Animaciones siguiendo el patrón del HomeScreen
+  // 🌟💥 EFECTO MEGA-BURST cuando el huevo completa
+  useEffect(() => {
+    if (eggState === 'completed') {
+      console.log("🌟💥 ACTIVANDO MEGA-BURST DE DESTELLOS SATURADOS!");
+      
+      // Activar flash fullscreen inmediatamente
+      setShowFullScreenFlash(true);
+      
+      // Activar mega-burst simultáneamente
+      setShowMegaBurst(true);
+      
+      // Desactivar flash después de 2.5s
+      const flashTimeout = setTimeout(() => {
+        setShowFullScreenFlash(false);
+        console.log("🌟 Flash completado");
+      }, 2500);
+      
+      // Desactivar mega-burst después de 4s
+      const burstTimeout = setTimeout(() => {
+        setShowMegaBurst(false);
+        console.log("💥 Mega-burst completado");
+      }, 4000);
+      
+      return () => {
+        clearTimeout(flashTimeout);
+        clearTimeout(burstTimeout);
+      };
+    }
+  }, [eggState]);
+
+  // Animaciones base
   const titleAnimation = {
     initial: { opacity: 0, y: -30 },
     animate: { 
@@ -67,13 +104,13 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     }
   };
 
-  // 🎯 Animación del huevo mejorada según su estado
+  // 🎯 Animación del huevo con efectos de glow progresivos
   const eggAnimation = {
     initial: { scale: 0.3, opacity: 0, rotate: -15 },
     animate: {
-      scale: eggState === 'idle' ? [1, 1.08, 1] : 1, // Solo palpita en idle
-      opacity: showBeast ? 0 : 1, // Se desvanece cuando aparece la bestia
-      rotate: 0,
+      scale: eggState === 'idle' ? [1, 1.08, 1] : 1,
+      opacity: showBeast ? 0 : 1,
+      rotate: eggState === 'hatching' ? [0, -2, 2, 0] : 0,
       transition: {
         type: "spring",
         stiffness: 100,
@@ -89,6 +126,11 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
           delay: showBeast ? 0 : 0.6, 
           duration: showBeast ? 0.5 : 0.5 
         },
+        rotate: eggState === 'hatching' ? {
+          repeat: Infinity,
+          duration: 0.3,
+          ease: "easeInOut"
+        } : { delay: 0.6, duration: 0.3 }
       },
     },
     whileHover: canClick ? { 
@@ -121,7 +163,6 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
         duration: 0.8
       } 
     },
-    // Animación de "respiración" sutil
     whileInView: {
       scale: [1, 1.02, 1],
       transition: {
@@ -132,12 +173,12 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     }
   };
 
-  // 🎯 Animación del botón Continue con movimiento atractivo
+  // 🎯 Animación del botón Continue
   const buttonAnimation = {
     initial: { opacity: 0, y: 50, scale: 0.8 },
     animate: { 
       opacity: 1, 
-      y: [0, -5, 0], // Pequeño rebote hacia arriba
+      y: [0, -5, 0],
       scale: 1,
       transition: { 
         delay: 0.5,
@@ -158,7 +199,7 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
   const buttonInteractionProps = {
     whileHover: { 
       scale: 1.1,
-      y: -8, // Se eleva más en hover
+      y: -8,
       transition: { 
         type: "spring", 
         stiffness: 400, 
@@ -176,6 +217,23 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     },
   };
 
+  // 🌟💥 Animación del Full-Screen Flash Prolongado
+  const fullScreenFlashAnimation = {
+    initial: { opacity: 0 },
+    animate: { 
+      opacity: [0, 1, 1, 0],
+      transition: { 
+        times: [0, 0.1, 0.9, 1], // Flash rápido, mantener, fade out lento
+        duration: 2.5,
+        ease: "easeInOut"
+      } 
+    },
+    exit: { 
+      opacity: 0,
+      transition: { duration: 0.3 }
+    }
+  };
+
   return (
     <div
       className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden font-rubik"
@@ -186,11 +244,32 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Magical Sparkle Particles */}
+      {/* Base Magical Sparkle Particles */}
       <MagicalSparkleParticles />
 
+      {/* 🌟💥 MEGA-BURST DE DESTELLOS SATURADOS */}
+      <MegaBurstParticles 
+        trigger={showMegaBurst} 
+        eggPosition={{ x: 50, y: 50 }}
+        onComplete={() => console.log("🎇 Mega-burst de destellos completado!")}
+      />
+
+      {/* 🌟💥 FULL-SCREEN FLASH PROLONGADO */}
+      <AnimatePresence>
+        {showFullScreenFlash && (
+          <motion.div
+            className="absolute inset-0 z-40 pointer-events-none"
+            style={{
+              backgroundColor: 'rgba(255, 255, 240, 0.95)' // Apagón luminoso
+            }}
+            {...fullScreenFlashAnimation}
+            key="mega-flash-effect"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Content Container */}
-      <div className="flex flex-col items-center justify-center space-y-8 z-10 px-4">
+      <div className="flex flex-col items-center justify-center space-y-8 z-50 px-4">
         
         {/* Title */}
         <motion.div
@@ -202,7 +281,7 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
           </h1>
         </motion.div>
 
-        {/* Subtitle - Cambia según el estado */}
+        {/* Subtitle */}
         <motion.div
           className="text-center max-w-md"
           {...subtitleAnimation}
@@ -211,8 +290,6 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
             {showBeast ? (
               <>
                 <br />
-                <span className="text-emerald font-semibold">
-                </span>
               </>
             ) : (
               <>
@@ -222,13 +299,17 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
                   eggState === 'completed' ? 'text-cyan' :
                   eggState === 'revealing' ? 'text-emerald' : 'text-gold'
                 }`}>
+                  {eggState === 'idle' ? '' :
+                   eggState === 'hatching' ? '' :
+                   eggState === 'completed' ? '' :
+                   ''}
                 </span>
               </>
             )}
           </p>
         </motion.div>
 
-        {/* Egg Asset - Se desvanece cuando aparece la bestia */}
+        {/* Egg Asset con efectos de glow progresivos */}
         {!showBeast && (
           <motion.div
             className={`relative ${canClick ? 'cursor-pointer' : 'cursor-default'}`}
@@ -241,28 +322,46 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
               className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.4)] select-none"
             />
             
-            {/* Glow effect - Solo activo en idle y hatching */}
-            {(eggState === 'idle' || eggState === 'hatching') && (
+            {/* 🌟 Sistema de Glow Progresivo */}
+            {glowLevel > 0 && (
               <>
-                <div className={`absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full blur-xl -z-10 transition-colors duration-300 ${
-                  eggState === 'hatching' ? 'bg-magenta/40 animate-pulse' : 'bg-gold/30 animate-pulse'
-                }`} />
+                {/* Glow Level 1: Suave */}
+                {glowLevel >= 1 && (
+                  <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-gold/20 animate-pulse blur-lg -z-10" />
+                )}
                 
-                {/* Pulso de interactividad - Solo en idle */}
-                {eggState === 'idle' && (
-                  <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-gold/10 animate-ping -z-10" />
+                {/* Glow Level 2: Medio */}
+                {glowLevel >= 2 && (
+                  <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-gold/30 animate-pulse blur-xl -z-10" />
+                )}
+                
+                {/* Glow Level 3: Intenso */}
+                {glowLevel >= 3 && (
+                  <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-yellow-400/40 animate-pulse blur-2xl -z-10" />
+                )}
+                
+                {/* Glow Level 4: Muy Intenso */}
+                {glowLevel >= 4 && (
+                  <>
+                    <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-orange-300/50 animate-pulse blur-3xl -z-10" />
+                    <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-white/20 animate-ping -z-10" />
+                  </>
+                )}
+                
+                {/* Glow Level 5: MÁXIMO POWER */}
+                {glowLevel >= 5 && (
+                  <>
+                    <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-white/60 animate-pulse blur-[40px] -z-10" />
+                    <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-cyan-300/40 animate-ping -z-10" />
+                    <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-magenta/30 animate-pulse blur-[50px] -z-10" />
+                  </>
                 )}
               </>
-            )}
-            
-            {/* Efecto especial cuando completa */}
-            {eggState === 'completed' && (
-              <div className="absolute inset-0 h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-72 lg:w-72 rounded-full bg-cyan/50 animate-pulse blur-2xl -z-10" />
             )}
           </motion.div>
         )}
 
-        {/* Beast Asset - Aparece después de la eclosión */}
+        {/* Beast Asset */}
         {showBeast && (
           <motion.div
             className="relative"
@@ -280,7 +379,7 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
           </motion.div>
         )}
 
-        {/* Continue Button - Solo aparece cuando se revela la bestia */}
+        {/* Continue Button */}
         {eggState === 'revealing' && showBeast && (
           <motion.button
             onClick={handleContinue}
