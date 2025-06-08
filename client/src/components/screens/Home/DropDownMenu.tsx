@@ -98,7 +98,7 @@ export const DropdownMenu = ({
       {/* Dropdown Overlay */}
       {isOpen && (
         <div 
-          className="absolute top-0 right-0 mt-12 w-48 bg-cream rounded-xl shadow-lg px-4 py-3 space-y-3 animate-in slide-in-from-right-2 z-50"
+          className="absolute top-0 right-0 mt-12 w-48 bg-cream rounded-xl shadow-lg px-4 py-3 space-y-3 z-50"
           role="menu"
           aria-orientation="vertical"
         >
