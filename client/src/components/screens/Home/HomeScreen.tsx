@@ -4,6 +4,7 @@ import { TamagotchiTopBar } from "../../layout/TopBar";
 import type { Screen } from "../../types/screens";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import { DropdownMenu } from "./DropDownMenu";
+import { PlayerInfoModal } from "./PlayerInfoModal";
 
 
 import bannerImg from "../../../assets/banners/banner-dragon.png";
@@ -21,7 +22,9 @@ interface HomeScreenProps {
 export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => {
   const [age] = useState(1);
   const playerName = "0xluis";
+  const [isPlayerInfoModalOpen, setIsPlayerInfoModalOpen] = useState(false);
 
+  // Beast data for sharing - hardcoded values for now
   // Beast data for sharing - hardcoded values for now
   const beastData = {
     age: 3, // days
@@ -31,9 +34,17 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
     cleanliness: 68,
   };
 
+  // Player data for the info modal
+  const playerData = {
+    username: playerName,
+    points: 5800,
+    currentStreak: 4,
+    banner: "dragon",
+  };
+
   const handleProfileClick = () => {
     console.log("Profile clicked:", playerAddress);
-    onNavigation("profile");
+    setIsPlayerInfoModalOpen(true);
   };
 
   const handleNavigateLogin = () => {
@@ -175,6 +186,13 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
       >
         <img src={dailyQuestIcon} alt="Daily Quests" className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16" />
       </motion.button>
+
+      {/* Player Info Modal */}
+      <PlayerInfoModal
+        isOpen={isPlayerInfoModalOpen}
+        onClose={() => setIsPlayerInfoModalOpen(false)}
+        playerData={playerData}
+      />
     </div>
   );
 };
