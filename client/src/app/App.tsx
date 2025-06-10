@@ -78,6 +78,7 @@ function AppContent() {
       {currentScreen === "play" && (
         <PlayScreen
           onNavigation={handleNavigation}
+          playerAddress={playerAddress}
         />
       )}
 
