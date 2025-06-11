@@ -72,6 +72,7 @@ function AppContent() {
       {currentScreen === "clean" && (
         <CleanScreen
           onNavigation={handleNavigation}
+          playerAddress={playerAddress}
         />
       )}
 
