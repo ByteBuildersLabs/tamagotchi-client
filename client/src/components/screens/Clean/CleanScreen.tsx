@@ -24,7 +24,7 @@ interface CleanScreenProps {
   playerAddress: string;
 }
 
-export const CleanScreen = ({  }: CleanScreenProps) => {
+export const CleanScreen = ({ }: CleanScreenProps) => {
 
   const [frameIndex, setFrameIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -143,7 +143,6 @@ export const CleanScreen = ({  }: CleanScreenProps) => {
     >
       {/* Magical Sparkle Particles */}
       <MagicalSparkleParticles />
-      {/* <RainingParticles/> */}
 
       {/* Top Bar with Coins, Gems, and Status */}
       <TamagotchiTopBar
@@ -152,34 +151,46 @@ export const CleanScreen = ({  }: CleanScreenProps) => {
         status={{ energy: 85, hunger: 60, happiness: 75, hygiene: 90 }}
       />
 
-      {/* Center: Beast and cloud together */}
-      <div className="flex-grow flex items-center justify-center w-full pointer-events-none select-none z-0 relative mt-[-20%]">
-        <div className="relative flex flex-col items-center">
-          <motion.img
-            src={iscloudOn ? cloudOffFrames[cloudOffFrameIndex] : cloudFrames[frameIndex]}
-            alt="Cloud"
-            className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto mb-4"
-            initial={cloudAnimation.initial}
-            animate={{ ...cloudAnimation.animate, y: 10 }}
-            whileHover={cloudAnimation.whileHover}
-            onClick={handlecloudClick}
-            drag
-            dragConstraints={cloudAnimation.dragConstraints}
-            dragElastic={cloudAnimation.dragElastic}
-          />
-          <motion.img
-            src={babyWorlfBeast}
-            alt="Tamagotchi Beast"
-            className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto"
-            initial={beastAnimation.initial}
-            animate={beastAnimation.animate}
-            whileHover={beastAnimation.whileHover}
-            drag
-            dragConstraints={beastAnimation.dragConstraints}
-            dragElastic={beastAnimation.dragElastic}
-          />
-        </div>
+      {/* Contenedor principal: título, nube y beast */}
+      <div className="flex flex-col items-center mt-8 space-y-6 z-10 pointer-events-none select-none">
+        {/* Clean Title */}
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg pointer-events-auto"
+        >
+          Clean Your Beast
+        </motion.h1>
+
+        {/* Cloud */}
+        <motion.img
+          src={iscloudOn ? cloudOffFrames[cloudOffFrameIndex] : cloudFrames[frameIndex]}
+          alt="Cloud"
+          className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto"
+          initial={cloudAnimation.initial}
+          animate={{ ...cloudAnimation.animate, y: 10 }}
+          whileHover={cloudAnimation.whileHover}
+          onClick={handlecloudClick}
+          drag
+          dragConstraints={cloudAnimation.dragConstraints}
+          dragElastic={cloudAnimation.dragElastic}
+        />
+
+        {/* Beast */}
+        <motion.img
+          src={babyWorlfBeast}
+          alt="Tamagotchi Beast"
+          className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto"
+          initial={beastAnimation.initial}
+          animate={beastAnimation.animate}
+          whileHover={beastAnimation.whileHover}
+          drag
+          dragConstraints={beastAnimation.dragConstraints}
+          dragElastic={beastAnimation.dragElastic}
+        />
       </div>
     </div>
   );
+
 };

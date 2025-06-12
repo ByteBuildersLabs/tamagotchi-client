@@ -85,6 +85,18 @@ export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
         status={{ energy: 85, hunger: 60, happiness: 75, hygiene: 90 }}
       />
 
+      {/* Play Title */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="mt-4 z-10"
+      >
+        <h1 className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg">
+          Play With Your Beast
+        </h1>
+      </motion.div>
+
       {/* Center: Beast */}
       <div className="flex-1 flex items-center justify-center w-full pointer-events-none select-none z-0 relative">
         <motion.img

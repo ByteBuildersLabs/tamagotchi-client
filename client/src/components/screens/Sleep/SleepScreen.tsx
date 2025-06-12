@@ -155,6 +155,18 @@ export const SleepScreen = ({ }: SleepScreenProps) => {
         status={{ energy: 85, hunger: 60, happiness: 75, hygiene: 90 }}
       />
 
+      {/* Sleep Title */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="mt-4 z-10"
+      >
+        <h1 className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg">
+          Sleep Your Beast
+        </h1>
+      </motion.div>
+
       {/* Center: Beast and Campfire together */}
       <div className="flex-grow flex items-center justify-center w-full pointer-events-none select-none z-0 relative">
         <motion.img
