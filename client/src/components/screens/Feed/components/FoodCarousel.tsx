@@ -1,10 +1,11 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import Slider from "react-slick";
 import { FoodCarouselProps } from '../../../types/feed.types';
 import { SLIDER_SETTINGS, CAROUSEL_STYLES } from '../../../../constants/feed.constants';
 import { FoodItem } from './FoodItem';
+import ArrowLeftIcon from '../../../../assets/icons/extras/icon-arrow-left.png';
+import ArrowRightIcon from '../../../../assets/icons/extras/icon-arrow-right.png';
 
 export const FoodCarousel = ({
   foods,
@@ -43,9 +44,13 @@ export const FoodCarousel = ({
           onClick={goToPrevious}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="p-2 bg-cream/90 rounded-full shadow-lg z-40"
+          className="p-2 z-40 flex items-center justify-center"
         >
-          <ChevronLeft className="h-4 w-4 text-white" />
+          <img 
+            src={ArrowLeftIcon} 
+            alt="Previous" 
+            className="h-10 w-10"
+          />
         </motion.button>
 
         {/* Carousel Container */}
@@ -70,9 +75,13 @@ export const FoodCarousel = ({
           onClick={goToNext}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="p-2 bg-cream/90 rounded-full shadow-lg z-40"
+          className="p-2 z-40 flex items-center justify-center"
         >
-          <ChevronRight className="h-4 w-4 text-white" />
+          <img 
+            src={ArrowRightIcon} 
+            alt="Next" 
+            className="h-10 w-10"
+          />
         </motion.button>
       </div>
 
