@@ -38,18 +38,18 @@ export const FoodCarousel = ({
       transition={{ delay: 0.4, duration: 0.5 }}
       className="fixed bottom-[calc(theme(spacing.16)+0.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30"
     >
-      <div className="flex items-center justify-center space-x-2 px-4">
+      <div className="flex items-center justify-center space-x-2 px-2">
         {/* Previous Button */}
         <motion.button
           onClick={goToPrevious}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="p-2 z-40 flex items-center justify-center"
+          className="p-1 sm:p-1 z-40 flex items-center justify-center"
         >
           <img 
             src={ArrowLeftIcon} 
             alt="Previous" 
-            className="h-10 w-10"
+            className="h-8 w-8 sm:h-10 sm:w-12 md:h-12 md:w-12"
           />
         </motion.button>
 
@@ -75,12 +75,12 @@ export const FoodCarousel = ({
           onClick={goToNext}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="p-2 z-40 flex items-center justify-center"
+          className="p-1 sm:p-1 z-40 flex items-center justify-center"
         >
           <img 
             src={ArrowRightIcon} 
             alt="Next" 
-            className="h-10 w-10"
+            className="h-8 w-8 sm:h-11 sm:w-12 md:h-12 md:w-12"
           />
         </motion.button>
       </div>
