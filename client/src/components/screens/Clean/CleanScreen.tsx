@@ -87,8 +87,6 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
       },
     },
     whileHover: { scale: 1.03, rotate: 2 },
-    dragConstraints: { left: -30, right: 30, top: -20, bottom: 20 },
-    dragElastic: 0.1,
   };
 
   const cloudAnimation = {
@@ -110,8 +108,6 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
       },
     },
     whileHover: { scale: 1.03, rotate: 2 },
-    dragConstraints: { left: -30, right: 30, top: -20, bottom: 20 },
-    dragElastic: 0.1,
   };
 
   const [iscloudOn, setIscloudOn] = useState(true);
@@ -172,9 +168,6 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
           animate={{ ...cloudAnimation.animate, y: 10 }}
           whileHover={cloudAnimation.whileHover}
           onClick={handlecloudClick}
-          drag
-          dragConstraints={cloudAnimation.dragConstraints}
-          dragElastic={cloudAnimation.dragElastic}
         />
 
         {/* Beast */}
@@ -185,9 +178,6 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
           initial={beastAnimation.initial}
           animate={beastAnimation.animate}
           whileHover={beastAnimation.whileHover}
-          drag
-          dragConstraints={beastAnimation.dragConstraints}
-          dragElastic={beastAnimation.dragElastic}
         />
       </div>
     </div>

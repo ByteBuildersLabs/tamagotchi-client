@@ -6,7 +6,7 @@ import { ShareModal } from "./ShareModal";
 
 // Assets
 import menuIcon from "../../../assets/icons/menu/icon-menu.webp";
-import closeIcon from "../../../assets/icons/menu/svg/icon-close.svg";
+import closeIcon from "../../../assets/icons/extras/icon-close.png";
 import profileIcon from "../../../assets/icons/menu/svg/icon-profile.svg";
 import shareIcon from "../../../assets/icons/menu/svg/icon-share.svg";
 import logoutIcon from "../../../assets/icons/menu/svg/icon-logout.svg";
@@ -91,7 +91,7 @@ export const DropdownMenu = ({
         <img
           src={isOpen ? closeIcon : menuIcon}
           alt=""
-          className={`${isOpen ? 'w-7 h-7 filter brightness-0 invert sepia-[40%] saturate-[150%] hue-rotate-[25deg] brightness-[95%]' : 'w-10 h-10'}`}
+          className={`${isOpen ? 'w-10 h-10' : 'w-10 h-10'}`}
         />
       </button>
 

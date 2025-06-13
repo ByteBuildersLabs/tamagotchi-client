@@ -1,10 +1,11 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import Slider from "react-slick";
 import { FoodCarouselProps } from '../../../types/feed.types';
 import { SLIDER_SETTINGS, CAROUSEL_STYLES } from '../../../../constants/feed.constants';
 import { FoodItem } from './FoodItem';
+import ArrowLeftIcon from '../../../../assets/icons/extras/icon-arrow-left.png';
+import ArrowRightIcon from '../../../../assets/icons/extras/icon-arrow-right.png';
 
 export const FoodCarousel = ({
   foods,
@@ -37,15 +38,19 @@ export const FoodCarousel = ({
       transition={{ delay: 0.4, duration: 0.5 }}
       className="fixed bottom-[calc(theme(spacing.16)+0.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30"
     >
-      <div className="flex items-center justify-center space-x-2 px-4">
+      <div className="flex items-center justify-center space-x-2 px-2">
         {/* Previous Button */}
         <motion.button
           onClick={goToPrevious}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="p-2 bg-cream/90 rounded-full shadow-lg z-40"
+          className="p-1 sm:p-1 z-40 flex items-center justify-center"
         >
-          <ChevronLeft className="h-4 w-4 text-white" />
+          <img 
+            src={ArrowLeftIcon} 
+            alt="Previous" 
+            className="h-8 w-8 sm:h-10 sm:w-12 md:h-12 md:w-12"
+          />
         </motion.button>
 
         {/* Carousel Container */}
@@ -70,9 +75,13 @@ export const FoodCarousel = ({
           onClick={goToNext}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="p-2 bg-cream/90 rounded-full shadow-lg z-40"
+          className="p-1 sm:p-1 z-40 flex items-center justify-center"
         >
-          <ChevronRight className="h-4 w-4 text-white" />
+          <img 
+            src={ArrowRightIcon} 
+            alt="Next" 
+            className="h-8 w-8 sm:h-11 sm:w-12 md:h-12 md:w-12"
+          />
         </motion.button>
       </div>
 

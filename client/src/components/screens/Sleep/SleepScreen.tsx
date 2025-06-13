@@ -9,9 +9,10 @@ import babyWorlfBeast from "../../../assets/beasts/baby-wolf.png";
 
 import extinguishedFrame0 from "../../../assets/icons/campfire/Animation/extinguished/extinguished-frame-0.png";
 import extinguishedFrame1 from "../../../assets/icons/campfire/Animation/extinguished/extinguished-frame-1.png";
-import extinguishedFrame2 from "../../../assets/icons/campfire/Animation/extinguished/extinguished-frame-2.png";
+import extinguishedFrame2 from "../../../assets/icons/campfire/Animation/extinguished/extinguished-frame-4.png";
 import extinguishedFrame3 from "../../../assets/icons/campfire/Animation/extinguished/extinguished-frame-3.png";
 import extinguishedFrame4 from "../../../assets/icons/campfire/Animation/extinguished/extinguished-frame-4.png";
+import extinguishedFrame5 from "../../../assets/icons/campfire/Animation/extinguished/extinguished-frame-5.png";
 
 import litFrame0 from "../../../assets/icons/campfire/Animation/lit/lit-frame-0.png";
 import litFrame1 from "../../../assets/icons/campfire/Animation/lit/lit-frame-1.png";
@@ -19,6 +20,8 @@ import litFrame2 from "../../../assets/icons/campfire/Animation/lit/lit-frame-2.
 import litFrame3 from "../../../assets/icons/campfire/Animation/lit/lit-frame-3.png";
 import litFrame4 from "../../../assets/icons/campfire/Animation/lit/lit-frame-4.png";
 import litFrame5 from "../../../assets/icons/campfire/Animation/lit/lit-frame-5.png";
+
+import trunkIcon from "../../../assets/icons/campfire/icon-trunk.png";
 
 interface SleepScreenProps {
   onNavigation: (screen: Screen) => void;
@@ -36,6 +39,7 @@ export const SleepScreen = ({ }: SleepScreenProps) => {
     extinguishedFrame2,
     extinguishedFrame3,
     extinguishedFrame4,
+    extinguishedFrame5,
   ];
 
   const litFrames = [
@@ -59,7 +63,7 @@ export const SleepScreen = ({ }: SleepScreenProps) => {
 
     const interval = setInterval(() => {
       setFrameIndex((prev) => (prev + 1) % extinguishedFrames.length);
-    }, 300);
+    }, 700);
 
     return () => clearInterval(interval);
   }, [hasMultipleExtinguishedFrames, isAnimating]);
@@ -70,7 +74,7 @@ export const SleepScreen = ({ }: SleepScreenProps) => {
 
     const interval = setInterval(() => {
       setLitFrameIndex((prev) => (prev + 1) % litFrames.length);
-    }, 200);
+    }, 700);
 
     return () => clearInterval(interval);
   }, [hasMultipleLitFrames, isLitAnimating]);
@@ -91,31 +95,42 @@ export const SleepScreen = ({ }: SleepScreenProps) => {
       },
     },
     whileHover: { scale: 1.03, rotate: 2 },
-    dragConstraints: { left: -30, right: 30, top: -20, bottom: 20 },
-    dragElastic: 0.1,
   };
 
   const campFireAnimation = {
     initial: { scale: 0.3, opacity: 0, rotate: -15 },
     animate: {
-      scale: [1, 1.05, 1],
+      scale: 1,
       opacity: 1,
       rotate: 0,
       transition: {
-        scale: {
-          repeat: Infinity,
-          repeatType: "loop",
-          duration: 1.5,
-          ease: "easeInOut",
-          delay: 0.6,
-        },
+        type: "spring",   // puedes mantener un spring o simplemente quitar el scale transition
+        stiffness: 100,
+        damping: 10,
+        delay: 0.6,
         opacity: { delay: 0.6, duration: 0.4 },
         rotate: { delay: 0.6, duration: 0.5 },
       },
     },
     whileHover: { scale: 1.03, rotate: 2 },
-    dragConstraints: { left: -30, right: 30, top: -20, bottom: 20 },
-    dragElastic: 0.1,
+  };
+
+  const trunkAnimation = {
+    initial: { scale: 0.3, opacity: 0, rotate: -15 },
+    animate: {
+      scale: 1,
+      opacity: 1,
+      rotate: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 10,
+        delay: 0.6,
+        scale: { delay: 0.6, duration: 0.5 },
+        opacity: { delay: 0.6, duration: 0.4 },
+      },
+    },
+    whileHover: { scale: 1.03, rotate: 2 },
   };
 
   const [isCampfireOn, setIsCampfireOn] = useState(true);
@@ -176,22 +191,32 @@ export const SleepScreen = ({ }: SleepScreenProps) => {
           initial={beastAnimation.initial}
           animate={beastAnimation.animate}
           whileHover={beastAnimation.whileHover}
-          drag
-          dragConstraints={beastAnimation.dragConstraints}
-          dragElastic={beastAnimation.dragElastic}
         />
-        <motion.img
-          src={isCampfireOn ? litFrames[litFrameIndex] : extinguishedFrames[frameIndex]}
-          alt="Camp Fire"
-          className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto"
-          initial={campFireAnimation.initial}
-          animate={{ ...campFireAnimation.animate, y: 40 }}
-          whileHover={campFireAnimation.whileHover}
-          onClick={handleCampfireClick}
-          drag
-          dragConstraints={campFireAnimation.dragConstraints}
-          dragElastic={campFireAnimation.dragElastic}
-        />
+
+        {/* Campfire Container */}
+        <div className="relative h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] pointer-events-auto flex flex-col items-center justify-end">
+          {/* Trunk (base layer) */}
+          <motion.img
+            src={trunkIcon}
+            alt="Campfire Trunk"
+            className="absolute bottom-0 h-1/2 w-2/3 sm:h-3/5 sm:w-3/4 md:h-2/3 md:w-4/5 lg:h-3/4 lg:w-5/6 object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] z-10"
+            initial={trunkAnimation.initial}
+            animate={trunkAnimation.animate}
+            whileHover={trunkAnimation.whileHover}
+            onClick={handleCampfireClick}
+          />
+
+          {/* Fire/Smoke Animation (on top of trunk) */}
+          <motion.img
+            src={isCampfireOn ? litFrames[litFrameIndex] : extinguishedFrames[frameIndex]}
+            alt="Camp Fire"
+            className="absolute bottom-[20%] h-3/4 w-3/4 sm:h-4/5 sm:w-4/5 md:h-full md:w-full object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] z-20"
+            initial={campFireAnimation.initial}
+            animate={campFireAnimation.animate}
+            whileHover={campFireAnimation.whileHover}
+            onClick={handleCampfireClick}
+          />
+        </div>
       </div>
     </div>
   );

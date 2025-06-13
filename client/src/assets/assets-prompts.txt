@@ -1,0 +1,47 @@
+egg dragon:
+
+A 3D cartoon-style magical egg with a smooth, light cream-colored shell and a glossy finish, inspired by Pokémon GO-style egg design. On the front is a large red-orange flame symbol representing the fire-type dragon beast. Around the symbol, small glowing orange sparkles or ember-like dots are scattered naturally. The shell is clean and uniform, with no dark patches or rough spots. No glow, no background, no shadows. Transparent PNG, 48x48px. Designed as the fire-type tamagotchi egg for a fantasy creature game.
+
+frames:
+
+Frame 1 – Huevo intacto (estado inicial)
+"A 3D cartoon-style magical egg with a smooth light cream-colored shell and glossy finish. On the front is a large red-orange flame symbol, with small glowing ember-like orange dots scattered naturally. The egg surface is clean and uniform with no cracks. No glow, no background. Transparent PNG, 48x48px. First frame of the fire-type tamagotchi egg hatching sequence."
+
+Frame 2 – Primeras grietas
+"Same fire-type egg as frame 1, now showing two fine cracks beginning at the top of the shell. The flame symbol and ember particles remain intact. No glow, no background. Transparent PNG, 48x48px. Second frame of the fire egg hatching sequence."
+
+Frame 3 – Grietas mágicas y chispa interna
+"The egg now has more pronounced cracks extending downward from the top. A soft red-orange glow leaks faintly through the cracks. Some shell pieces start to lift slightly. The rest of the egg remains intact. Glossy cartoon finish, no background. Transparent PNG, 48x48px. Third frame of the fire egg hatching animation."
+
+Frame 4 – Fragmentación visible
+"The upper shell has broken more, with small pieces beginning to separate and a magical orange glow softly radiating from the inside. Ember particles are subtly visible around the cracks. The flame symbol is partly obscured. Transparent PNG, 48x48px. Fourth frame of the fire egg hatching sequence."
+
+Frame 5 – Ruptura activa
+"The egg is breaking apart at the top, with visible shell fragments floating or falling. A fiery magical light glows from the interior. The bottom half is still intact. No creature visible yet. Transparent PNG, 48x48px. Fifth frame of the fire egg animation."
+
+Frame 6 – Cascarón roto
+"The egg is fully broken, with shell pieces around the base. A warm orange magical mist floats above the remains, with a dark dragon-shaped silhouette beginning to emerge. Glossy cartoon rendering, no background. Transparent PNG, 48x48px. Final frame of fire egg hatching."
+
+water egg:
+
+A 3D cartoon-style magical egg with a clean, light pearl-colored shell and a polished glossy surface, styled like Pokémon GO eggs. The egg has a large cyan blue water droplet symbol on the front, with small glowing aqua dots or ripple-like markings scattered subtly around it. The egg's surface is smooth and spotless, with no black patches or shadows. No background, no glow. Transparent PNG, 48x48px. Designed as the water-type tamagotchi egg for a magical forest creature game.
+
+frames:
+
+Frame 1 – Huevo intacto (estado inicial)
+"A 3D cartoon-style magical egg with a clean light pearl-colored shell and glossy finish. A large cyan-blue water droplet symbol is on the front, with small glowing blue ripple-like dots scattered around. No cracks, no damage. Transparent PNG, 48x48px. First frame of the water-type tamagotchi egg hatching sequence."
+
+Frame 2 – Primeras grietas
+"Same water-type egg, now with two soft cracks forming near the top. The water droplet and ripple dots remain undisturbed. No glow or background. Transparent PNG, 48x48px. Second frame of the water egg hatching animation."
+
+Frame 3 – Grietas con brillo acuático
+"More visible cracks stretch downward, and soft blue light begins to glow from within. The surface around the cracks appears slightly misty. Some shell fragments start to loosen. Glossy cartoon style, no background. Transparent PNG, 48x48px. Third frame of the water egg hatching sequence."
+
+Frame 4 – Fragmentos se separan
+"The top of the egg begins to break with floating shell pieces and a subtle water shimmer effect escaping from inside. The symbol is partially covered. No glow, no characters. Transparent PNG, 48x48px. Fourth frame of the hatching sequence."
+
+Frame 5 – Apertura con niebla azul
+"The top half of the egg is visibly breaking apart with blue mist and magical droplets floating upward. The lower shell remains intact. No creature yet visible. Transparent PNG, 48x48px. Fifth frame of the water egg hatching."
+
+Frame 6 – Cascarón roto
+"The egg is fully cracked, with shell fragments at the base and a glowing cyan mist rising. A subtle aquatic silhouette of the tamagotchi creature (serpent-like) is barely visible. No background, no effects. Transparent PNG, 48x48px. Final frame of water egg hatching."
