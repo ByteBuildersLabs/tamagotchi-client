@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef } from "react";
 import { motion } from "framer-motion";
+import Slider from "react-slick";
 import { TamagotchiTopBar } from "../../layout/TopBar";
 import { NavBar } from "../../layout/NavBar";
 import type { Screen } from "../../types/screens";
@@ -8,6 +9,8 @@ import babyWorlfBeast from "../../../assets/beasts/baby-wolf.png";
 import playBackground from "../../../assets/backgrounds/bg-play.png";
 import flappyGameIcon from "../../../assets/icons/games/flappy.png";
 import platformGameIcon from "../../../assets/icons/games/platform.png";
+import ArrowLeftIcon from "../../../assets/icons/extras/icon-arrow-left.png";
+import ArrowRightIcon from "../../../assets/icons/extras/icon-arrow-right.png";
 
 interface PlayScreenProps {
   onNavigation: (screen: Screen) => void;
@@ -30,8 +33,65 @@ const miniGames = [
   }
 ];
 
+// Slider settings for mini-games carousel
+const GAME_SLIDER_SETTINGS = {
+  dots: true,
+  infinite: miniGames.length > 1,
+  speed: 500,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  arrows: false,
+  autoplay: false,
+  centerMode: false,
+  variableWidth: false,
+  responsive: [
+    {
+      breakpoint: 1024,
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1,
+      }
+    },
+    {
+      breakpoint: 768,
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1,
+      }
+    }
+  ]
+};
+
+// Minimal custom styles - solo para elementos que react-slick controla
+const GAME_CAROUSEL_STYLES = `
+  .slick-dots {
+    bottom: -40px !important;
+    display: flex !important;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .slick-dots li button {
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    border: none !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .slick-dots li.slick-active button {
+    background: rgba(255, 255, 255, 0.8) !important;
+    transform: scale(1.2);
+  }
+
+  .slick-dots li button:before {
+    display: none !important;
+  }
+`;
+
 export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
-  const [currentGameIndex, setCurrentGameIndex] = useState(0);
+  const sliderRef = useRef<Slider>(null);
 
   const handleMiniGameSelect = (gameId: string) => {
     console.log(`Selected mini-game: ${gameId}`);
@@ -39,12 +99,12 @@ export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
     // navigate(miniGames.find(game => game.id === gameId)?.route || "/play");
   };
 
-  const nextGame = () => {
-    setCurrentGameIndex((prev) => (prev + 1) % miniGames.length);
+  const goToPrevious = () => {
+    sliderRef.current?.slickPrev();
   };
 
-  const prevGame = () => {
-    setCurrentGameIndex((prev) => (prev - 1 + miniGames.length) % miniGames.length);
+  const goToNext = () => {
+    sliderRef.current?.slickNext();
   };
 
   const beastAnimation = {
@@ -113,64 +173,74 @@ export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0, transition: { delay: 0.8, duration: 0.6, ease: "easeOut" } }}
-        className="w-full max-w-sm px-4 pb-24 z-10"
+        className="w-full max-w-sm px-2 pb-32 z-10"
       >
-        <div className="relative">
-          {/* Game Cards */}
-          <div className="overflow-hidden">
-            <motion.div
-              className="flex"
-              animate={{ x: `-${currentGameIndex * 100}%` }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        <div className="flex items-center justify-center space-x-1">
+          {/* Previous Button */}
+          {miniGames.length > 1 && (
+            <motion.button
+              onClick={goToPrevious}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="z-40 flex items-center justify-center"
             >
+              <img 
+                src={ArrowLeftIcon} 
+                alt="Previous" 
+                className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14"
+              />
+            </motion.button>
+          )}
+
+          {/* Carousel Container */}
+          <div className="w-full max-w-[280px] h-32">
+            <Slider ref={sliderRef} {...GAME_SLIDER_SETTINGS}>
               {miniGames.map((game) => (
-                <div key={game.id} className="w-full flex-shrink-0 px-2">
+                <div key={game.id} className="px-2">
                   <div
                     onClick={() => handleMiniGameSelect(game.id)}
                     className="flex flex-col items-center cursor-pointer"
                   >
-                    <div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center bg-gray-800/60 backdrop-blur-sm rounded-xl shadow-lg mb-3">
+                    <motion.div 
+                      className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center mb-3"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
                       <img
                         src={game.icon}
                         alt={game.title}
                         className="w-16 h-16 md:w-20 md:h-20 object-contain"
                       />
-                    </div>
+                    </motion.div>
                     <p className="text-sm md:text-base font-rubik font-semibold text-cream text-center drop-shadow-sm">
                       {game.title}
                     </p>
                   </div>
                 </div>
               ))}
-            </motion.div>
+            </Slider>
           </div>
 
-          {/* Navigation Arrows */}
+          {/* Next Button */}
           {miniGames.length > 1 && (
-            <>
-              <button
-                onClick={prevGame}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-2 bg-gray-900/70 backdrop-blur-sm rounded-full p-3 shadow-lg z-10 hover:bg-gray-900/80 transition-colors duration-200"
-                aria-label="Previous Game"
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-
-              <button
-                onClick={nextGame}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-2 bg-gray-900/70 backdrop-blur-sm rounded-full p-3 shadow-lg z-10 hover:bg-gray-900/80 transition-colors duration-200"
-                aria-label="Next Game"
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </>
+            <motion.button
+              onClick={goToNext}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="z-40 flex items-center justify-center"
+            >
+              <img 
+                src={ArrowRightIcon} 
+                alt="Next" 
+                className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14"
+              />
+            </motion.button>
           )}
         </div>
       </motion.div>
+
+      {/* Custom Carousel Dots Styling */}
+      <style>{GAME_CAROUSEL_STYLES}</style>
 
       {/* Navigation Bar */}
       <NavBar onNavigation={onNavigation} activeTab="play" />
