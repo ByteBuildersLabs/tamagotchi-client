@@ -10,11 +10,11 @@ import { loadSlim } from "@tsparticles/slim";
 
 interface RainParticlesProps {
   isActive: boolean;
-  duration?: number; // duración en segundos
+  duration: number; // in seconds
   onComplete?: () => void;
 }
 
-function RainParticles({ isActive, duration = 5, onComplete }: RainParticlesProps): JSX.Element | null {
+function RainParticles({ isActive, duration, onComplete }: RainParticlesProps): JSX.Element | null {
   const [engineLoaded, setEngineLoaded] = useState(false);
   const [showRain, setShowRain] = useState(false);
 
@@ -23,12 +23,10 @@ function RainParticles({ isActive, duration = 5, onComplete }: RainParticlesProp
       .then(() => setEngineLoaded(true));
   }, []);
 
-  // Controla la activación y desactivación de la lluvia
   useEffect(() => {
     if (isActive) {
       setShowRain(true);
       
-      // Timer para detener la lluvia después de la duración especificada
       const timer = setTimeout(() => {
         setShowRain(false);
         if (onComplete) {
@@ -78,18 +76,17 @@ function RainParticles({ isActive, duration = 5, onComplete }: RainParticlesProp
           },
         },
         number: {
-          value: 150,
+          value: 80,
           density: {
-            enable: true,
-            area: 800,
+            enable: false,
           },
         },
         opacity: {
-          value: { min: 0.4, max: 0.8 },
+          value: { min: 0.5, max: 0.9 },
           animation: {
             enable: true,
             speed: { min: 1, max: 3 },
-            minimumValue: 0.1,
+            minimumValue: 0.2,
             sync: false,
           },
         },
@@ -97,32 +94,32 @@ function RainParticles({ isActive, duration = 5, onComplete }: RainParticlesProp
           type: "line",
           options: {
             line: {
-              length: { min: 8, max: 20 },
+              length: { min: 10, max: 25 },
             },
           },
         },
         size: {
-          value: { min: 0.5, max: 1.5 },
+          value: { min: 0.8, max: 2 },
           animation: {
             enable: false,
           },
         },
         stroke: {
-          width: { min: 0.5, max: 1.2 },
+          width: { min: 0.8, max: 1.5 },
         },
         rotate: {
-          value: { min: 0, max: 10 },
+          value: { min: -5, max: 5 },
           direction: "random",
           animation: {
             enable: true,
-            speed: { min: 1, max: 3 },
+            speed: { min: 2, max: 5 },
             sync: false,
           },
         },
         life: {
           duration: {
             sync: false,
-            value: { min: 3, max: 7 },
+            value: { min: 2, max: 4 },
           },
           count: 1,
         },
@@ -135,28 +132,26 @@ function RainParticles({ isActive, duration = 5, onComplete }: RainParticlesProp
           },
         },
       },
-      emitters: [
-        {
-          direction: MoveDirection.bottom,
-          life: {
-            count: 0,
-            duration: duration,
-            delay: 0,
-          },
-          rate: {
-            delay: 0.01,
-            quantity: 3,
-          },
-          position: {
-            x: 50,
-            y: -5,
-          },
-          size: {
-            width: 100,
-            height: 0,
-          },
+      emitters: {
+        direction: MoveDirection.bottom,
+        life: {
+          count: 0,
+          duration: duration * 1000, 
+          delay: 0,
         },
-      ],
+        rate: {
+          delay: 0.1,
+          quantity: 8,
+        },
+        position: {
+          x: 50,
+          y: 30,
+        },
+        size: {
+          width: 25,
+          height: 5,
+        },
+      },
     }),
     [duration]
   );

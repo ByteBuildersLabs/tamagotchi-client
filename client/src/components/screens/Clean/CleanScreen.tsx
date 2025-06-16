@@ -7,57 +7,21 @@ import { motion } from "framer-motion";
 import type { Screen } from "../../types/screens";
 
 import babyWorlfBeast from "../../../assets/beasts/baby-wolf.png";
-
-import cloudFrame0 from "../../../assets/icons/cloud/Animation/icon-cloud-frame-0.png";
-import cloudFrame1 from "../../../assets/icons/cloud/Animation/icon-cloud-frame-1.png";
-import cloudFrame2 from "../../../assets/icons/cloud/Animation/icon-cloud-frame-2.png";
-import cloudFrame3 from "../../../assets/icons/cloud/Animation/icon-cloud-frame-3.png";
-import cloudFrame4 from "../../../assets/icons/cloud/Animation/icon-cloud-frame-4.png";
-import cloudFrame5 from "../../../assets/icons/cloud/Animation/icon-cloud-frame-5.png";
-import cloudFrame6 from "../../../assets/icons/cloud/Animation/icon-cloud-frame-6.png";
-
 import cloudOff from "../../../assets/icons/cloud/icon-cloud.png";
 
 interface CleanScreenProps {
   onNavigation: (screen: Screen) => void;
   playerAddress: string;
+  rainDuration?: number;
 }
 
-export const CleanScreen = ({ }: CleanScreenProps) => {
-  const [frameIndex, setFrameIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
+export const CleanScreen = ({ rainDuration = 20 }: CleanScreenProps) => {
   const [isRainActive, setIsRainActive] = useState(false);
 
-  const cloudFrames = [
-    cloudFrame0,
-    cloudFrame1,
-    cloudFrame2,
-    cloudFrame3,
-    cloudFrame4,
-    cloudFrame5,
-    cloudFrame6
-  ];
-
-  const cloudOffFrames = [
-    cloudOff
-  ];
-
-  const hasMultiplecloudFrames = cloudFrames.length > 1;
+  const cloudOffFrames = [cloudOff];
   const hasMultiplecloudOffFrames = cloudOffFrames.length > 1;
-
   const [cloudOffFrameIndex, setcloudOffFrameIndex] = useState(0);
   const [iscloudOffAnimating, setIscloudOffAnimating] = useState(true);
-
-  // Animate the cloud frames
-  useEffect(() => {
-    if (!hasMultiplecloudFrames || !isAnimating) return;
-
-    const interval = setInterval(() => {
-      setFrameIndex((prev) => (prev + 1) % cloudFrames.length);
-    }, 300);
-
-    return () => clearInterval(interval);
-  }, [hasMultiplecloudFrames, isAnimating]);
 
   // Animate the cloudOff frames
   useEffect(() => {
@@ -113,18 +77,12 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
 
   const handlecloudClick = () => {
     if (iscloudOn) {
-      setIsAnimating(true); // Start cloud animation
-      setFrameIndex(0); // Reset to the first cloud frame
-      setIscloudOffAnimating(false); // Stop cloudOff animation
-      setcloudOffFrameIndex(0); // Reset cloudOff frame
-      
-      // Activar la lluvia
+      setIscloudOffAnimating(false);
+      setcloudOffFrameIndex(0);
       setIsRainActive(true);
     } else {
-      setIsAnimating(false); // Stop cloud animation
-      setFrameIndex(0); // Reset cloud frame
-      setIscloudOffAnimating(true); // Start cloudOff animation
-      setcloudOffFrameIndex(0); // Reset to the first cloudOff frame
+      setIscloudOffAnimating(true);
+      setcloudOffFrameIndex(0);
     }
     setIscloudOn(!iscloudOn);
   };
@@ -132,8 +90,7 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
   const handleRainComplete = () => {
     setIsRainActive(false);
     console.log("Rain animation completed!");
-    // Aquí puedes agregar lógica adicional cuando termine la lluvia
-    // Por ejemplo, actualizar el estado de limpieza del beast
+    // Additional logic when rain finishes
   };
 
   return (
@@ -149,23 +106,22 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
       {/* Magical Sparkle Particles */}
       <MagicalSparkleParticles />
 
-      {/* Rain Particles */}
-      <RainParticles 
-        isActive={isRainActive} 
-        duration={5} 
+      {/* Rain Particles with dynamic duration */}
+      <RainParticles
+        isActive={isRainActive}
+        duration={rainDuration}
         onComplete={handleRainComplete}
       />
 
-      {/* Top Bar with Coins, Gems, and Status */}
+      {/* Top Bar */}
       <TamagotchiTopBar
         coins={12345}
         gems={678}
         status={{ energy: 85, hunger: 60, happiness: 75, hygiene: 90 }}
       />
 
-      {/* Contenedor principal: título, nube y beast */}
+      {/* Main content */}
       <div className="flex flex-col items-center mt-8 space-y-6 z-10 pointer-events-none select-none">
-        {/* Clean Title */}
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -175,9 +131,8 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
           Clean Your Beast
         </motion.h1>
 
-        {/* Cloud */}
         <motion.img
-          src={iscloudOn ? cloudOffFrames[cloudOffFrameIndex] : cloudFrames[frameIndex]}
+          src={cloudOffFrames[cloudOffFrameIndex]}
           alt="Cloud"
           className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto cursor-pointer"
           initial={cloudAnimation.initial}
@@ -187,7 +142,6 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
           onClick={handlecloudClick}
         />
 
-        {/* Beast */}
         <motion.img
           src={babyWorlfBeast}
           alt="Tamagotchi Beast"
