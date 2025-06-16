@@ -2,7 +2,7 @@ import { TamagotchiTopBar } from "../../layout/TopBar";
 import { useState, useEffect } from "react";
 import cleanBackground from "../../../assets/backgrounds/bg-clean.png";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
-// import RainingParticles from "../../shared/RainingParticles";
+import RainParticles from "./RainParticles";
 import { motion } from "framer-motion";
 import type { Screen } from "../../types/screens";
 
@@ -18,16 +18,15 @@ import cloudFrame6 from "../../../assets/icons/cloud/Animation/icon-cloud-frame-
 
 import cloudOff from "../../../assets/icons/cloud/icon-cloud.png";
 
-
 interface CleanScreenProps {
   onNavigation: (screen: Screen) => void;
   playerAddress: string;
 }
 
 export const CleanScreen = ({ }: CleanScreenProps) => {
-
   const [frameIndex, setFrameIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isRainActive, setIsRainActive] = useState(false);
 
   const cloudFrames = [
     cloudFrame0,
@@ -118,6 +117,9 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
       setFrameIndex(0); // Reset to the first cloud frame
       setIscloudOffAnimating(false); // Stop cloudOff animation
       setcloudOffFrameIndex(0); // Reset cloudOff frame
+      
+      // Activar la lluvia
+      setIsRainActive(true);
     } else {
       setIsAnimating(false); // Stop cloud animation
       setFrameIndex(0); // Reset cloud frame
@@ -125,6 +127,13 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
       setcloudOffFrameIndex(0); // Reset to the first cloudOff frame
     }
     setIscloudOn(!iscloudOn);
+  };
+
+  const handleRainComplete = () => {
+    setIsRainActive(false);
+    console.log("Rain animation completed!");
+    // Aquí puedes agregar lógica adicional cuando termine la lluvia
+    // Por ejemplo, actualizar el estado de limpieza del beast
   };
 
   return (
@@ -139,6 +148,13 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
     >
       {/* Magical Sparkle Particles */}
       <MagicalSparkleParticles />
+
+      {/* Rain Particles */}
+      <RainParticles 
+        isActive={isRainActive} 
+        duration={5} 
+        onComplete={handleRainComplete}
+      />
 
       {/* Top Bar with Coins, Gems, and Status */}
       <TamagotchiTopBar
@@ -163,10 +179,11 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
         <motion.img
           src={iscloudOn ? cloudOffFrames[cloudOffFrameIndex] : cloudFrames[frameIndex]}
           alt="Cloud"
-          className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto"
+          className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto cursor-pointer"
           initial={cloudAnimation.initial}
           animate={{ ...cloudAnimation.animate, y: 10 }}
           whileHover={cloudAnimation.whileHover}
+          whileTap={{ scale: 0.95 }}
           onClick={handlecloudClick}
         />
 
@@ -182,5 +199,4 @@ export const CleanScreen = ({ }: CleanScreenProps) => {
       </div>
     </div>
   );
-
 };
