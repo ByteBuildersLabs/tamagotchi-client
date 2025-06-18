@@ -1,10 +1,18 @@
 import { TamagotchiTopBar } from "../../layout/TopBar";
-import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import sleepBackground from "../../../assets/backgrounds/bg-sleep.png";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
-import { motion } from "framer-motion";
-import type { Screen } from "../../types/screens";
+import { SleepScreenProps } from "../../types/sleep.types";
 
+// Hooks
+import { useCampfireAnimation } from "./components/hooks/useCampfireAnimation";
+import { useCampfireState } from "./components/hooks/useCampfireState";
+
+// Components
+import { CampfireController } from "./components/CampfireController";
+import { BeastSleepDisplay } from "./components/BeastDisplay";
+
+// Assets
 import babyWorlfBeast from "../../../assets/beasts/baby-wolf.png";
 
 import extinguishedFrame0 from "../../../assets/icons/campfire/Animation/extinguished/extinguished-frame-0.png";
@@ -23,16 +31,8 @@ import litFrame5 from "../../../assets/icons/campfire/Animation/lit/lit-frame-5.
 
 import trunkIcon from "../../../assets/icons/campfire/icon-trunk.png";
 
-interface SleepScreenProps {
-  onNavigation: (screen: Screen) => void;
-  playerAddress: string;
-}
-
-export const SleepScreen = ({ }: SleepScreenProps) => {
-
-  const [frameIndex, setFrameIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-
+export const SleepScreen = ({}: SleepScreenProps) => {
+  // Frame configuration
   const extinguishedFrames = [
     extinguishedFrame0,
     extinguishedFrame1,
@@ -51,103 +51,27 @@ export const SleepScreen = ({ }: SleepScreenProps) => {
     litFrame5,
   ];
 
-  const hasMultipleExtinguishedFrames = extinguishedFrames.length > 1;
-  const hasMultipleLitFrames = litFrames.length > 1;
-
-  const [litFrameIndex, setLitFrameIndex] = useState(0);
-  const [isLitAnimating, setIsLitAnimating] = useState(true);
-
-  // Animate the extinguished frames
-  useEffect(() => {
-    if (!hasMultipleExtinguishedFrames || !isAnimating) return;
-
-    const interval = setInterval(() => {
-      setFrameIndex((prev) => (prev + 1) % extinguishedFrames.length);
-    }, 700);
-
-    return () => clearInterval(interval);
-  }, [hasMultipleExtinguishedFrames, isAnimating]);
-
-  // Animate the lit frames
-  useEffect(() => {
-    if (!hasMultipleLitFrames || !isLitAnimating) return;
-
-    const interval = setInterval(() => {
-      setLitFrameIndex((prev) => (prev + 1) % litFrames.length);
-    }, 700);
-
-    return () => clearInterval(interval);
-  }, [hasMultipleLitFrames, isLitAnimating]);
-
-  const beastAnimation = {
-    initial: { scale: 0.3, opacity: 0, rotate: -15 },
-    animate: {
-      scale: 1,
-      opacity: 1,
-      rotate: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 10,
-        delay: 0.6,
-        scale: { delay: 0.6, duration: 0.5 },
-        opacity: { delay: 0.6, duration: 0.4 },
-      },
-    },
-    whileHover: { scale: 1.03, rotate: 2 },
-  };
-
-  const campFireAnimation = {
-    initial: { scale: 0.3, opacity: 0, rotate: -15 },
-    animate: {
-      scale: 1,
-      opacity: 1,
-      rotate: 0,
-      transition: {
-        type: "spring",   // puedes mantener un spring o simplemente quitar el scale transition
-        stiffness: 100,
-        damping: 10,
-        delay: 0.6,
-        opacity: { delay: 0.6, duration: 0.4 },
-        rotate: { delay: 0.6, duration: 0.5 },
-      },
-    },
-    whileHover: { scale: 1.03, rotate: 2 },
-  };
-
-  const trunkAnimation = {
-    initial: { scale: 0.3, opacity: 0, rotate: -15 },
-    animate: {
-      scale: 1,
-      opacity: 1,
-      rotate: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 10,
-        delay: 0.6,
-        scale: { delay: 0.6, duration: 0.5 },
-        opacity: { delay: 0.6, duration: 0.4 },
-      },
-    },
-    whileHover: { scale: 1.03, rotate: 2 },
-  };
-
-  const [isCampfireOn, setIsCampfireOn] = useState(true);
+  // Custom hooks
+  const { isCampfireOn, toggleCampfire } = useCampfireState();
+  
+  const {
+    litFrameIndex,
+    extinguishedFrameIndex,
+    startLitAnimation,
+    startExtinguishedAnimation
+  } = useCampfireAnimation({
+    litFrames,
+    extinguishedFrames,
+    animationInterval: 700
+  });
 
   const handleCampfireClick = () => {
     if (isCampfireOn) {
-      setIsAnimating(true); // Start extinguished animation
-      setFrameIndex(0); // Reset to the first extinguished frame
-      setIsLitAnimating(false); // Stop lit animation
-      setLitFrameIndex(0); // Reset lit frame
+      startExtinguishedAnimation();
     } else {
-      setIsAnimating(false); // Stop extinguished animation
-      setFrameIndex(0); // Reset extinguished frame
-      setIsLitAnimating(true); // Start lit animation
-      setLitFrameIndex(0); // Reset to the first lit frame
+      startLitAnimation();
     }
-    setIsCampfireOn(!isCampfireOn);
+    toggleCampfire();
   };
 
   return (
@@ -163,7 +87,7 @@ export const SleepScreen = ({ }: SleepScreenProps) => {
       {/* Magical Sparkle Particles */}
       <MagicalSparkleParticles />
 
-      {/* Top Bar with Coins, Gems, and Status */}
+      {/* Top Bar */}
       <TamagotchiTopBar
         coins={12345}
         gems={678}
@@ -184,39 +108,20 @@ export const SleepScreen = ({ }: SleepScreenProps) => {
 
       {/* Center: Beast and Campfire together */}
       <div className="flex-grow flex items-center justify-center w-full pointer-events-none select-none z-0 relative">
-        <motion.img
-          src={babyWorlfBeast}
-          alt="Tamagotchi Beast"
-          className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto"
-          initial={beastAnimation.initial}
-          animate={beastAnimation.animate}
-          whileHover={beastAnimation.whileHover}
+        <BeastSleepDisplay 
+          beastImage={babyWorlfBeast}
+          altText="Tamagotchi Beast"
         />
 
-        {/* Campfire Container */}
-        <div className="relative h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] pointer-events-auto flex flex-col items-center justify-end">
-          {/* Trunk (base layer) */}
-          <motion.img
-            src={trunkIcon}
-            alt="Campfire Trunk"
-            className="absolute bottom-0 h-1/2 w-2/3 sm:h-3/5 sm:w-3/4 md:h-2/3 md:w-4/5 lg:h-3/4 lg:w-5/6 object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] z-10"
-            initial={trunkAnimation.initial}
-            animate={trunkAnimation.animate}
-            whileHover={trunkAnimation.whileHover}
-            onClick={handleCampfireClick}
-          />
-
-          {/* Fire/Smoke Animation (on top of trunk) */}
-          <motion.img
-            src={isCampfireOn ? litFrames[litFrameIndex] : extinguishedFrames[frameIndex]}
-            alt="Camp Fire"
-            className="absolute bottom-[20%] h-3/4 w-3/4 sm:h-4/5 sm:w-4/5 md:h-full md:w-full object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] z-20"
-            initial={campFireAnimation.initial}
-            animate={campFireAnimation.animate}
-            whileHover={campFireAnimation.whileHover}
-            onClick={handleCampfireClick}
-          />
-        </div>
+        <CampfireController
+          isCampfireOn={isCampfireOn}
+          onCampfireClick={handleCampfireClick}
+          litFrames={litFrames}
+          extinguishedFrames={extinguishedFrames}
+          litFrameIndex={litFrameIndex}
+          extinguishedFrameIndex={extinguishedFrameIndex}
+          trunkImage={trunkIcon}
+        />
       </div>
     </div>
   );
