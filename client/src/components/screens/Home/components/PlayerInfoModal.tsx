@@ -2,11 +2,11 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 // Import assets
-import bannerImg from "../../../assets/banners/banner-dragon.png";
-import medalIcon from "../../../assets/icons/ranking/icon-ranking.webp";
-import beastIcon from "../../../assets/icons/profile/beast.png";
-import editIcon from "../../../assets/icons/profile/edit.png";
-import dailyStreakIcon from "../../../assets/icons/dailyStreak/icon-daily-streak.webp";
+import bannerImg from "../../../../assets/banners/banner-dragon.png";
+import medalIcon from "../../../../assets/icons/ranking/icon-ranking.webp";
+import beastIcon from "../../../../assets/icons/profile/beast.png";
+import editIcon from "../../../../assets/icons/profile/edit.png";
+import dailyStreakIcon from "../../../../assets/icons/dailyStreak/icon-daily-streak.webp";
 
 interface PlayerInfoModalProps {
   isOpen: boolean;
