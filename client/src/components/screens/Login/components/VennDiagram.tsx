@@ -1,6 +1,7 @@
 import type { CircleType } from '../../../types/login.types';
 import { SVGDefinitions, BackgroundElements } from './SVGComponents';
 import { InteractiveCircles } from './InteractiveCircles';
+import { useStarknetConnect } from '../../../../dojo/hooks/useStarknetConnect';
 
 interface VennDiagramProps {
   currentCircle: CircleType;
@@ -8,10 +9,28 @@ interface VennDiagramProps {
 }
 
 export const VennDiagram = ({ currentCircle, onConnect }: VennDiagramProps) => {
+  // Get connection state for button styling
+  const { status, isConnecting } = useStarknetConnect();
+
   const handleConnect = () => {
-    console.log('Connect button clicked');
+    console.log('🎮 ByteBeasts Connect button clicked');
     onConnect?.();
   };
+
+  // Determine button state and text
+  const getButtonState = () => {
+    if (isConnecting || status === 'connecting') {
+      return { text: 'CONNECTING...', disabled: true };
+    }
+    
+    if (status === 'connected') {
+      return { text: 'CONNECTED', disabled: true };
+    }
+    
+    return { text: 'CONNECT', disabled: false };
+  };
+
+  const buttonState = getButtonState();
 
   return (
     <div className="h-screen w-full bg-screen flex flex-col items-center justify-center absolute top-0 left-0 z-10 opacity-0 translate-y-8 animate-fadeInUp">
@@ -37,18 +56,35 @@ export const VennDiagram = ({ currentCircle, onConnect }: VennDiagramProps) => {
           </svg>
         </div>
         
-        {/* Connect Button */}
+        {/* Connect Button with dynamic state */}
         <div 
           className="flex justify-center mt-8 opacity-0 translate-y-8 animate-fadeInUp"
           style={{ animationDelay: '0.6s' }}
         >
           <button
             onClick={handleConnect}
-            className="btn-cr-yellow text-lg px-8 py-3 hover:scale-105 active:scale-95 transition-transform duration-150"
+            disabled={buttonState.disabled}
+            className={`
+              text-lg px-8 py-3 transition-all duration-300 transform
+              ${buttonState.disabled 
+                ? 'btn-cr-gray cursor-not-allowed opacity-70' 
+                : 'btn-cr-yellow hover:scale-105 active:scale-95'
+              }
+            `}
           >
-            CONNECT
+            {buttonState.text}
           </button>
         </div>
+
+        {/* Loading indicator for connecting state */}
+        {isConnecting && (
+          <div className="flex justify-center mt-4">
+            <div className="flex items-center space-x-2 text-text-primary/80">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-text-primary"></div>
+              <span className="text-sm font-medium">Opening Cartridge Controller...</span>
+            </div>
+          </div>
+        )}
         
       </div>
     </div>
