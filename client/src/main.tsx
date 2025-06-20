@@ -4,12 +4,12 @@ import { posthogInstance } from "./context/PosthogConfig";
 import { PostHogProvider } from 'posthog-js/react';
 
 // Dojo & Starknet
-// import { init } from "@dojoengine/sdk";
-// import { DojoSdkProvider } from "@dojoengine/sdk/react";
-// import { dojoConfig } from "./dojo/dojoConfig";
-// import type { SchemaType } from "./dojo/bindings";
-// import { setupWorld } from "./dojo/contracts.gen";
-// import StarknetProvider from "./dojo/starknet-provider";
+import { init } from "@dojoengine/sdk";
+import { DojoSdkProvider } from "@dojoengine/sdk/react";
+import { dojoConfig } from "./dojo/dojoConfig";
+import type { SchemaType } from "./dojo/models.gen";
+import { setupWorld } from "./dojo/contracts.gen";
+import StarknetProvider from "./dojo/starknet-provider";
 
 // App Entry
 import Main from "../src/app/App";
@@ -35,27 +35,27 @@ if ("serviceWorker" in navigator) {
 
 // Init Dojo
 async function main() {
-  // const sdk = await init<SchemaType>({
-  //   client: {
-  //     toriiUrl: dojoConfig.toriiUrl,
-  //     relayUrl: dojoConfig.relayUrl,
-  //     worldAddress: dojoConfig.manifest.world.address,
-  //   },
-  //   domain: {
-  //     name: "ByteBeasts Tamagotchi",
-  //     version: "1.0",
-  //     chainId: "KATANA",
-  //     revision: "1",
-  //   },
-  // });
+  const sdk = await init<SchemaType>({
+    client: {
+      toriiUrl: dojoConfig.toriiUrl,
+      relayUrl: dojoConfig.relayUrl,
+      worldAddress: dojoConfig.manifest.world.address,
+    },
+    domain: {
+      name: "ByteBeasts Tamagotchi",
+      version: "1.0",
+      chainId: "KATANA",
+      revision: "1",
+    },
+  });
 
   const rootElement = document.getElementById("root");
   if (!rootElement) throw new Error("Root element not found");
 
   createRoot(rootElement).render(
     <StrictMode>
-        {/* <DojoSdkProvider sdk={sdk} dojoConfig={dojoConfig} clientFn={setupWorld}>
-          <StarknetProvider> */}
+        <DojoSdkProvider sdk={sdk} dojoConfig={dojoConfig} clientFn={setupWorld}>
+          <StarknetProvider> 
           {posthogInstance.initialized && posthogInstance.client ? (
               <PostHogProvider client={posthogInstance.client}>
                 <Main />
@@ -63,8 +63,8 @@ async function main() {
             ) : (
               <Main />
             )}
-          {/* </StarknetProvider>
-        </DojoSdkProvider> */}
+          </StarknetProvider>
+        </DojoSdkProvider>
     </StrictMode>
   );
 }
