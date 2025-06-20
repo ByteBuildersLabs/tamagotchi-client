@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect, useRef } from "react";
-// import { useAccount, useDisconnect } from "@starknet-react/core";
+import { useAccount, useDisconnect } from "@starknet-react/core";
 
 // // Components
 import { ShareModal } from "./ShareModal";
@@ -29,8 +29,8 @@ export const DropdownMenu = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  // const { connector } = useAccount();
-  // const { disconnect } = useDisconnect();
+  const { connector } = useAccount();
+  const { disconnect } = useDisconnect();
 
   const toggleMenu = useCallback(() => {
     setIsOpen(prev => !prev);
@@ -53,17 +53,17 @@ export const DropdownMenu = ({
     };
   }, [isOpen]);
 
-  // const handleProfile = useCallback(() => {
-  //   if (!connector || !('controller' in connector)) {
-  //     console.error("Connector not initialized");
-  //     return;
-  //   }
-  //   if (connector.controller && typeof connector.controller === 'object' && 'openProfile' in connector.controller) {
-  //     (connector.controller as { openProfile: (profile: string) => void }).openProfile("achievements");
-  //   } else {
-  //     console.error("Connector controller is not properly initialized");
-  //   }
-  // }, [connector]);
+  const handleProfile = useCallback(() => {
+    if (!connector || !('controller' in connector)) {
+      console.error("Connector not initialized");
+      return;
+    }
+    if (connector.controller && typeof connector.controller === 'object' && 'openProfile' in connector.controller) {
+      (connector.controller as { openProfile: (profile: string) => void }).openProfile("achievements");
+    } else {
+      console.error("Connector controller is not properly initialized");
+    }
+  }, [connector]);
 
   const handleShareClick = useCallback(() => {
     setIsShareModalOpen(true);
@@ -71,7 +71,7 @@ export const DropdownMenu = ({
   }, []);
 
   const handleDisconnect = useCallback(() => {
-    // disconnect();
+    disconnect();
     setIsOpen(false);
     // Add a small delay to ensure the wallet modal is closed before navigation
     setTimeout(() => {
@@ -103,10 +103,9 @@ export const DropdownMenu = ({
           aria-orientation="vertical"
         >
           <button
-            // onClick={handleProfile}
+            onClick={handleProfile}
             className="flex items-center space-x-3 w-full hover:scale-105 transition-transform"
             role="menuitem"
-            disabled
           >
             <img src={profileIcon} alt="" className="w-5 h-5" />
             <span className="text-dark font-luckiest">Profile</span>
