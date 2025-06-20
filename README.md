@@ -1,81 +1,86 @@
-## 🌟 Overview  
-Welcome to ByteBeasts Tamagotchi Game! 🎮 This interactive web-based game brings to life the magical creatures of Etheria known as ByteBeast. 🐾 Players act as guardians responsible for nurturing and caring for their Beasts, building a unique bond, and ensuring their companion grows strong and healthy. 💖
+## 🌟 Overview
+
+Welcome to ByteBeasts Tamagotchi Game! 🎮 This interactive web-based game brings to life the magical creatures of Etheria known as ByteBeasts. 🐾 Players act as guardians responsible for nurturing and caring for their Beasts, building a unique bond, and ensuring their companion grows strong and healthy. 💖
 
 ---
 
-## 💻 Client Setup (with HTTPS)
+## 💻 Client Setup
 
-To run the frontend locally over HTTPS (required for Controller), follow these steps:
+### 🧱 Prerequisites
 
-### 1️⃣ Install mkcert  
+* **Node.js**
+* **pnpm** (recommended for managing dependencies)
+* **mkcert** (for HTTPS development)
 
-Open a terminal and run:
+Install mkcert (if you don’t have it):
 
 ```bash
 brew install mkcert
-````
-
-> *mkcert* is a simple tool for making locally-trusted development certificates.
-
----
-
-### 2️⃣ Generate Local Certificates
-
-Run the following commands in the project root (or in the `client` folder):
-
-```bash
 mkcert -install
-mkcert localhost
 ```
 
-This will generate the certificate files:
+> *mkcert* is a simple tool for creating locally-trusted development certificates.
 
-* `localhost.pem`
-* `localhost-key.pem`
+---
 
-Rename them as follows to match your desired filenames:
+## ⚡ Development Scenarios
+
+### 🌐 Run with HTTP (default)
+
+No HTTPS, simple local development:
 
 ```bash
-mv localhost.pem mkcert+1.pem
-mv localhost-key.pem mkcert+1-key.pem
+pnpm dev
 ```
 
----
-
-### 3️⃣ Update Vite Configuration
-
-In your `vite.config.ts`, update the `server` configuration to use the renamed certificate files:
-
-```ts
-import fs from 'fs';
-
-export default defineConfig({
-  server: {
-    https: {
-      key: fs.readFileSync('mkcert+1-key.pem'),
-      cert: fs.readFileSync('mkcert+1.pem'),
-    },
-  },
-});
-```
-
----
-
-### 4️⃣ Run the Development Server
-
-Make sure you're inside the `client` directory, then install dependencies and run the app:
+or explicitly:
 
 ```bash
-cd client
-pnpm install
-pnpm run dev
+pnpm dev:http
 ```
 
-> Ensure the HTTPS certificates (`mkcert+1.pem` and `mkcert+1-key.pem`) are present in the root of the `client` project.
+> This starts the Vite dev server on HTTP.
 
 ---
 
-### 🧱 Client Dependencies
+### 🔐 Run with HTTPS
 
-* Node.js (make sure it’s installed)
-* pnpm (recommended for managing dependencies)
+To develop with HTTPS (required for certain features like Controller or Service Worker testing):
+
+#### 1️⃣ Generate certificates
+
+Run:
+
+```bash
+pnpm mkcert
+```
+
+This will generate:
+
+* `dev.pem`
+* `dev-key.pem`
+
+These files will be automatically used by Vite if you run the HTTPS script.
+
+---
+
+#### 2️⃣ Run dev server with HTTPS
+
+```bash
+pnpm dev:https
+```
+
+> This will start your app at `https://localhost:3002` (or your configured port), using the generated certificates.
+
+---
+
+## ⚙️ Scripts summary
+
+| Command          | Description                                                   |
+| ---------------- | ------------------------------------------------------------- |
+| `pnpm dev`       | Run dev server over HTTP                                      |
+| `pnpm dev:http`  | Force HTTP dev server                                         |
+| `pnpm dev:https` | Run dev server with HTTPS (using mkcert certificates)         |
+| `pnpm mkcert`    | Generate local HTTPS certificates (`dev.pem` + `dev-key.pem`) |
+| `pnpm build`     | Build production assets                                       |
+| `pnpm preview`   | Preview production build locally                              |
