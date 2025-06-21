@@ -1,5 +1,6 @@
 import { useStarknetConnect } from '../../../dojo/hooks/useStarknetConnect';
 import { useSpawnPlayer } from '../../../dojo/hooks/useSpawnPlayer'; 
+import { useAccount } from '@starknet-react/core';
 import { useLoginAnimations } from './components/useLoginAnimations';
 import { UniverseView, GameView } from './components/CoverViews';
 import { VennDiagram } from './components/VennDiagram';
@@ -40,6 +41,8 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     txStatus
   } = useSpawnPlayer();
 
+  const { account } = useAccount();
+
   // Get player from store
   const storePlayer = useAppStore(state => state.player);
 
@@ -59,13 +62,13 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
    * Trigger player initialization on wallet connect
    */
   useEffect(() => {
-    if (status === 'connected' && hasTriedConnect) {
-      console.log("Wallet connected, initializing player...");
-      initializePlayer().then(result => {
-        console.log("Player initialization result:", result);
-      });
-    }
-  }, [status, hasTriedConnect, initializePlayer]);
+  if (status === 'connected' && hasTriedConnect && account) {
+    console.log("Wallet connected, initializing player...");
+    initializePlayer().then(result => {
+      console.log("Player initialization result:", result);
+    });
+  }
+}, [status, hasTriedConnect, account, initializePlayer]);
 
   /**
    * Monitor connection status and player initialization - redirect when both complete
@@ -99,14 +102,14 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
    * Handle spawn errors
    */
   useEffect(() => {
-    if (spawnError) {
-      console.error('🚨 Player spawn error:', spawnError);
-      toast.error(`Player initialization failed: ${spawnError}`, {
-        duration: 4000,
-        position: 'top-center'
-      });
-    }
-  }, [spawnError]);
+  if (spawnError && spawnError !== "Already initializing") {
+    console.error('🚨 Player spawn error:', spawnError);
+    toast.error(`Player initialization failed: ${spawnError}`, {
+      duration: 4000,
+      position: 'top-center'
+    });
+  }
+}, [spawnError]);
 
   /**
    * Show connecting/initializing state with more detail

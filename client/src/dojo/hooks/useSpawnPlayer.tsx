@@ -234,12 +234,20 @@ export const useSpawnPlayer = (): UseSpawnPlayerReturn => {
         }));
       }
       
-      setInitState(prev => ({ 
-        ...prev, 
-        error: errorMessage,
-        isInitializing: false,
-        step: 'checking'
-      }));
+      if (errorMessage !== "Already initializing") {
+        setInitState(prev => ({ 
+          ...prev, 
+          error: errorMessage,
+          isInitializing: false,
+          step: 'checking'
+        }));
+      } else {
+        setInitState(prev => ({ 
+          ...prev, 
+          isInitializing: false,
+          step: 'checking'
+        }));
+      }
 
       setIsInitializing(false);
       return { success: false, playerExists: false, error: errorMessage };
