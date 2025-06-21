@@ -1,11 +1,12 @@
 import { useStarknetConnect } from '../../../dojo/hooks/useStarknetConnect';
-// import { useSpawnPlayer } from '../../../dojo/hooks/useSpawnPlayer'; // TODO: Re-enable after beast spawn integration
+import { useSpawnPlayer } from '../../../dojo/hooks/useSpawnPlayer'; 
+import { useAccount } from '@starknet-react/core';
 import { useLoginAnimations } from './components/useLoginAnimations';
 import { UniverseView, GameView } from './components/CoverViews';
 import { VennDiagram } from './components/VennDiagram';
 import { useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-//import useAppStore from '../../../zustand/store';
+import useAppStore from '../../../zustand/store'; 
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -25,20 +26,25 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     isConnecting, 
     error: connectionError,
     address,
+    hasTriedConnect
   } = useStarknetConnect();
 
-  // TODO: Re-enable after beast spawn integration
-  // Integrate player spawn hook - TEMPORARILY DISABLED
-  // const { 
-  //   initializePlayer, 
-  //   playerExists,
-  //   completed,
-  //   isInitializing,
-  //   error: spawnError
-  // } = useSpawnPlayer();
+  // Integrate player spawn hook
+  const { 
+    initializePlayer, 
+    playerExists,
+    completed,
+    isInitializing,
+    error: spawnError,
+    currentStep,
+    txHash,
+    txStatus
+  } = useSpawnPlayer();
+
+  const { account } = useAccount();
 
   // Get player from store
-  //const storePlayer = useAppStore(state => state.player);
+  const storePlayer = useAppStore(state => state.player);
 
   /**
    * Handle connect button click - trigger Cartridge Controller
@@ -52,46 +58,32 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     }
   };
 
-  // TODO: Re-enable after beast spawn integration
   /**
-   * Trigger player initialization on wallet connect - TEMPORARILY DISABLED
-   */
-  // useEffect(() => {
-  //   if (status === 'connected' && hasTriedConnect) {
-  //     console.log("Wallet connected, initializing player...");
-  //     initializePlayer().then(result => {
-  //       console.log("Player initialization result:", result);
-  //     });
-  //   }
-  // }, [status, hasTriedConnect, initializePlayer]);
-
-  /**
-   * Monitor connection status and redirect when wallet connects
-   * TEMPORARILY SIMPLIFIED - just redirect on wallet connection
-   * TODO: Re-enable full player initialization check after beast spawn integration
+   * Trigger player initialization on wallet connect
    */
   useEffect(() => {
-    // Temporarily simplified: just redirect when wallet is connected
-    if (status === 'connected' && address) {
-      console.log('✅ Controller connected, redirecting to game:', address);
+  if (status === 'connected' && hasTriedConnect && account) {
+    console.log("Wallet connected, initializing player...");
+    initializePlayer().then(result => {
+      console.log("Player initialization result:", result);
+    });
+  }
+}, [status, hasTriedConnect, account, initializePlayer]);
+
+  /**
+   * Monitor connection status and player initialization - redirect when both complete
+   */
+  useEffect(() => {
+    // Only redirect when both wallet is connected AND player is initialized
+    if (status === 'connected' && address && (playerExists || completed) && storePlayer) {
+      console.log('✅ Controller connected and player initialized:', address);
       
-      // Navigate to main game after successful connection
+      // Navigate to main game after successful connection and initialization
       setTimeout(() => {
         onLoginSuccess();
       }, 1500);
     }
-    
-    // TODO: Re-enable full check after beast spawn integration
-    // if (status === 'connected' && address && (playerExists || completed) && storePlayer) {
-    //   console.log('✅ Controller connected and player initialized:', address);
-    //   
-    //   // Navigate to main game after successful connection and initialization
-    //   setTimeout(() => {
-    //     onLoginSuccess();
-    //   }, 1500);
-    // }
-  }, [status, address, onLoginSuccess]);
-  // }, [status, address, playerExists, completed, storePlayer, onLoginSuccess]); // TODO: Re-enable after beast spawn
+  }, [status, address, playerExists, completed, storePlayer, onLoginSuccess]);
 
   /**
    * Handle connection errors
@@ -106,38 +98,51 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     }
   }, [connectionError]);
 
-  // TODO: Re-enable after beast spawn integration
   /**
-   * Handle spawn errors - TEMPORARILY DISABLED
+   * Handle spawn errors
    */
-  // useEffect(() => {
-  //   if (spawnError) {
-  //     console.error('🚨 Player spawn error:', spawnError);
-  //     toast.error(`Player initialization failed: ${spawnError}`, {
-  //       duration: 4000,
-  //       position: 'top-center'
-  //     });
-  //   }
-  // }, [spawnError]);
+  useEffect(() => {
+  if (spawnError && spawnError !== "Already initializing") {
+    console.error('🚨 Player spawn error:', spawnError);
+    toast.error(`Player initialization failed: ${spawnError}`, {
+      duration: 4000,
+      position: 'top-center'
+    });
+  }
+}, [spawnError]);
 
   /**
-   * Show connecting state
+   * Show connecting/initializing state with more detail
    */
   useEffect(() => {
     if (isConnecting) {
       console.log('Opening Cartridge Controller...');
+    } else if (isInitializing) {
+      console.log(`Initializing player - Step: ${currentStep}`);
+      if (txHash) {
+        console.log(`Transaction: ${txHash} - Status: ${txStatus}`);
+      }
     } else {
       console.log('Stopped connecting / connection dismissed');
     }
-    
-    // TODO: Re-enable after beast spawn integration
-    // } else if (isInitializing) {
-    //   console.log('Initializing player...');
-    // } else {
-    //   console.log('Stopped connecting / connection dismissed');
-    // }
-  }, [isConnecting]);
-  // }, [isConnecting, isInitializing]); // TODO: Re-enable after beast spawn
+  }, [isConnecting, isInitializing, currentStep, txHash, txStatus]);
+
+  /**
+   * Show transaction progress toasts
+   */
+  useEffect(() => {
+    if (txHash && txStatus === 'SUCCESS') {
+      toast.success('Player spawned successfully!', {
+        duration: 3000,
+        position: 'top-center'
+      });
+    } else if (txHash && txStatus === 'REJECTED') {
+      toast.error('Transaction failed', {
+        duration: 4000,
+        position: 'top-center'
+      });
+    }
+  }, [txHash, txStatus]);
 
   // Render different views based on animation state
   switch (view) {
@@ -153,7 +158,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             onConnect={handleConnect}
           />
           
-          {/* Toast Container in case of errors*/}
+          {/* Toast Container for status updates */}
           <Toaster
             toastOptions={{
               className: 'bg-white/95 text-gray-800 border border-gray-200 rounded-lg shadow-xl backdrop-blur-sm font-medium',
