@@ -9,7 +9,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import useAppStore from '../../../zustand/store'; 
 
 interface LoginScreenProps {
-  onLoginSuccess: (destination: 'hatch' | 'home') => void;
+  onLoginSuccess: (destination: 'hatch' | 'cover') => void;
 }
 
 /**
@@ -85,7 +85,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
       // Navigate based on beast status
       setTimeout(() => {
         if (shouldGoToHome) {
-          onLoginSuccess('home');
+          onLoginSuccess('cover');
         } else if (shouldGoToHatch) {
           onLoginSuccess('hatch');
         }
@@ -152,7 +152,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   useEffect(() => {
     if (completed) {
       if (hasLiveBeast) {
-        toast.success('🐾 Beast found! Going to Home', {
+        toast.success('🐾 Beast found!', {
           duration: 2000,
           position: 'top-center'
         });
