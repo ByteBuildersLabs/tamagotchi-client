@@ -18,13 +18,28 @@ function AppContent() {
     setCurrentScreenState(screen);
   };
 
+  // 🎯 Callback para cuando Login termina - navegación dinámica basada en beast status
+  const handleLoginComplete = useCallback((destination: 'hatch' | 'home') => {
+    console.log(`🧭 Login complete, navigating to: ${destination}`);
+    
+    if (destination === 'home') {
+      // Player has live beast - go directly to home
+      setCurrentScreenState("home");
+    } else {
+      // Player needs to spawn beast - go to hatch
+      setCurrentScreenState("hatch");
+    }
+  }, []);
+
   // 🎯 Callback específico para cuando HatchEgg termina
   const handleHatchComplete = useCallback(() => {
+    console.log("🥚 Hatch complete, going to cover screen");
     setCurrentScreenState("cover");
   }, []);
 
   // 🎯 Callback específico para cuando Cover termina
   const handleCoverComplete = useCallback(() => {
+    console.log("🌟 Cover complete, going to home screen");
     setCurrentScreenState("home");
   }, []);
 
@@ -32,7 +47,7 @@ function AppContent() {
     <div className="relative min-h-screen pb-16">
       {currentScreen === "login" && (
         <LoginScreen 
-          onLoginSuccess={() => handleNavigation("hatch")} 
+          onLoginSuccess={handleLoginComplete}
         />
       )}
 

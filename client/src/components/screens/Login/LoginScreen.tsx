@@ -1,5 +1,5 @@
 import { useStarknetConnect } from '../../../dojo/hooks/useStarknetConnect';
-import { useSpawnPlayer } from '../../../dojo/hooks/useSpawnPlayer'; 
+import { usePlayerInitialization } from '../../../dojo/hooks/usePlayerInitialization';
 import { useAccount } from '@starknet-react/core';
 import { useLoginAnimations } from './components/useLoginAnimations';
 import { UniverseView, GameView } from './components/CoverViews';
@@ -9,12 +9,12 @@ import toast, { Toaster } from 'react-hot-toast';
 import useAppStore from '../../../zustand/store'; 
 
 interface LoginScreenProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (destination: 'hatch' | 'home') => void;
 }
 
 /**
  * Main Login/Cover component that handles the intro sequence
- * and redirects to cover screen when wallet connects successfully
+ * and redirects to appropriate screen based on player's beast status
  */
 export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const { view, currentCircle } = useLoginAnimations();
@@ -29,17 +29,20 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     hasTriedConnect
   } = useStarknetConnect();
 
-  // Integrate player spawn hook
+  // Integrate player initialization coordinator hook
   const { 
-    initializePlayer, 
-    playerExists,
-    completed,
+    initializeComplete,
     isInitializing,
-    error: spawnError,
+    error: initializationError,
+    completed,
     currentStep,
-    txHash,
-    txStatus
-  } = useSpawnPlayer();
+    playerExists,
+    hasLiveBeast,
+    shouldGoToHatch,
+    shouldGoToHome,
+    playerSpawnTxHash,
+    playerSpawnTxStatus,
+  } = usePlayerInitialization();
 
   const { account } = useAccount();
 
@@ -59,31 +62,53 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   };
 
   /**
-   * Trigger player initialization on wallet connect
+   * Trigger complete player initialization on wallet connect
    */
   useEffect(() => {
-  if (status === 'connected' && hasTriedConnect && account) {
-    console.log("Wallet connected, initializing player...");
-    initializePlayer().then(result => {
-      console.log("Player initialization result:", result);
-    });
-  }
-}, [status, hasTriedConnect, account, initializePlayer]);
+    if (status === 'connected' && hasTriedConnect && account) {
+      console.log("Wallet connected, starting complete initialization...");
+      initializeComplete().then(result => {
+        console.log("Complete initialization result:", result);
+      });
+    }
+  }, [status, hasTriedConnect, account, initializeComplete]);
 
   /**
-   * Monitor connection status and player initialization - redirect when both complete
+   * Monitor initialization completion and navigate appropriately
    */
   useEffect(() => {
-    // Only redirect when both wallet is connected AND player is initialized
-    if (status === 'connected' && address && (playerExists || completed) && storePlayer) {
-      console.log('✅ Controller connected and player initialized:', address);
+    // Only navigate when initialization is complete
+    if (status === 'connected' && address && completed && storePlayer) {
+      console.log('✅ Complete initialization finished:', {
+        address,
+        playerExists,
+        hasLiveBeast,
+        shouldGoToHatch,
+        shouldGoToHome
+      });
       
-      // Navigate to main game after successful connection and initialization
+      // Navigate based on beast status
       setTimeout(() => {
-        onLoginSuccess();
+        if (shouldGoToHome) {
+          console.log('🏠 Navigating to Home - Player has live beast');
+          onLoginSuccess('home');
+        } else if (shouldGoToHatch) {
+          console.log('🥚 Navigating to Hatch - Player needs to spawn beast');
+          onLoginSuccess('hatch');
+        }
       }, 1500);
     }
-  }, [status, address, playerExists, completed, storePlayer, onLoginSuccess]);
+  }, [
+    status, 
+    address, 
+    completed, 
+    storePlayer, 
+    playerExists, 
+    hasLiveBeast, 
+    shouldGoToHatch, 
+    shouldGoToHome, 
+    onLoginSuccess
+  ]);
 
   /**
    * Handle connection errors
@@ -99,17 +124,17 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   }, [connectionError]);
 
   /**
-   * Handle spawn errors
+   * Handle initialization errors
    */
   useEffect(() => {
-  if (spawnError && spawnError !== "Already initializing") {
-    console.error('🚨 Player spawn error:', spawnError);
-    toast.error(`Player initialization failed: ${spawnError}`, {
-      duration: 4000,
-      position: 'top-center'
-    });
-  }
-}, [spawnError]);
+    if (initializationError && initializationError !== "Already initializing") {
+      console.error('🚨 Initialization error:', initializationError);
+      toast.error(`Initialization failed: ${initializationError}`, {
+        duration: 4000,
+        position: 'top-center'
+      });
+    }
+  }, [initializationError]);
 
   /**
    * Show connecting/initializing state with more detail
@@ -118,31 +143,51 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     if (isConnecting) {
       console.log('Opening Cartridge Controller...');
     } else if (isInitializing) {
-      console.log(`Initializing player - Step: ${currentStep}`);
-      if (txHash) {
-        console.log(`Transaction: ${txHash} - Status: ${txStatus}`);
+      console.log(`Initializing - Step: ${currentStep}`);
+      if (playerSpawnTxHash) {
+        console.log(`Transaction: ${playerSpawnTxHash} - Status: ${playerSpawnTxStatus}`);
       }
     } else {
       console.log('Stopped connecting / connection dismissed');
     }
-  }, [isConnecting, isInitializing, currentStep, txHash, txStatus]);
+  }, [isConnecting, isInitializing, currentStep, playerSpawnTxHash, playerSpawnTxStatus]);
 
   /**
    * Show transaction progress toasts
    */
   useEffect(() => {
-    if (txHash && txStatus === 'SUCCESS') {
+    if (playerSpawnTxHash && playerSpawnTxStatus === 'SUCCESS') {
       toast.success('Player spawned successfully!', {
         duration: 3000,
         position: 'top-center'
       });
-    } else if (txHash && txStatus === 'REJECTED') {
+    } else if (playerSpawnTxHash && playerSpawnTxStatus === 'REJECTED') {
       toast.error('Transaction failed', {
         duration: 4000,
         position: 'top-center'
       });
     }
-  }, [txHash, txStatus]);
+  }, [playerSpawnTxHash, playerSpawnTxStatus]);
+
+  /**
+   * Show beast status information (for debugging)
+   */
+  useEffect(() => {
+    if (completed) {
+      if (hasLiveBeast) {
+        toast.success('🐾 Beast found! Going to Home', {
+          duration: 2000,
+          position: 'top-center'
+        });
+      } else {
+        toast('🥚 No beast found. Time to hatch!', {
+          duration: 2000,
+          position: 'top-center',
+          icon: '🥚'
+        });
+      }
+    }
+  }, [completed, hasLiveBeast]);
 
   // Render different views based on animation state
   switch (view) {
