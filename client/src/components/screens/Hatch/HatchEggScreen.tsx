@@ -14,6 +14,7 @@ import MegaBurstParticles from "./components/MegaBurstParticles";
 
 // Dojo hooks
 import { useSpawnBeast } from "../../../dojo/hooks/useSpawnBeast";
+import useAppStore from '../../../zustand/store';
 
 // Assets
 import forestBackground from "../../../assets/backgrounds/bg-home.png";
@@ -98,10 +99,19 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
   };
 
   /**
-   * Handle continue button - only show when both animation and spawn are complete
+   * Handle continue button - check using direct store state
    */
   const handleContinue = () => {
-    if (!spawnCompleted) {
+    // Check beast status directly from store instead of reactive hook
+    const currentStorePlayer = useAppStore.getState().player;
+    const currentBeastStatuses = useAppStore.getState().beastStatuses;
+    
+    const isBeastReady = currentStorePlayer?.current_beast_id && 
+      currentBeastStatuses.some(status => 
+        status.beast_id === currentStorePlayer.current_beast_id && status.is_alive
+      );
+
+    if (!spawnCompleted && !isBeastReady) {
       console.log("⏳ Waiting for beast spawn to complete...");
       toast("Please wait for beast spawn to complete", {
         duration: 2000,
@@ -113,7 +123,8 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
 
     console.log(`🎮 Continuing to cover with spawned beast...`, {
       beastType,
-      spawnedParams: spawnedBeastParams
+      spawnedParams: spawnedBeastParams,
+      beastReady: isBeastReady
     });
     onLoadingComplete();
   };
@@ -179,7 +190,16 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
   }, [isSpawning, resetSpawner]);
 
   // Determine if continue button should be enabled
-  const canContinue = eggState === 'revealing' && showBeast && spawnCompleted;
+  // Check directly from store instead of relying on reactive hooks
+  const storePlayer = useAppStore(state => state.player);
+  const storeBeastStatuses = useAppStore(state => state.beastStatuses);
+  
+  const directHasLiveBeast = storePlayer?.current_beast_id && 
+    storeBeastStatuses.some(status => 
+      status.beast_id === storePlayer.current_beast_id && status.is_alive
+    );
+
+  const canContinue = eggState === 'revealing' && showBeast && (spawnCompleted || directHasLiveBeast);
   const showSpawnProgress = isSpawning || (txHash && txStatus === 'PENDING');
 
   return (
@@ -254,7 +274,7 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
         )}
 
         {/* Wait message if animation done but spawn not complete */}
-        {eggState === 'revealing' && showBeast && !spawnCompleted && (
+        {eggState === 'revealing' && showBeast && !spawnCompleted && !directHasLiveBeast && (
           <div className="bg-amber-100 border border-amber-400 rounded-lg px-4 py-2">
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>

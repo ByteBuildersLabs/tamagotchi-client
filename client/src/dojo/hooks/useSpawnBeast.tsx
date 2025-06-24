@@ -6,6 +6,7 @@ import { useDojoSDK } from '@dojoengine/sdk/react';
 // Hooks imports
 import { useBeasts } from './useBeasts';
 import { useBeastStatus } from './useBeastStatus';
+import { usePlayer } from './usePlayer';
 import { useStarknetConnect } from './useStarknetConnect';
 
 // Helpers imports
@@ -63,6 +64,7 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
   const { status } = useStarknetConnect();
   const { refetch: refetchBeasts } = useBeasts();
   const { refetch: refetchBeastStatus } = useBeastStatus();
+  const { refetch: refetchPlayer } = usePlayer();
 
   // Local state for spawn process
   const [spawnState, setSpawnState] = useState<SpawnState>({
@@ -154,23 +156,76 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
           step: 'fetching'
         }));
 
-        // Step 3: Wait for transaction to be processed
+        // Step 3: Wait for transaction to be processed (like Golem Runner)
         console.log("⏳ Waiting for transaction to be processed...");
         await new Promise(resolve => setTimeout(resolve, 3500));
         
-        // Step 4: Refresh beast data
+        // Step 4: Refresh beast data with retry logic
         console.log("🔄 Refreshing beast data...");
-        await Promise.all([
-          refetchBeasts(),
-          refetchBeastStatus()
-        ]);
+        
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        while (attempts < maxAttempts) {
+          await Promise.all([
+            refetchPlayer(),    // ← Refetch player data to get updated current_beast_id
+            refetchBeasts(),
+            refetchBeastStatus()
+          ]);
+          
+          // Small delay to check if data was loaded
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Check if beast is now live by reading directly from store
+          const freshStorePlayer = useAppStore.getState().player;
+          const freshBeastStatuses = useAppStore.getState().beastStatuses;
+          
+          const isNowLive = freshStorePlayer?.current_beast_id && 
+            freshBeastStatuses.some(status => 
+              status.beast_id === freshStorePlayer.current_beast_id && status.is_alive
+            );
+          
+          console.log(`🔄 Attempt ${attempts + 1} - Beast check:`, {
+            currentBeastId: freshStorePlayer?.current_beast_id,
+            isLive: isNowLive,
+            beastStatuses: freshBeastStatuses.length
+          });
+          
+          // If beast is live, we can exit early
+          if (isNowLive) {
+            console.log("✅ Beast is live! Completing spawn...");
+            break;
+          }
+          
+          attempts++;
+          
+          if (attempts < maxAttempts) {
+            console.log(`🔄 Attempt ${attempts} - waiting for indexer... retrying in 2s`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
 
         console.log("✅ Beast data refreshed!");
 
-        // Step 5: Complete
+        // Step 5: Final check - verify beast is live using fresh store data
+        const finalStorePlayer = useAppStore.getState().player;
+        const finalBeastStatuses = useAppStore.getState().beastStatuses;
+        
+        const isBeastLive = finalStorePlayer?.current_beast_id && 
+          finalBeastStatuses.some(status => 
+            status.beast_id === finalStorePlayer.current_beast_id && status.is_alive
+          );
+
+        console.log("🔍 Final beast verification:", {
+          currentBeastId: finalStorePlayer?.current_beast_id,
+          isBeastLive,
+          beastStatusCount: finalBeastStatuses.length
+        });
+
+        // Step 6: Complete
         setSpawnState(prev => ({
           ...prev,
-          completed: true,
+          completed: !!isBeastLive, // ← Ensure completed is always a boolean
           step: 'success',
           isSpawning: false
         }));
