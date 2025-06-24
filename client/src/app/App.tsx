@@ -19,10 +19,10 @@ function AppContent() {
   };
 
   // Callback for when Login completes - dynamic navigation based on beast status
-  const handleLoginComplete = useCallback((destination: 'hatch' | 'home') => {
-    if (destination === 'home') {
+  const handleLoginComplete = useCallback((destination: 'hatch' | 'cover') => {
+    if (destination === 'cover') {
       // Player has live beast - go directly to home
-      setCurrentScreenState("home");
+      setCurrentScreenState("cover");
     } else {
       // Player needs to spawn beast - go to hatch
       setCurrentScreenState("hatch");
