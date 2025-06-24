@@ -65,7 +65,7 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
       
       if (result.success) {
         // Toast success message
-        toast.success(`🐾 Beast spawned! Specie: ${result.beastParams?.specie}`, {
+        toast.success(`🐾 Beast spawned!`, {
           duration: 3000,
           position: 'top-center'
         });
