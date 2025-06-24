@@ -23,7 +23,6 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const { 
     status, 
     handleConnect: connectWallet, 
-    isConnecting, 
     error: connectionError,
     address,
     hasTriedConnect
@@ -32,10 +31,8 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   // Integrate player initialization coordinator hook
   const { 
     initializeComplete,
-    isInitializing,
     error: initializationError,
     completed,
-    currentStep,
     playerExists,
     hasLiveBeast,
     shouldGoToHatch,
@@ -56,11 +53,10 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
    * Handle connect button click - trigger Cartridge Controller
    */
   const handleConnect = async () => {
-    console.log('🎮 Connecting Controller...');
     try {
       await connectWallet();
     } catch (error) {
-      console.error('❌ Connection failed:', error);
+      console.error('Connection failed:', error);
     }
   };
 
@@ -69,11 +65,10 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
    */
   useEffect(() => {
     if (status === 'connected' && hasTriedConnect && account && !hasInitialized.current) {
-      console.log("Wallet connected, starting complete initialization...");
       hasInitialized.current = true;
       
-      initializeComplete().then(result => {
-        console.log("Complete initialization result:", result);
+      initializeComplete().then(() => {
+        // Initialization completed successfully
       }).catch(error => {
         console.error("Initialization failed:", error);
         hasInitialized.current = false; // Reset on error
@@ -87,21 +82,11 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   useEffect(() => {
     // Only navigate when initialization is complete
     if (status === 'connected' && address && completed && storePlayer) {
-      console.log('✅ Complete initialization finished:', {
-        address,
-        playerExists,
-        hasLiveBeast,
-        shouldGoToHatch,
-        shouldGoToHome
-      });
-      
       // Navigate based on beast status
       setTimeout(() => {
         if (shouldGoToHome) {
-          console.log('🏠 Navigating to Home - Player has live beast');
           onLoginSuccess('home');
         } else if (shouldGoToHatch) {
-          console.log('🥚 Navigating to Hatch - Player needs to spawn beast');
           onLoginSuccess('hatch');
         }
       }, 1500);
@@ -123,7 +108,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
    */
   useEffect(() => {
     if (connectionError) {
-      console.error('🚨 Connection error:', connectionError);
+      console.error('Connection error:', connectionError);
       toast.error(`Connection failed: ${connectionError}`, {
         duration: 4000,
         position: 'top-center'
@@ -136,29 +121,13 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
    */
   useEffect(() => {
     if (initializationError && initializationError !== "Already initializing") {
-      console.error('🚨 Initialization error:', initializationError);
+      console.error('Initialization error:', initializationError);
       toast.error(`Initialization failed: ${initializationError}`, {
         duration: 4000,
         position: 'top-center'
       });
     }
   }, [initializationError]);
-
-  /**
-   * Show connecting/initializing state with more detail
-   */
-  useEffect(() => {
-    if (isConnecting) {
-      console.log('Opening Cartridge Controller...');
-    } else if (isInitializing) {
-      console.log(`Initializing - Step: ${currentStep}`);
-      if (playerSpawnTxHash) {
-        console.log(`Transaction: ${playerSpawnTxHash} - Status: ${playerSpawnTxStatus}`);
-      }
-    } else {
-      console.log('Stopped connecting / connection dismissed');
-    }
-  }, [isConnecting, isInitializing, currentStep, playerSpawnTxHash, playerSpawnTxStatus]);
 
   /**
    * Show transaction progress toasts
@@ -178,7 +147,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   }, [playerSpawnTxHash, playerSpawnTxStatus]);
 
   /**
-   * Show beast status information (for debugging)
+   * Show beast status information
    */
   useEffect(() => {
     if (completed) {

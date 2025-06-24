@@ -49,7 +49,6 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
     currentStep,
     txHash,
     txStatus,
-    spawnedBeastParams,
     resetSpawner
   } = useSpawnBeast();
 
@@ -57,30 +56,20 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
    * Enhanced hatching function that includes beast spawning
    */
   const handleHatchEgg = async () => {
-    console.log("🥚 Starting egg hatching with beast spawn...");
-
     // Step 1: Start egg animation
     startEggHatching();
 
     // Step 2: Execute beast spawn transaction
     try {
-      console.log("🐾 Spawning beast in contract...");
       const result = await spawnBeast();
       
       if (result.success) {
-        console.log("✅ Beast spawned successfully!", {
-          txHash: result.transactionHash,
-          beastParams: result.beastParams
-        });
-        
         // Toast success message
         toast.success(`🐾 Beast spawned! Specie: ${result.beastParams?.specie}`, {
           duration: 3000,
           position: 'top-center'
         });
       } else {
-        console.error("❌ Beast spawn failed:", result.error);
-        
         // Show error but don't break the animation
         toast.error(`Spawn failed: ${result.error}`, {
           duration: 4000,
@@ -88,7 +77,7 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
         });
       }
     } catch (error) {
-      console.error("❌ Error during beast spawn:", error);
+      console.error("Error during beast spawn:", error);
       
       // Show error but don't break the animation
       toast.error("Beast spawn failed. Please try again.", {
@@ -112,7 +101,6 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
       );
 
     if (!spawnCompleted && !isBeastReady) {
-      console.log("⏳ Waiting for beast spawn to complete...");
       toast("Please wait for beast spawn to complete", {
         duration: 2000,
         position: 'top-center',
@@ -121,32 +109,8 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
       return;
     }
 
-    console.log(`🎮 Continuing to cover with spawned beast...`, {
-      beastType,
-      spawnedParams: spawnedBeastParams,
-      beastReady: isBeastReady
-    });
     onLoadingComplete();
   };
-
-  /**
-   * Show spawn progress toasts
-   */
-  useEffect(() => {
-    if (isSpawning && currentStep) {
-      const stepMessages = {
-        'preparing': '🔄 Preparing beast spawn...',
-        'spawning': '📤 Spawning beast...',
-        'confirming': '⏳ Confirming transaction...',
-        'fetching': '🔄 Updating beast data...',
-        'success': '✅ Beast spawn complete!'
-      };
-
-      if (stepMessages[currentStep as keyof typeof stepMessages]) {
-        console.log(stepMessages[currentStep as keyof typeof stepMessages]);
-      }
-    }
-  }, [isSpawning, currentStep]);
 
   /**
    * Handle transaction status updates
@@ -170,7 +134,7 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
    */
   useEffect(() => {
     if (spawnError) {
-      console.error('🚨 Beast spawn error:', spawnError);
+      console.error('Beast spawn error:', spawnError);
       toast.error(`Beast spawn error: ${spawnError}`, {
         duration: 4000,
         position: 'top-center'
@@ -215,14 +179,14 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
       {/* Base Magical Sparkle Particles */}
       <MagicalSparkleParticles />
 
-      {/* 🌟💥 MEGA-BURST OF SATURATED FLASHES */}
+      {/* Mega-burst of saturated flashes */}
       <MegaBurstParticles
         trigger={showMegaBurst}
         eggPosition={{ x: 50, y: 50 }}
-        onComplete={() => console.log("🎇 Mega-burst of flashes completed!")}
+        onComplete={() => {}} // Simplified completion handler
       />
 
-      {/* FULL-SCREEN PROLONGED FLASH */}
+      {/* Full-screen prolonged flash */}
       <AnimatePresence>
         {showFullScreenFlash && <FullScreenFlash />}
       </AnimatePresence>

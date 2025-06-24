@@ -41,8 +41,6 @@ export const generateRandomBeastParams = (): BeastSpawnParams => {
   const specie = randomValue as BeastSpecies;
   const beast_type = randomValue as BeastType;
   
-  console.log(`🎲 Generated random beast params: specie=${specie}, beast_type=${beast_type}`);
-  
   return {
     specie,
     beast_type
@@ -64,12 +62,12 @@ export const validateBeastParams = (params: BeastSpawnParams): boolean => {
   const isBeastTypeValid = beast_type >= 1 && beast_type <= 3;
   
   if (!isSpecieValid) {
-    console.error(`❌ Invalid specie: ${specie}. Must be between 1-3`);
+    console.error(`Invalid specie: ${specie}. Must be between 1-3`);
     return false;
   }
   
   if (!isBeastTypeValid) {
-    console.error(`❌ Invalid beast_type: ${beast_type}. Must be between 1-3`);
+    console.error(`Invalid beast_type: ${beast_type}. Must be between 1-3`);
     return false;
   }
   

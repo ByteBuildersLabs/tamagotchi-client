@@ -76,8 +76,6 @@ const hexToBool = (hexValue: string | boolean): boolean => {
 // API function to fetch beast status data
 const fetchBeastStatusData = async (playerAddress: string): Promise<BeastStatus[]> => {
   try {
-    console.log("Fetching beast status for player:", playerAddress);
-    
     const response = await fetch(TORII_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,17 +86,14 @@ const fetchBeastStatusData = async (playerAddress: string): Promise<BeastStatus[
     });
 
     const result = await response.json();
-    console.log("GraphQL beast status response:", result);
     
     if (!result.data?.tamagotchiBeastStatusModels?.edges?.length) {
-      console.log("No beast status found for player");
       return [];
     }
 
     // Convert raw data to BeastStatus objects
     const beastStatuses: BeastStatus[] = result.data.tamagotchiBeastStatusModels.edges.map((edge: any) => {
       const rawStatus = edge.node;
-      console.log("[useBeastStatus] Raw beast status data:", rawStatus);
       
       const beastStatus: BeastStatus = {
         player: rawStatus.player,
@@ -113,7 +108,6 @@ const fetchBeastStatusData = async (playerAddress: string): Promise<BeastStatus[
         last_timestamp: hexToNumber(rawStatus.last_timestamp)
       };
       
-      console.log("[useBeastStatus] Converted beast status:", beastStatus);
       return beastStatus;
     });
     
@@ -159,13 +153,7 @@ export const useBeastStatus = (): UseBeastStatusReturn => {
 
   // Memoize hasLiveBeast - checks if current beast exists and is alive
   const hasLiveBeast = useMemo(() => {
-    console.log("🔍 [useBeastStatus] Checking hasLiveBeast:", {
-      playerCurrentBeastId: storePlayer?.current_beast_id,
-      availableBeastStatuses: storeBeastStatuses.map(s => ({ beast_id: s.beast_id, is_alive: s.is_alive }))
-    });
-    
     if (!storePlayer?.current_beast_id || storePlayer.current_beast_id === 0) {
-      console.log("❌ [useBeastStatus] No current_beast_id in player");
       return false;
     }
     
@@ -173,12 +161,7 @@ export const useBeastStatus = (): UseBeastStatusReturn => {
       status.beast_id === storePlayer.current_beast_id
     );
     
-    console.log("🔍 [useBeastStatus] Found current status:", currentStatus);
-    
-    const result = currentStatus ? currentStatus.is_alive : false;
-    console.log("🎯 [useBeastStatus] hasLiveBeast result:", result);
-    
-    return result;
+    return currentStatus ? currentStatus.is_alive : false;
   }, [storePlayer?.current_beast_id, storeBeastStatuses]);
 
   // Function to get beast status by ID

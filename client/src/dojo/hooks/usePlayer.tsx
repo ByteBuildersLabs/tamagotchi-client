@@ -61,7 +61,6 @@ const hexToNumber = (hexValue: string | number): number => {
 // API Functions
 const fetchPlayerData = async (playerAddress: string): Promise<Player | null> => {
   try {
-    console.log("Fetching player with address:", playerAddress);
     
     const response = await fetch(TORII_URL, {
       method: "POST",
@@ -73,16 +72,13 @@ const fetchPlayerData = async (playerAddress: string): Promise<Player | null> =>
     });
 
     const result = await response.json();
-    console.log("GraphQL response:", result);
     
     if (!result.data?.tamagotchiPlayerModels?.edges?.length) {
-      console.log("No player found in response");
       return null; // Player not found
     }
 
     // Extract player data
     const rawPlayerData = result.data.tamagotchiPlayerModels.edges[0].node;
-    console.log("[usePlayer] Raw player data extracted:", rawPlayerData);
     
     // Convert hex values to numbers
     const playerData: Player = {
@@ -93,8 +89,6 @@ const fetchPlayerData = async (playerAddress: string): Promise<Player | null> =>
       last_active_day: hexToNumber(rawPlayerData.last_active_day),
       creation_day: hexToNumber(rawPlayerData.creation_day)
     };
-    
-    console.log("Player data after conversion:", playerData);
     
     return playerData;
   } catch (error) {
@@ -134,14 +128,9 @@ export const usePlayer = (): UsePlayerReturn => {
       setError(null);
       
       const playerData = await fetchPlayerData(userAddress);
-      console.log("Player data fetched:", playerData);
       
       // Update store with player data
       setPlayer(playerData);
-      
-      // Check if player was set in store
-      const updatedPlayer = useAppStore.getState().player;
-      console.log("Player in store after update:", updatedPlayer);
       
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error occurred');
@@ -156,7 +145,6 @@ export const usePlayer = (): UsePlayerReturn => {
   // Effect to fetch player data when address changes
   useEffect(() => {
     if (userAddress) {
-      console.log("Address changed, refetching player data");
       refetch();
     }
   }, [userAddress]);
@@ -164,7 +152,6 @@ export const usePlayer = (): UsePlayerReturn => {
   // Effect to sync with account changes
   useEffect(() => {
     if (!account) {
-      console.log("No account, clearing player data");
       setPlayer(null);
       setError(null);
       setIsLoading(false);

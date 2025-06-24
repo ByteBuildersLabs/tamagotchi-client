@@ -13,7 +13,6 @@ import { useStarknetConnect } from './useStarknetConnect';
 import { 
   generateRandomBeastParams, 
   validateBeastParams,
-  getBeastDisplayInfo,
   type BeastSpawnParams 
 } from '../../utils/beastHelpers';
 
@@ -122,9 +121,6 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
         spawnedBeastParams: params
       }));
 
-      const beastInfo = getBeastDisplayInfo(params.specie, params.beast_type);
-      console.log(`🐾 Spawning ${beastInfo.displayName}...`, params);
-
       // Step 1: Prepare transaction
       setSpawnState(prev => ({ ...prev, step: 'spawning' }));
 
@@ -134,8 +130,6 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
         params.specie,
         params.beast_type
       );
-
-      console.log("🔄 Spawn beast transaction sent:", tx.transaction_hash);
       
       setSpawnState(prev => ({
         ...prev,
@@ -144,31 +138,24 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
         step: 'confirming'
       }));
 
-      // Step 2: Wait for transaction confirmation (similar to Golem Runner pattern)
-      console.log("⏳ Waiting for transaction confirmation...");
-      
+      // Step 2: Wait for transaction confirmation
       if (tx && tx.code === "SUCCESS") {
-        console.log("✅ Transaction confirmed!");
-        
         setSpawnState(prev => ({
           ...prev,
           txStatus: 'SUCCESS',
           step: 'fetching'
         }));
 
-        // Step 3: Wait for transaction to be processed (like Golem Runner)
-        console.log("⏳ Waiting for transaction to be processed...");
+        // Step 3: Wait for transaction to be processed
         await new Promise(resolve => setTimeout(resolve, 3500));
         
         // Step 4: Refresh beast data with retry logic
-        console.log("🔄 Refreshing beast data...");
-        
         let attempts = 0;
         const maxAttempts = 3;
         
         while (attempts < maxAttempts) {
           await Promise.all([
-            refetchPlayer(),    // ← Refetch player data to get updated current_beast_id
+            refetchPlayer(),    // Refetch player data to get updated current_beast_id
             refetchBeasts(),
             refetchBeastStatus()
           ]);
@@ -185,27 +172,17 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
               status.beast_id === freshStorePlayer.current_beast_id && status.is_alive
             );
           
-          console.log(`🔄 Attempt ${attempts + 1} - Beast check:`, {
-            currentBeastId: freshStorePlayer?.current_beast_id,
-            isLive: isNowLive,
-            beastStatuses: freshBeastStatuses.length
-          });
-          
           // If beast is live, we can exit early
           if (isNowLive) {
-            console.log("✅ Beast is live! Completing spawn...");
             break;
           }
           
           attempts++;
           
           if (attempts < maxAttempts) {
-            console.log(`🔄 Attempt ${attempts} - waiting for indexer... retrying in 2s`);
             await new Promise(resolve => setTimeout(resolve, 2000));
           }
         }
-
-        console.log("✅ Beast data refreshed!");
 
         // Step 5: Final check - verify beast is live using fresh store data
         const finalStorePlayer = useAppStore.getState().player;
@@ -216,16 +193,10 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
             status.beast_id === finalStorePlayer.current_beast_id && status.is_alive
           );
 
-        console.log("🔍 Final beast verification:", {
-          currentBeastId: finalStorePlayer?.current_beast_id,
-          isBeastLive,
-          beastStatusCount: finalBeastStatuses.length
-        });
-
         // Step 6: Complete
         setSpawnState(prev => ({
           ...prev,
-          completed: !!isBeastLive, // ← Ensure completed is always a boolean
+          completed: !!isBeastLive, // Ensure completed is always a boolean
           step: 'success',
           isSpawning: false
         }));
@@ -245,7 +216,7 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
       }
 
     } catch (error: any) {
-      console.error("❌ Beast spawn failed:", error);
+      console.error("Error spawning beast:", error);
       
       const errorMessage = error?.message || error?.toString() || "Unknown error occurred";
       
@@ -261,14 +232,13 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
         error: errorMessage
       };
     }
-  }, [account, status, storePlayer, client, state, refetchBeasts, refetchBeastStatus]);
+  }, [account, status, storePlayer, client, state, refetchBeasts, refetchBeastStatus, refetchPlayer]);
 
   /**
    * Spawn beast with random parameters
    */
   const spawnBeast = useCallback(async (): Promise<SpawnResult> => {
     const params = generateRandomBeastParams();
-    console.log("🎲 Spawning random beast with params:", params);
     return executeSpawnBeast(params);
   }, [executeSpawnBeast]);
 

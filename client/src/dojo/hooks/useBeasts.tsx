@@ -55,8 +55,6 @@ const hexToNumber = (hexValue: string | number): number => {
 // API function to fetch beasts data
 const fetchBeastsData = async (playerAddress: string): Promise<Beast[]> => {
   try {
-    console.log("Fetching beasts for player:", playerAddress);
-    
     const response = await fetch(TORII_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -67,17 +65,14 @@ const fetchBeastsData = async (playerAddress: string): Promise<Beast[]> => {
     });
 
     const result = await response.json();
-    console.log("GraphQL beasts response:", result);
     
     if (!result.data?.tamagotchiBeastModels?.edges?.length) {
-      console.log("No beasts found for player");
       return [];
     }
 
     // Convert raw data to Beast objects
     const beasts: Beast[] = result.data.tamagotchiBeastModels.edges.map((edge: any) => {
       const rawBeast = edge.node;
-      console.log("[useBeasts] Raw beast data:", rawBeast);
       
       const beast: Beast = {
         player: rawBeast.player,
@@ -88,7 +83,6 @@ const fetchBeastsData = async (playerAddress: string): Promise<Beast[]> => {
         beast_type: hexToNumber(rawBeast.beast_type)
       };
       
-      console.log("[useBeasts] Converted beast:", beast);
       return beast;
     });
     

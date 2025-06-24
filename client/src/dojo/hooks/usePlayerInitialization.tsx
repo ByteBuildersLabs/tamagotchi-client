@@ -45,9 +45,9 @@ interface UsePlayerInitializationReturn {
 }
 
 /**
- * Hook coordinador para la inicialización completa del player
- * Maneja tanto el spawn del player como la verificación de bestias
- * Decide la navegación apropiada (Hatch vs Home)
+ * Coordinator hook for complete player initialization
+ * Handles both player spawn and beast verification
+ * Decides appropriate navigation (Hatch vs Home)
  */
 export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
   // Hooks dependencies
@@ -88,8 +88,6 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
    */
   const initializeComplete = useCallback(async (): Promise<InitializationResult> => {
     try {
-      console.log("🚀 Starting complete player initialization...");
-
       setInitState(prev => ({
         ...prev,
         isInitializing: true,
@@ -99,17 +97,11 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
       }));
 
       // Step 1: Initialize/spawn player
-      console.log("👤 Step 1: Initializing player...");
       const playerResult = await initializePlayer();
 
       if (!playerResult.success) {
         throw new Error(playerResult.error || "Player initialization failed");
       }
-
-      console.log("✅ Player initialization completed:", {
-        playerExists: playerResult.playerExists,
-        transactionHash: playerResult.transactionHash
-      });
 
       setInitState(prev => ({
         ...prev,
@@ -118,8 +110,6 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
       }));
 
       // Step 2: Check beast status
-      console.log("🐾 Step 2: Checking beast status...");
-
       // Small delay to ensure player data is in store
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -132,11 +122,6 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
       // Get fresh hasLiveBeast value directly from store instead of hook variable
       const currentStorePlayer = useAppStore.getState().player;
       const currentBeastStatuses = useAppStore.getState().beastStatuses;
-      
-      console.log("🔍 [Initialization] Store state check:", {
-        currentBeastId: currentStorePlayer?.current_beast_id,
-        beastStatuses: currentBeastStatuses.map(s => ({ beast_id: s.beast_id, is_alive: s.is_alive }))
-      });
 
       // Calculate hasLiveBeast directly from fresh store data
       const directHasLiveBeast = currentStorePlayer?.current_beast_id && 
@@ -144,20 +129,9 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
           status.beast_id === currentStorePlayer.current_beast_id && status.is_alive
         ) || false;
 
-      console.log("🐾 Beast status check completed:", {
-        hasLiveBeast: directHasLiveBeast,
-        currentBeastId: currentStorePlayer?.current_beast_id || 0
-      });
-
       // Step 3: Determine navigation
       const shouldGoToHome = directHasLiveBeast;
       const shouldGoToHatch = !directHasLiveBeast;
-
-      console.log("🧭 Navigation decision:", {
-        shouldGoToHome,
-        shouldGoToHatch,
-        reason: directHasLiveBeast ? "Has live beast" : "No live beast found"
-      });
 
       // Step 4: Complete initialization
       setInitState(prev => ({
@@ -181,7 +155,7 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
     } catch (error: any) {
       const errorMessage = error?.message || "Complete initialization failed";
       
-      console.error("❌ Complete initialization failed:", error);
+      console.error("Complete initialization failed:", error);
 
       setInitState(prev => ({
         ...prev,
@@ -206,8 +180,6 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
    * Reset all initialization state
    */
   const resetInitialization = useCallback(() => {
-    console.log("🔄 Resetting complete initialization...");
-    
     // Reset our local state
     setInitState({
       isInitializing: false,

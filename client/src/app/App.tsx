@@ -12,16 +12,14 @@ import type { Screen } from "../components/types/screens";
 
 function AppContent() {
   const [currentScreen, setCurrentScreenState] = useState<Screen>("login");
-  const [playerAddress] = useState("0x123"); // Dirección temporal
+  const [playerAddress] = useState("0x123"); // Temporary address
 
   const handleNavigation = (screen: Screen) => {
     setCurrentScreenState(screen);
   };
 
-  // 🎯 Callback para cuando Login termina - navegación dinámica basada en beast status
+  // Callback for when Login completes - dynamic navigation based on beast status
   const handleLoginComplete = useCallback((destination: 'hatch' | 'home') => {
-    console.log(`🧭 Login complete, navigating to: ${destination}`);
-    
     if (destination === 'home') {
       // Player has live beast - go directly to home
       setCurrentScreenState("home");
@@ -31,15 +29,13 @@ function AppContent() {
     }
   }, []);
 
-  // 🎯 Callback específico para cuando HatchEgg termina
+  // Specific callback for when HatchEgg completes
   const handleHatchComplete = useCallback(() => {
-    console.log("🥚 Hatch complete, going to cover screen");
     setCurrentScreenState("cover");
   }, []);
 
-  // 🎯 Callback específico para cuando Cover termina
+  // Specific callback for when Cover completes
   const handleCoverComplete = useCallback(() => {
-    console.log("🌟 Cover complete, going to home screen");
     setCurrentScreenState("home");
   }, []);
 
