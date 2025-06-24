@@ -42,28 +42,19 @@ export function useStarknetConnect(): UseStarknetConnectReturn {
       setConnectionError(undefined);
       setHasTriedConnect(true);
       
-      console.log("🎮 Connecting to ByteBeasts via Cartridge Controller...");
-      
       // Prioritize Cartridge connector for ByteBeasts experience
       let connector: Connector = cartridgeConnector;
       
       // Fallback to first available connector if Cartridge not in list
       if (!connectors.includes(cartridgeConnector)) {
         connector = connectors[0];
-        console.warn("⚠️ Cartridge connector not found, using fallback:", connector);
       }
       
       if (!connector) {
         throw new Error("No wallet connectors available. Please install a Starknet wallet.");
       }
-
-      console.log("🔗 Using connector:", {
-        name: connector.name || 'Unknown',
-        available: connector.available || false
-      });
       
       await connect({ connector });
-      console.log("✅ Connection initiated successfully");
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown connection error";
@@ -79,12 +70,10 @@ export function useStarknetConnect(): UseStarknetConnectReturn {
   const handleDisconnect = useCallback(async () => {
     try {
       setConnectionError(undefined);
-      console.log("🔌 Disconnecting wallet...");
       
       await disconnect();
       setHasTriedConnect(false);
       
-      console.log("✅ Wallet disconnected successfully");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown disconnection error";
       setConnectionError(errorMessage);
@@ -109,21 +98,8 @@ export function useStarknetConnect(): UseStarknetConnectReturn {
   useEffect(() => {
     if (status === 'connected') {
       setConnectionError(undefined);
-      console.log("🎊 Wallet connected to ByteBeasts!");
     }
   }, [status]);
-
-  /**
-   * Log status changes for debugging
-   */
-  useEffect(() => {
-    console.log("📊 Connection status changed:", {
-      status,
-      address: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : undefined,
-      hasTriedConnect,
-      isConnecting
-    });
-  }, [status, address, hasTriedConnect, isConnecting]);
 
   return {
     status,

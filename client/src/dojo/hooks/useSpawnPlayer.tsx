@@ -75,7 +75,6 @@ export const useSpawnPlayer = (): UseSpawnPlayerReturn => {
   const initializePlayer = useCallback(async (): Promise<InitializationResult> => {
     // Prevent multiple executions
     if (isInitializing) {
-      console.log("⚠️ Already initializing player, skipping...");
       return { success: false, playerExists: false, error: "Already initializing" };
     }
 
@@ -98,8 +97,6 @@ export const useSpawnPlayer = (): UseSpawnPlayerReturn => {
     }
 
     const transactionId = uuidv4();
-
-    console.log("🚀 Starting player initialization...");
     
     try {
       // Start initialization
@@ -111,7 +108,6 @@ export const useSpawnPlayer = (): UseSpawnPlayerReturn => {
       }));
 
       // Step 1: Refetch player data to check if player exists
-      console.log("🔄 Fetching latest player data...");
       await refetchPlayer();
       
       // Wait a bit to ensure data is loaded
@@ -120,13 +116,9 @@ export const useSpawnPlayer = (): UseSpawnPlayerReturn => {
       // Check if player exists in the store
       const storePlayer = useAppStore.getState().player;
       const playerExists = storePlayer !== null;
-      
-      console.log("👤 Player exists:", playerExists);
-      console.log("📊 Player data:", storePlayer);
 
       if (playerExists) {
         // Player exists - load data and continue
-        console.log("✅ Player already exists, continuing with existing data...");
         
         setInitState(prev => ({ 
           ...prev, 
@@ -147,7 +139,6 @@ export const useSpawnPlayer = (): UseSpawnPlayerReturn => {
         return { success: true, playerExists: true };
       } else {
         // Player doesn't exist - spawn new player
-        console.log("🆕 Player not found, spawning new player...");
         
         setInitState(prev => ({ 
           ...prev, 
@@ -156,11 +147,8 @@ export const useSpawnPlayer = (): UseSpawnPlayerReturn => {
         }));
 
         // Execute spawn player transaction using Dojo SDK
-        console.log("📝 Executing spawn_player transaction...");
         const spawnTx = await client.player.spawnPlayer(account as Account);
         
-        console.log("✅ Spawn transaction response:", spawnTx);
-
         if (spawnTx?.transaction_hash) {
           setInitState(prev => ({ 
             ...prev, 
@@ -169,7 +157,6 @@ export const useSpawnPlayer = (): UseSpawnPlayerReturn => {
         }
         
         if (spawnTx && spawnTx.code === "SUCCESS") {
-          console.log("🎉 Player spawned successfully!");
           
           setInitState(prev => ({ 
             ...prev, 
@@ -177,18 +164,15 @@ export const useSpawnPlayer = (): UseSpawnPlayerReturn => {
           }));
           
           // Wait for transaction to be processed
-          console.log("⏳ Waiting for transaction to be processed...");
           await new Promise(resolve => setTimeout(resolve, 3500));
           
           // Refetch player data after spawning
-          console.log("🔄 Refetching player data after spawn...");
           await refetchPlayer();
           
           // Verify player was created
           const newStorePlayer = useAppStore.getState().player;
           
           if (newStorePlayer) {
-            console.log("✅ Player spawned in store successfully:", newStorePlayer);
             
             setInitState(prev => ({ 
               ...prev, 
@@ -258,7 +242,6 @@ export const useSpawnPlayer = (): UseSpawnPlayerReturn => {
    * Reset initialization state
    */
   const resetInitializer = useCallback(() => {
-    console.log("🔄 Resetting initializer state...");
     setIsInitializing(false);
     setInitState({
       isInitializing: false,

@@ -12,18 +12,29 @@ import type { Screen } from "../components/types/screens";
 
 function AppContent() {
   const [currentScreen, setCurrentScreenState] = useState<Screen>("login");
-  const [playerAddress] = useState("0x123"); // Dirección temporal
+  const [playerAddress] = useState("0x123"); // Temporary address
 
   const handleNavigation = (screen: Screen) => {
     setCurrentScreenState(screen);
   };
 
-  // 🎯 Callback específico para cuando HatchEgg termina
+  // Callback for when Login completes - dynamic navigation based on beast status
+  const handleLoginComplete = useCallback((destination: 'hatch' | 'home') => {
+    if (destination === 'home') {
+      // Player has live beast - go directly to home
+      setCurrentScreenState("home");
+    } else {
+      // Player needs to spawn beast - go to hatch
+      setCurrentScreenState("hatch");
+    }
+  }, []);
+
+  // Specific callback for when HatchEgg completes
   const handleHatchComplete = useCallback(() => {
     setCurrentScreenState("cover");
   }, []);
 
-  // 🎯 Callback específico para cuando Cover termina
+  // Specific callback for when Cover completes
   const handleCoverComplete = useCallback(() => {
     setCurrentScreenState("home");
   }, []);
@@ -32,7 +43,7 @@ function AppContent() {
     <div className="relative min-h-screen pb-16">
       {currentScreen === "login" && (
         <LoginScreen 
-          onLoginSuccess={() => handleNavigation("hatch")} 
+          onLoginSuccess={handleLoginComplete}
         />
       )}
 
