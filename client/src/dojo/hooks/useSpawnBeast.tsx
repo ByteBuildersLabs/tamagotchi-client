@@ -127,11 +127,11 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
       setSpawnState(prev => ({ ...prev, step: 'spawning' }));
 
       // Execute spawn_beast transaction
-      const tx = await client.game.spawnBeast({
-        account: account as Account,
-        specie: params.specie,
-        beastType: params.beast_type,
-      });
+      const tx = await client.game.spawnBeast(
+        account as Account,
+        params.specie,
+        params.beast_type
+      );
 
       console.log("🔄 Spawn beast transaction sent:", tx.transaction_hash);
       

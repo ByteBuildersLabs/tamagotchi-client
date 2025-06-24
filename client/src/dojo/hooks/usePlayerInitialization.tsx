@@ -34,20 +34,20 @@ interface UsePlayerInitializationReturn {
   hasLiveBeast: boolean;
   shouldGoToHatch: boolean;
   shouldGoToHome: boolean;
-
+  
   // Player spawn state passthrough
   playerSpawnTxHash: string | null;
   playerSpawnTxStatus: 'PENDING' | 'SUCCESS' | 'REJECTED' | null;
-
+  
   // Actions
   initializeComplete: () => Promise<InitializationResult>;
   resetInitialization: () => void;
 }
 
 /**
- * Coordinator hook for complete player initialization
- * Handles both player spawning and beast verification
- * Decides the appropriate navigation (Hatch vs Home)
+ * Hook coordinador para la inicialización completa del player
+ * Maneja tanto el spawn del player como la verificación de bestias
+ * Decide la navegación apropiada (Hatch vs Home)
  */
 export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
   // Hooks dependencies
@@ -129,22 +129,34 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
       // Another small delay to ensure beast status is processed
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Check if player has live beast
-      const playerHasLiveBeast = hasLiveBeast;
+      // Get fresh hasLiveBeast value directly from store instead of hook variable
+      const currentStorePlayer = useAppStore.getState().player;
+      const currentBeastStatuses = useAppStore.getState().beastStatuses;
+      
+      console.log("🔍 [Initialization] Store state check:", {
+        currentBeastId: currentStorePlayer?.current_beast_id,
+        beastStatuses: currentBeastStatuses.map(s => ({ beast_id: s.beast_id, is_alive: s.is_alive }))
+      });
+
+      // Calculate hasLiveBeast directly from fresh store data
+      const directHasLiveBeast = currentStorePlayer?.current_beast_id && 
+        currentBeastStatuses.some(status => 
+          status.beast_id === currentStorePlayer.current_beast_id && status.is_alive
+        ) || false;
 
       console.log("🐾 Beast status check completed:", {
-        hasLiveBeast: playerHasLiveBeast,
-        currentBeastId: storePlayer?.current_beast_id || 0
+        hasLiveBeast: directHasLiveBeast,
+        currentBeastId: currentStorePlayer?.current_beast_id || 0
       });
 
       // Step 3: Determine navigation
-      const shouldGoToHome = playerHasLiveBeast;
-      const shouldGoToHatch = !playerHasLiveBeast;
+      const shouldGoToHome = directHasLiveBeast;
+      const shouldGoToHatch = !directHasLiveBeast;
 
       console.log("🧭 Navigation decision:", {
         shouldGoToHome,
         shouldGoToHatch,
-        reason: playerHasLiveBeast ? "Has live beast" : "No live beast found"
+        reason: directHasLiveBeast ? "Has live beast" : "No live beast found"
       });
 
       // Step 4: Complete initialization
@@ -153,7 +165,7 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
         step: 'complete',
         completed: true,
         isInitializing: false,
-        hasLiveBeast: playerHasLiveBeast,
+        hasLiveBeast: directHasLiveBeast,
         shouldGoToHatch,
         shouldGoToHome
       }));
@@ -161,14 +173,14 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
       return {
         success: true,
         playerExists: playerResult.playerExists,
-        hasLiveBeast: playerHasLiveBeast,
+        hasLiveBeast: directHasLiveBeast,
         shouldGoToHatch,
         shouldGoToHome
       };
 
     } catch (error: any) {
       const errorMessage = error?.message || "Complete initialization failed";
-
+      
       console.error("❌ Complete initialization failed:", error);
 
       setInitState(prev => ({
@@ -195,7 +207,7 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
    */
   const resetInitialization = useCallback(() => {
     console.log("🔄 Resetting complete initialization...");
-
+    
     // Reset our local state
     setInitState({
       isInitializing: false,
@@ -242,11 +254,11 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
     hasLiveBeast: initState.hasLiveBeast,
     shouldGoToHatch: initState.shouldGoToHatch,
     shouldGoToHome: initState.shouldGoToHome,
-
+    
     // Player spawn state passthrough
     playerSpawnTxHash: playerTxHash,
     playerSpawnTxStatus: playerTxStatus,
-
+    
     // Actions
     initializeComplete,
     resetInitialization,

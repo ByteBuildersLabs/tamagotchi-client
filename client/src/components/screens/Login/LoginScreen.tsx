@@ -4,7 +4,7 @@ import { useAccount } from '@starknet-react/core';
 import { useLoginAnimations } from './components/useLoginAnimations';
 import { UniverseView, GameView } from './components/CoverViews';
 import { VennDiagram } from './components/VennDiagram';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import useAppStore from '../../../zustand/store'; 
 
@@ -49,6 +49,9 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   // Get player from store
   const storePlayer = useAppStore(state => state.player);
 
+  // Ref to prevent multiple initializations
+  const hasInitialized = useRef(false);
+
   /**
    * Handle connect button click - trigger Cartridge Controller
    */
@@ -65,10 +68,15 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
    * Trigger complete player initialization on wallet connect
    */
   useEffect(() => {
-    if (status === 'connected' && hasTriedConnect && account) {
+    if (status === 'connected' && hasTriedConnect && account && !hasInitialized.current) {
       console.log("Wallet connected, starting complete initialization...");
+      hasInitialized.current = true;
+      
       initializeComplete().then(result => {
         console.log("Complete initialization result:", result);
+      }).catch(error => {
+        console.error("Initialization failed:", error);
+        hasInitialized.current = false; // Reset on error
       });
     }
   }, [status, hasTriedConnect, account, initializeComplete]);

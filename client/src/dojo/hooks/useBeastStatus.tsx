@@ -159,7 +159,13 @@ export const useBeastStatus = (): UseBeastStatusReturn => {
 
   // Memoize hasLiveBeast - checks if current beast exists and is alive
   const hasLiveBeast = useMemo(() => {
+    console.log("🔍 [useBeastStatus] Checking hasLiveBeast:", {
+      playerCurrentBeastId: storePlayer?.current_beast_id,
+      availableBeastStatuses: storeBeastStatuses.map(s => ({ beast_id: s.beast_id, is_alive: s.is_alive }))
+    });
+    
     if (!storePlayer?.current_beast_id || storePlayer.current_beast_id === 0) {
+      console.log("❌ [useBeastStatus] No current_beast_id in player");
       return false;
     }
     
@@ -167,7 +173,12 @@ export const useBeastStatus = (): UseBeastStatusReturn => {
       status.beast_id === storePlayer.current_beast_id
     );
     
-    return currentStatus ? currentStatus.is_alive : false;
+    console.log("🔍 [useBeastStatus] Found current status:", currentStatus);
+    
+    const result = currentStatus ? currentStatus.is_alive : false;
+    console.log("🎯 [useBeastStatus] hasLiveBeast result:", result);
+    
+    return result;
   }, [storePlayer?.current_beast_id, storeBeastStatuses]);
 
   // Function to get beast status by ID
