@@ -48,7 +48,7 @@ interface UseSpawnBeastReturn {
   spawnedBeastParams: BeastSpawnParams | null;
   
   // Actions
-  spawnBeast: () => Promise<SpawnResult>;
+  spawnBeast: (params?: BeastSpawnParams) => Promise<SpawnResult>; 
   resetSpawner: () => void;
 }
 
@@ -235,11 +235,13 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
   }, [account, status, storePlayer, client, state, refetchBeasts, refetchBeastStatus, refetchPlayer]);
 
   /**
-   * Spawn beast with random parameters
+   * Spawn beast with optional parameters
+   * If no parameters are provided, generate random ones
    */
-  const spawnBeast = useCallback(async (): Promise<SpawnResult> => {
-    const params = generateRandomBeastParams();
-    return executeSpawnBeast(params);
+  const spawnBeast = useCallback(async (params?: BeastSpawnParams): Promise<SpawnResult> => {
+    const beastParams = params || generateRandomBeastParams();
+    console.log("🎲 Using beast params for spawn:", beastParams);
+    return executeSpawnBeast(beastParams);
   }, [executeSpawnBeast]);
 
   /**
