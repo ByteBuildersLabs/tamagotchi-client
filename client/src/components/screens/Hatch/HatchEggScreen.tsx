@@ -1,5 +1,5 @@
 import { AnimatePresence } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import { useEggAnimation } from "./hooks/useEggAnimation";
@@ -16,26 +16,59 @@ import MegaBurstParticles from "./components/MegaBurstParticles";
 import { useSpawnBeast } from "../../../dojo/hooks/useSpawnBeast";
 import useAppStore from '../../../zustand/store';
 
+// 🔥 NUEVO: Imports para beast params y mapping
+import type { BeastSpawnParams } from "../../../utils/beastHelpers";
+import { getBeastDisplayInfo } from "../../../utils/beastHelpers";
+import { getEggTypeBySpecie, BEAST_ASSETS } from "./components/eggAnimation";
+
 // Assets
 import forestBackground from "../../../assets/backgrounds/bg-home.png";
 
 interface HatchEggScreenProps {
   onLoadingComplete: () => void;
-  eggType?: EggType;
+  beastParams: BeastSpawnParams; // 🔥 CAMBIO: Recibir beastParams en lugar de eggType
 }
 
-export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchEggScreenProps) => {
-  // Hook with progressive effects
+export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScreenProps) => {
+  // 🔥 NUEVO: Determinar eggType usando helper function
+  const eggType: EggType = getEggTypeBySpecie(beastParams.specie);
+  
+  // 🔥 NUEVO: Obtener información de display de la bestia
+  const beastDisplayInfo = useMemo(() => {
+    return getBeastDisplayInfo(beastParams.specie, beastParams.beast_type);
+  }, [beastParams.specie, beastParams.beast_type]);
+
+  // 🔥 NUEVO: Obtener asset correcto basado en beastParams reales
+  const correctBeastAsset = useMemo(() => {
+    // Mapear beast type numérico a string para acceder a BEAST_ASSETS
+    const getBeastTypeString = (beastType: number): 'wolf' | 'dragon' | 'snake' => {
+      switch (beastType) {
+        case 1: return 'wolf';
+        case 2: return 'dragon';  
+        case 3: return 'snake';
+        default: return 'wolf';
+      }
+    };
+    
+    const beastTypeString = getBeastTypeString(beastParams.beast_type);
+    return BEAST_ASSETS[beastTypeString];
+  }, [beastParams.beast_type]);
+
+  console.log("🥚 Hatching with params:", beastParams);
+  console.log("🥚 Using egg type:", eggType);
+  console.log("🐾 Expected beast:", beastDisplayInfo);
+
+  // Hook with progressive effects - usando eggType determinado
   const {
     currentFrame,
     eggState,
     startHatching: startEggHatching,
     canClick,
-    beastType,
-    beastAsset,
     showBeast,
     glowLevel
   } = useEggAnimation(eggType);
+  
+  // 🔥 ELIMINADO: beastType no usado (ahora usamos beastDisplayInfo.displayName)
 
   // Mega-burst effects hook
   const { showMegaBurst, showFullScreenFlash } = useMegaBurstEffect(eggState);
@@ -53,19 +86,22 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
   } = useSpawnBeast();
 
   /**
-   * Enhanced hatching function that includes beast spawning
+   * 🔥 ACTUALIZADO: Enhanced hatching function con parámetros específicos
    */
   const handleHatchEgg = async () => {
     // Step 1: Start egg animation
     startEggHatching();
 
-    // Step 2: Execute beast spawn transaction
+    // Step 2: Execute beast spawn transaction con parámetros predeterminados
     try {
-      const result = await spawnBeast();
+      console.log("🚀 Spawning beast with predetermined params:", beastParams);
+      
+      // 🔥 CAMBIO: Pasar beastParams específicos al spawn
+      const result = await spawnBeast(beastParams);
       
       if (result.success) {
-        // Toast success message
-        toast.success(`🐾 Beast spawned!`, {
+        // Toast success message con nombre específico
+        toast.success(`🐾 ${beastDisplayInfo.displayName} spawned!`, {
           duration: 3000,
           position: 'top-center'
         });
@@ -193,30 +229,30 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
 
       {/* Content Container */}
       <div className="flex flex-col items-center justify-center space-y-8 z-50 px-4">
-        {/* Header */}
+        {/* Header - 🔥 ACTUALIZADO: Usar nombre específico de la bestia */}
         <HatchHeader 
           showBeast={showBeast} 
-          beastType={beastType} 
+          beastType={beastDisplayInfo.displayName} 
           eggState={eggState} 
         />
 
-        {/* Spawn Progress Indicator */}
+        {/* Spawn Progress Indicator - 🔥 ACTUALIZADO: Mostrar nombre específico */}
         {showSpawnProgress && (
           <div className="bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200 shadow-lg">
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
               <span className="text-sm font-medium text-gray-700">
-                {isSpawning ? `Spawning beast... (${currentStep})` : 'Transaction pending...'}
+                {isSpawning ? `Spawning ${beastDisplayInfo.displayName}... (${currentStep})` : 'Transaction pending...'}
               </span>
             </div>
           </div>
         )}
 
-        {/* Egg Display */}
+        {/* Egg Display - 🔥 ACTUALIZADO: Usar eggType determinado */}
         {!showBeast && (
           <EggDisplay
             currentFrame={currentFrame}
-            eggType={eggType}
+            eggType={eggType} // Egg type correcto basado en specie
             eggState={eggState}
             canClick={canClick && !isSpawning} // Disable clicking during spawn
             glowLevel={glowLevel}
@@ -224,11 +260,11 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
           />
         )}
 
-        {/* Beast Display */}
+        {/* Beast Display - 🔥 CORREGIDO: Usar asset correcto basado en beastParams */}
         {showBeast && (
           <BeastDisplay
-            beastAsset={beastAsset}
-            beastType={beastType}
+            beastAsset={correctBeastAsset}
+            beastType={beastDisplayInfo.displayName}
           />
         )}
 
@@ -237,13 +273,13 @@ export const HatchEggScreen = ({ onLoadingComplete, eggType = 'shadow' }: HatchE
           <ContinueButton onContinue={handleContinue} />
         )}
 
-        {/* Wait message if animation done but spawn not complete */}
+        {/* Wait message if animation done but spawn not complete - 🔥 ACTUALIZADO */}
         {eggState === 'revealing' && showBeast && !spawnCompleted && !directHasLiveBeast && (
           <div className="bg-amber-100 border border-amber-400 rounded-lg px-4 py-2">
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
               <span className="text-sm font-medium text-amber-800">
-                Finalizing beast creation...
+                Finalizing {beastDisplayInfo.displayName} creation...
               </span>
             </div>
           </div>
