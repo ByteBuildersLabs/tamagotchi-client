@@ -10,7 +10,7 @@ import {
   HighestScore 
 } from '../dojo/models.gen';
 
-// 🔥 NEW: Simplified Beast State - only what we actually need
+// Simplified Beast State - only what we actually need
 interface LiveBeastData {
   beast: Beast | null;
   status: BeastStatus | null;
@@ -22,14 +22,8 @@ interface AppStore {
   // Player state
   player: Player | null;
   
-  // 🔥 OPTIMIZED: Single live beast data instead of arrays
+  // Single live beast data instead of arrays
   liveBeast: LiveBeastData;
-  
-  // 🔥 DEPRECATED: Remove these arrays - we only need the live beast
-  // beasts: Beast[];
-  // currentBeast: Beast | null;
-  // beastStatuses: BeastStatus[];
-  // currentBeastStatus: BeastStatus | null;
   
   // Food state
   foods: Food[];
@@ -49,18 +43,10 @@ interface AppStore {
   updatePlayerPoints: (total_points: number) => void;
   updateCurrentBeastId: (current_beast_id: number) => void;
   
-  // 🔥 NEW: Simplified beast actions for live beast only
+  // Simplified beast actions for live beast only
   setLiveBeast: (beast: Beast | null, status: BeastStatus | null) => void;
   updateLiveBeastStatus: (statusUpdate: Partial<BeastStatus>) => void;
   clearLiveBeast: () => void;
-  
-  // 🔥 DEPRECATED: Remove old beast array actions
-  // setBeasts: (beasts: Beast[]) => void;
-  // addBeast: (beast: Beast) => void;
-  // setCurrentBeast: (beast: Beast | null) => void;
-  // setBeastStatuses: (beastStatuses: BeastStatus[]) => void;
-  // setCurrentBeastStatus: (beastStatus: BeastStatus | null) => void;
-  // updateBeastStatus: (player: string, beast_id: number, statusUpdate: Partial<BeastStatus>) => void;
   
   // Food actions
   setFoods: (foods: Food[]) => void;
@@ -81,7 +67,7 @@ interface AppStore {
   // Utility actions
   resetStore: () => void;
   
-  // 🔥 NEW: Convenience getters
+  // Convenience getters
   hasLiveBeast: () => boolean;
   getCurrentBeastId: () => number | null;
 }
@@ -109,7 +95,10 @@ const useAppStore = create<AppStore>()(
       ...initialState,
       
       // Player actions
-      setPlayer: (player) => set({ player }),
+      setPlayer: (player) => {
+        console.log("🔄 [STORE] Setting player:", player);
+        set({ player });
+      },
       
       updatePlayerStreak: (daily_streak) => set((state) => ({
         player: state.player ? { ...state.player, daily_streak } : null
@@ -119,38 +108,61 @@ const useAppStore = create<AppStore>()(
         player: state.player ? { ...state.player, total_points } : null
       })),
       
-      updateCurrentBeastId: (current_beast_id) => set((state) => ({
-        player: state.player ? { ...state.player, current_beast_id } : null
-      })),
+      updateCurrentBeastId: (current_beast_id) => {
+        console.log("🔄 [STORE] Updating current_beast_id:", current_beast_id);
+        set((state) => ({
+          player: state.player ? { ...state.player, current_beast_id } : null
+        }));
+      },
       
-      // 🔥 NEW: Simplified live beast actions
-      setLiveBeast: (beast, status) => set({
-        liveBeast: {
-          beast,
-          status,
-          isAlive: status?.is_alive || false
-        }
-      }),
+      // Simplified live beast actions
+      setLiveBeast: (beast, status) => {
+        const isAlive = status?.is_alive || false;
+        console.log("🔄 [STORE] Setting live beast:", { beast, status, isAlive });
+        
+        set({
+          liveBeast: {
+            beast,
+            status,
+            isAlive
+          }
+        });
+        
+        // 🔥 NEW: Verify the update immediately
+        setTimeout(() => {
+          const newState = get();
+          console.log("✅ [STORE] Live beast set, new state:", {
+            liveBeast: newState.liveBeast,
+            hasLiveBeastResult: newState.hasLiveBeast()
+          });
+        }, 0);
+      },
       
-      updateLiveBeastStatus: (statusUpdate) => set((state) => ({
-        liveBeast: {
-          ...state.liveBeast,
-          status: state.liveBeast.status 
-            ? { ...state.liveBeast.status, ...statusUpdate }
-            : null,
-          isAlive: statusUpdate.is_alive !== undefined 
-            ? statusUpdate.is_alive 
-            : state.liveBeast.isAlive
-        }
-      })),
+      updateLiveBeastStatus: (statusUpdate) => {
+        console.log("🔄 [STORE] Updating live beast status:", statusUpdate);
+        set((state) => ({
+          liveBeast: {
+            ...state.liveBeast,
+            status: state.liveBeast.status 
+              ? { ...state.liveBeast.status, ...statusUpdate }
+              : null,
+            isAlive: statusUpdate.is_alive !== undefined 
+              ? statusUpdate.is_alive 
+              : state.liveBeast.isAlive
+          }
+        }));
+      },
       
-      clearLiveBeast: () => set({
-        liveBeast: {
-          beast: null,
-          status: null,
-          isAlive: false
-        }
-      }),
+      clearLiveBeast: () => {
+        console.log("🔄 [STORE] Clearing live beast");
+        set({
+          liveBeast: {
+            beast: null,
+            status: null,
+            isAlive: false
+          }
+        });
+      },
       
       // Food actions
       setFoods: (foods) => set({ foods }),
@@ -196,17 +208,29 @@ const useAppStore = create<AppStore>()(
       startGame: () => set({ gameStarted: true }),
       endGame: () => set({ gameStarted: false }),
       
-      // 🔥 NEW: Convenience getters
+      // 🔥 ENHANCED: Convenience getters with debugging
       hasLiveBeast: () => {
         const state = get();
-        return state.liveBeast.isAlive && 
+        const result = state.liveBeast.isAlive && 
                state.liveBeast.beast !== null && 
                state.liveBeast.status !== null;
+               
+        console.log("🔍 [STORE-GETTER] hasLiveBeast() called:", {
+          isAlive: state.liveBeast.isAlive,
+          hasBeast: state.liveBeast.beast !== null,
+          hasStatus: state.liveBeast.status !== null,
+          result,
+          liveBeastData: state.liveBeast
+        });
+        
+        return result;
       },
       
       getCurrentBeastId: () => {
         const state = get();
-        return state.liveBeast.beast?.beast_id || null;
+        const result = state.liveBeast.beast?.beast_id || null;
+        console.log("🔍 [STORE-GETTER] getCurrentBeastId() called:", result);
+        return result;
       },
       
       // Utility actions
@@ -217,7 +241,7 @@ const useAppStore = create<AppStore>()(
       partialize: (state) => ({
         // Only persist certain parts of the state
         player: state.player,
-        liveBeast: state.liveBeast, // 🔥 NEW: Only persist live beast data
+        liveBeast: state.liveBeast,
         foods: state.foods,
         highestScores: state.highestScores,
         isConnected: state.isConnected,
