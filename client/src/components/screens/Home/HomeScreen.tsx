@@ -5,11 +5,11 @@ import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import { PlayerInfoModal } from "./components/PlayerInfoModal";
 import forestBackground from "../../../assets/backgrounds/bg-home.png";
 
-// 🔥 NUEVO: Imports para datos dinámicos
+// 🔥 UPDATED: Imports para datos dinámicos con hook optimizado
 import useAppStore from "../../../zustand/store";
-import { useBeastStatus } from "../../../dojo/hooks/useBeastStatus";
+import { useLiveBeast } from "../../../dojo/hooks/useLiveBeast"; // 🔥 NEW: Single optimized hook
 import { getBeastDisplayInfo, type BeastSpecies, type BeastType } from "../../../utils/beastHelpers";
-import { BEAST_ASSETS, type BeastType as EggBeastType } from "../Hatch/components/eggAnimation"; // Para obtener assets
+import { BEAST_ASSETS, type BeastType as EggBeastType } from "../Hatch/components/eggAnimation";
 
 // Hooks
 import { usePlayerModal } from "./components/hooks/usePlayerModal";
@@ -24,35 +24,30 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
   const [age] = useState(1);
   const playerName = "0xluis";
 
-  // 🔥 NUEVO: Obtener datos reales del store
+  // 🔥 UPDATED: Obtener datos reales del store optimizado
   const storePlayer = useAppStore(state => state.player);
-  const storeBeasts = useAppStore(state => state.beasts);
   
-  // 🔥 NUEVO: Hook para verificar beast status
-  const { hasLiveBeast, currentBeastStatus } = useBeastStatus();
+  // 🔥 NEW: Hook optimizado que reemplaza useBeasts + useBeastStatus
+  const { 
+    liveBeast, 
+    liveBeastStatus, 
+    hasLiveBeast 
+  } = useLiveBeast();
 
-  // 🔥 NUEVO: Obtener bestia actual del jugador
-  const currentBeast = useMemo(() => {
-    if (!storePlayer?.current_beast_id || !storeBeasts.length) {
-      return null;
-    }
-    
-    return storeBeasts.find(beast => 
-      beast.beast_id === storePlayer.current_beast_id
-    ) || null;
-  }, [storePlayer?.current_beast_id, storeBeasts]);
+  // 🔥 SIMPLIFIED: currentBeast ahora viene directamente del hook optimizado
+  const currentBeast = liveBeast;
 
-  // 🔥 NUEVO: Obtener información de display de la bestia actual
+  // 🔥 UPDATED: Obtener información de display de la bestia actual
   const currentBeastDisplay = useMemo(() => {
     if (!currentBeast) return null;
     
-    // 🔥 CORREGIDO: Cast seguro a los tipos esperados
+    // Cast seguro a los tipos esperados
     const displayInfo = getBeastDisplayInfo(
       currentBeast.specie as BeastSpecies, 
       currentBeast.beast_type as BeastType
     );
     
-    // 🔥 CORREGIDO: Mapear beast type numérico a string para acceder a BEAST_ASSETS
+    // Mapear beast type numérico a string para acceder a BEAST_ASSETS
     const getBeastTypeString = (beastType: number): EggBeastType => {
       switch (beastType) {
         case 1: return 'wolf';
@@ -73,9 +68,9 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
     };
   }, [currentBeast]);
 
-  // 🔥 NUEVO: Datos de bestia dinámicos basados en status real
+  // 🔥 UPDATED: Datos de bestia dinámicos basados en status real del hook optimizado
   const beastData: BeastData = useMemo(() => {
-    if (!currentBeastStatus) {
+    if (!liveBeastStatus) {
       return {
         age: 0,
         energy: 0,
@@ -87,22 +82,22 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
 
     return {
       age: currentBeastDisplay?.age || 0,
-      energy: currentBeastStatus.energy,
-      hunger: currentBeastStatus.hunger,
-      happiness: currentBeastStatus.happiness,
-      cleanliness: currentBeastStatus.hygiene,
+      energy: liveBeastStatus.energy,
+      hunger: liveBeastStatus.hunger,
+      happiness: liveBeastStatus.happiness,
+      cleanliness: liveBeastStatus.hygiene,
     };
-  }, [currentBeastStatus, currentBeastDisplay]);
+  }, [liveBeastStatus, currentBeastDisplay]);
 
   // Custom hooks
   const { isPlayerInfoModalOpen, openPlayerModal, closePlayerModal } = usePlayerModal();
   const { handleShopClick, handleDailyQuestsClick, handleNavigateLogin } = useHomeNavigation(onNavigation);
 
-  // Player data (mantener hardcodeado por ahora, puede ser dinámico después)
+  // Player data
   const playerData: PlayerData = {
     username: playerName,
-    points: storePlayer?.total_points || 0, // 🔥 ACTUALIZADO: Usar puntos reales
-    currentStreak: storePlayer?.daily_streak || 0, // 🔥 ACTUALIZADO: Usar streak real
+    points: storePlayer?.total_points || 0,
+    currentStreak: storePlayer?.daily_streak || 0,
     banner: "dragon",
   };
 
@@ -111,9 +106,9 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
     openPlayerModal();
   };
 
-  // 🔥 NUEVO: Función para renderizar contenido basado en estado de bestia
+  // 🔥 UPDATED: Función para renderizar contenido basado en estado de bestia
   const renderBeastContent = () => {
-    // Caso 1: No hay bestia o no está viva
+    // Caso 1: No hay bestia viva
     if (!hasLiveBeast || !currentBeastDisplay) {
       return (
         <div className="flex-grow flex items-center justify-center w-full">
@@ -147,7 +142,7 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
     );
   };
 
-  // 🔥 NUEVO: Determinar si mostrar action buttons
+  // 🔥 UPDATED: Determinar si mostrar action buttons
   const shouldShowActionButtons = hasLiveBeast && currentBeastDisplay;
 
   return (
@@ -163,19 +158,19 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
       {/* Magical Sparkle Particles */}
       <MagicalSparkleParticles />
        
-      {/* Top Bar - 🔥 ACTUALIZADO: Usar datos reales de beast status */}
+      {/* 🔥 UPDATED: Top Bar usando liveBeastStatus del hook optimizado */}
       <TamagotchiTopBar
         coins={12345} // TODO: Hacer dinámico cuando tengas sistema de coins
         gems={678}    // TODO: Hacer dinámico cuando tengas sistema de gems
         status={{
-          energy: currentBeastStatus?.energy || 0,
-          hunger: currentBeastStatus?.hunger || 0,
-          happiness: currentBeastStatus?.happiness || 0,
-          hygiene: currentBeastStatus?.hygiene || 0
+          energy: liveBeastStatus?.energy || 0,
+          hunger: liveBeastStatus?.hunger || 0,
+          happiness: liveBeastStatus?.happiness || 0,
+          hygiene: liveBeastStatus?.hygiene || 0
         }}
       />
 
-      {/* Player Info Section - 🔥 ACTUALIZADO: Usar beastData dinámico */}
+      {/* Player Info Section */}
       <PlayerInfoSection
         playerName={playerName}
         age={age}
@@ -184,10 +179,10 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
         beastData={beastData}
       />
 
-      {/* 🔥 NUEVO: Beast Display Dinámico */}
+      {/* Beast Display Dinámico */}
       {renderBeastContent()}
 
-      {/* Action Buttons - 🔥 NUEVO: Solo mostrar si hay bestia viva */}
+      {/* Action Buttons - Solo mostrar si hay bestia viva */}
       {shouldShowActionButtons && (
         <ActionButtons
           onShopClick={handleShopClick}
@@ -195,14 +190,14 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
         />
       )}
 
-      {/* Player Info Modal - 🔥 ACTUALIZADO: Usar playerData con puntos reales */}
+      {/* Player Info Modal */}
       <PlayerInfoModal
         isOpen={isPlayerInfoModalOpen}
         onClose={closePlayerModal}
         playerData={playerData}
       />
 
-      {/* 🔥 NUEVO: Debug info en desarrollo */}
+      {/* 🔥 UPDATED: Debug info optimizado */}
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed bottom-20 left-4 bg-black/80 text-white p-2 rounded text-xs max-w-xs">
           <div>Beast ID: {currentBeast?.beast_id || 'None'}</div>
@@ -210,6 +205,8 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
           <div>Type: {currentBeast?.beast_type || 'N/A'}</div>
           <div>Alive: {hasLiveBeast ? 'Yes' : 'No'}</div>
           <div>Display: {currentBeastDisplay?.displayName || 'None'}</div>
+          <div>Energy: {liveBeastStatus?.energy || 0}</div>
+          <div>Hunger: {liveBeastStatus?.hunger || 0}</div>
         </div>
       )}
     </div>
