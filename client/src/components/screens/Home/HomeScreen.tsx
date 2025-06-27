@@ -5,17 +5,15 @@ import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import { PlayerInfoModal } from "./components/PlayerInfoModal";
 import forestBackground from "../../../assets/backgrounds/bg-home.png";
 
-// Dynamic data imports with optimized hook
-import useAppStore from "../../../zustand/store";
-import { useLiveBeast } from "../../../dojo/hooks/useLiveBeast";
-import { getBeastDisplayInfo, type BeastSpecies, type BeastType } from "../../../utils/beastHelpers";
-import { BEAST_ASSETS, type BeastType as EggBeastType } from "../Hatch/components/eggAnimation";
+// Universal hook to encapsulate beast display logic
+import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 
-// Hooks
+// Store
+import useAppStore from "../../../zustand/store";
+
+// Components y hooks
 import { usePlayerModal } from "./components/hooks/usePlayerModal";
 import { useHomeNavigation } from "./components/hooks/useHomeNavigation";
-
-// Components
 import { PlayerInfoSection } from "./components/PlayerInfoSection";
 import { ActionButtons } from "./components/ActionButtons";
 import { BeastHomeDisplay } from "./components/BeastDisplay";
@@ -24,50 +22,18 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
   const [age] = useState(1);
   const playerName = "0xluis";
 
-  // Get real data from optimized store
+  // Universal hook to encapsulate beast display logic
+  const {
+    currentBeastDisplay,
+    liveBeastStatus,
+    hasLiveBeast,
+    isLoading
+  } = useBeastDisplay();
+
+  // Store data
   const storePlayer = useAppStore(state => state.player);
-  
-  // Optimized hook that replaces useBeasts + useBeastStatus
-  const { 
-    liveBeast, 
-    liveBeastStatus, 
-    hasLiveBeast 
-  } = useLiveBeast();
 
-  const currentBeast = liveBeast;
-
-  // Get display information for current beast
-  const currentBeastDisplay = useMemo(() => {
-    if (!currentBeast) return null;
-    
-    // Safe cast to expected types
-    const displayInfo = getBeastDisplayInfo(
-      currentBeast.specie as BeastSpecies, 
-      currentBeast.beast_type as BeastType
-    );
-    
-    // Map numeric beast type to string for BEAST_ASSETS access
-    const getBeastTypeString = (beastType: number): EggBeastType => {
-      switch (beastType) {
-        case 1: return 'wolf';
-        case 2: return 'dragon';  
-        case 3: return 'snake';
-        default: return 'wolf';
-      }
-    };
-    
-    const beastTypeString = getBeastTypeString(displayInfo.beastType as number);
-    const beastAsset = BEAST_ASSETS[beastTypeString];
-    
-    return {
-      ...displayInfo,
-      asset: beastAsset,
-      age: currentBeast.age,
-      beast_id: currentBeast.beast_id
-    };
-  }, [currentBeast]);
-
-  // Dynamic beast data based on real status from optimized hook
+  // Beast data para la UI
   const beastData: BeastData = useMemo(() => {
     if (!liveBeastStatus) {
       return {
@@ -104,19 +70,31 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
     openPlayerModal();
   };
 
-  // Render content based on beast state
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-white">Loading your beast...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render beast content
   const renderBeastContent = () => {
-    // Case 1: No live beast
+    // No live beast case
     if (!hasLiveBeast || !currentBeastDisplay) {
       return (
         <div className="flex-grow flex items-center justify-center w-full">
           <div className="text-center space-y-4">
             <div className="text-6xl opacity-50">💔</div>
             <h3 className="text-xl font-semibold text-white/90 drop-shadow-lg">
-              {!currentBeast ? "No Beast Found" : "Beast Needs Attention"}
+              {!currentBeastDisplay ? "No Beast Found" : "Beast Needs Attention"}
             </h3>
             <p className="text-sm text-white/70 drop-shadow-md">
-              {!currentBeast 
+              {!currentBeastDisplay 
                 ? "Time to hatch your first beast!" 
                 : "Your beast needs care to come back to life"}
             </p>
@@ -124,24 +102,21 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
               onClick={() => onNavigation("hatch")}
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
             >
-              {!currentBeast ? "Hatch New Beast" : "Revive Beast"}
+              {!currentBeastDisplay ? "Hatch New Beast" : "Revive Beast"}
             </button>
           </div>
         </div>
       );
     }
 
-    // Case 2: Live beast - display normally
+    // Live beast display
     return (
       <BeastHomeDisplay 
         beastImage={currentBeastDisplay.asset}
-        altText={`${currentBeastDisplay.displayName}`}
+        altText={currentBeastDisplay.displayName}
       />
     );
   };
-
-  // Determine if action buttons should be shown
-  const shouldShowActionButtons = hasLiveBeast && currentBeastDisplay;
 
   return (
     <div
@@ -153,13 +128,11 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Magical Sparkle Particles */}
       <MagicalSparkleParticles />
        
-      {/* Top Bar using liveBeastStatus from optimized hook */}
       <TamagotchiTopBar
-        coins={12345} // TODO: Make dynamic when coin system is implemented
-        gems={678}    // TODO: Make dynamic when gem system is implemented
+        coins={12345}
+        gems={678}
         status={{
           energy: liveBeastStatus?.energy || 0,
           hunger: liveBeastStatus?.hunger || 0,
@@ -168,7 +141,6 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
         }}
       />
 
-      {/* Player Info Section */}
       <PlayerInfoSection
         playerName={playerName}
         age={age}
@@ -177,18 +149,15 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
         beastData={beastData}
       />
 
-      {/* Dynamic Beast Display */}
       {renderBeastContent()}
 
-      {/* Action Buttons - Only show if there's a live beast */}
-      {shouldShowActionButtons && (
+      {hasLiveBeast && currentBeastDisplay && (
         <ActionButtons
           onShopClick={handleShopClick}
           onDailyQuestsClick={handleDailyQuestsClick}
         />
       )}
 
-      {/* Player Info Modal */}
       <PlayerInfoModal
         isOpen={isPlayerInfoModalOpen}
         onClose={closePlayerModal}

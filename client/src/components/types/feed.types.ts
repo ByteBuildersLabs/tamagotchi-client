@@ -1,4 +1,4 @@
-export type Screen = "login" | "cover" | "home" | "sleep" | "feed" | "clean" | "play";
+import type { Screen } from "../types/screens";
 
 export interface FoodItem {
   id: string;
