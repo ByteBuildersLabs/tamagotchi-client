@@ -10,18 +10,20 @@ import {
   HighestScore 
 } from '../dojo/models.gen';
 
+// Simplified Beast State - only what we actually need
+interface LiveBeastData {
+  beast: Beast | null;
+  status: BeastStatus | null;
+  isAlive: boolean;
+}
+
 // App State Interface
 interface AppStore {
   // Player state
   player: Player | null;
   
-  // Beast state
-  beasts: Beast[];
-  currentBeast: Beast | null;
-  
-  // Beast status state (separate from Beast for live stats)
-  beastStatuses: BeastStatus[];
-  currentBeastStatus: BeastStatus | null;
+  // Single live beast data instead of arrays
+  liveBeast: LiveBeastData;
   
   // Food state
   foods: Food[];
@@ -41,15 +43,10 @@ interface AppStore {
   updatePlayerPoints: (total_points: number) => void;
   updateCurrentBeastId: (current_beast_id: number) => void;
   
-  // Beast actions
-  setBeasts: (beasts: Beast[]) => void;
-  addBeast: (beast: Beast) => void;
-  setCurrentBeast: (beast: Beast | null) => void;
-  
-  // Beast status actions
-  setBeastStatuses: (beastStatuses: BeastStatus[]) => void;
-  setCurrentBeastStatus: (beastStatus: BeastStatus | null) => void;
-  updateBeastStatus: (player: string, beast_id: number, statusUpdate: Partial<BeastStatus>) => void;
+  // Simplified beast actions for live beast only
+  setLiveBeast: (beast: Beast | null, status: BeastStatus | null) => void;
+  updateLiveBeastStatus: (statusUpdate: Partial<BeastStatus>) => void;
+  clearLiveBeast: () => void;
   
   // Food actions
   setFoods: (foods: Food[]) => void;
@@ -69,15 +66,20 @@ interface AppStore {
   
   // Utility actions
   resetStore: () => void;
+  
+  // Convenience getters
+  hasLiveBeast: () => boolean;
+  getCurrentBeastId: () => number | null;
 }
 
 // Initial state
 const initialState = {
   player: null,
-  beasts: [],
-  currentBeast: null,
-  beastStatuses: [],
-  currentBeastStatus: null,
+  liveBeast: {
+    beast: null,
+    status: null,
+    isAlive: false
+  },
   foods: [],
   highestScores: [],
   isLoading: false,
@@ -89,11 +91,13 @@ const initialState = {
 // Create the store
 const useAppStore = create<AppStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...initialState,
       
       // Player actions
-      setPlayer: (player) => set({ player }),
+      setPlayer: (player) => {
+        set({ player });
+      },
       
       updatePlayerStreak: (daily_streak) => set((state) => ({
         player: state.player ? { ...state.player, daily_streak } : null
@@ -103,36 +107,48 @@ const useAppStore = create<AppStore>()(
         player: state.player ? { ...state.player, total_points } : null
       })),
       
-      updateCurrentBeastId: (current_beast_id) => set((state) => ({
-        player: state.player ? { ...state.player, current_beast_id } : null
-      })),
+      updateCurrentBeastId: (current_beast_id) => {
+        set((state) => ({
+          player: state.player ? { ...state.player, current_beast_id } : null
+        }));
+      },
       
-      // Beast actions
-      setBeasts: (beasts) => set({ beasts }),
+      // Live beast actions
+      setLiveBeast: (beast, status) => {
+        const isAlive = status?.is_alive || false;
+        
+        set({
+          liveBeast: {
+            beast,
+            status,
+            isAlive
+          }
+        });
+      },
       
-      addBeast: (beast) => set((state) => ({
-        beasts: [...state.beasts, beast]
-      })),
+      updateLiveBeastStatus: (statusUpdate) => {
+        set((state) => ({
+          liveBeast: {
+            ...state.liveBeast,
+            status: state.liveBeast.status 
+              ? { ...state.liveBeast.status, ...statusUpdate }
+              : null,
+            isAlive: statusUpdate.is_alive !== undefined 
+              ? statusUpdate.is_alive 
+              : state.liveBeast.isAlive
+          }
+        }));
+      },
       
-      setCurrentBeast: (beast) => set({ currentBeast: beast }),
-      
-      // Beast status actions (for live stats like hunger, energy, etc.)
-      setBeastStatuses: (beastStatuses) => set({ beastStatuses }),
-      
-      setCurrentBeastStatus: (beastStatus) => set({ currentBeastStatus: beastStatus }),
-      
-      updateBeastStatus: (player, beast_id, statusUpdate) => set((state) => ({
-        beastStatuses: state.beastStatuses.map(status => 
-          status.player === player && status.beast_id === beast_id 
-            ? { ...status, ...statusUpdate } 
-            : status
-        ),
-        currentBeastStatus: 
-          state.currentBeastStatus?.player === player && 
-          state.currentBeastStatus?.beast_id === beast_id
-            ? { ...state.currentBeastStatus, ...statusUpdate }
-            : state.currentBeastStatus
-      })),
+      clearLiveBeast: () => {
+        set({
+          liveBeast: {
+            beast: null,
+            status: null,
+            isAlive: false
+          }
+        });
+      },
       
       // Food actions
       setFoods: (foods) => set({ foods }),
@@ -178,6 +194,19 @@ const useAppStore = create<AppStore>()(
       startGame: () => set({ gameStarted: true }),
       endGame: () => set({ gameStarted: false }),
       
+      // Convenience getters
+      hasLiveBeast: () => {
+        const state = get();
+        return state.liveBeast.isAlive && 
+               state.liveBeast.beast !== null && 
+               state.liveBeast.status !== null;
+      },
+      
+      getCurrentBeastId: () => {
+        const state = get();
+        return state.liveBeast.beast?.beast_id || null;
+      },
+      
       // Utility actions
       resetStore: () => set(initialState),
     }),
@@ -186,10 +215,7 @@ const useAppStore = create<AppStore>()(
       partialize: (state) => ({
         // Only persist certain parts of the state
         player: state.player,
-        beasts: state.beasts,
-        currentBeast: state.currentBeast,
-        beastStatuses: state.beastStatuses,
-        currentBeastStatus: state.currentBeastStatus,
+        liveBeast: state.liveBeast,
         foods: state.foods,
         highestScores: state.highestScores,
         isConnected: state.isConnected,

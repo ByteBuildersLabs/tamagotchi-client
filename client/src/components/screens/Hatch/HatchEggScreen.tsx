@@ -1,5 +1,5 @@
 import { AnimatePresence } from "framer-motion";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useCallback } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import { useEggAnimation } from "./hooks/useEggAnimation";
@@ -16,7 +16,7 @@ import MegaBurstParticles from "./components/MegaBurstParticles";
 import { useSpawnBeast } from "../../../dojo/hooks/useSpawnBeast";
 import useAppStore from '../../../zustand/store';
 
-// 🔥 NUEVO: Imports para beast params y mapping
+// Beast params and mapping imports
 import type { BeastSpawnParams } from "../../../utils/beastHelpers";
 import { getBeastDisplayInfo } from "../../../utils/beastHelpers";
 import { getEggTypeBySpecie, BEAST_ASSETS } from "./components/eggAnimation";
@@ -26,21 +26,30 @@ import forestBackground from "../../../assets/backgrounds/bg-home.png";
 
 interface HatchEggScreenProps {
   onLoadingComplete: () => void;
-  beastParams: BeastSpawnParams; // 🔥 CAMBIO: Recibir beastParams en lugar de eggType
+  beastParams: BeastSpawnParams;
 }
 
 export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScreenProps) => {
-  // 🔥 NUEVO: Determinar eggType usando helper function
-  const eggType: EggType = getEggTypeBySpecie(beastParams.specie);
+  // Refs to prevent infinite re-renders
+  const mountedRef = useRef(true);
+
+  // Ensure mounted ref stays true during component lifecycle
+  useEffect(() => {
+    mountedRef.current = true;
+    
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Memoize static values to prevent re-calculations
+  const eggType: EggType = useMemo(() => getEggTypeBySpecie(beastParams.specie), [beastParams.specie]);
   
-  // 🔥 NUEVO: Obtener información de display de la bestia
   const beastDisplayInfo = useMemo(() => {
     return getBeastDisplayInfo(beastParams.specie, beastParams.beast_type);
   }, [beastParams.specie, beastParams.beast_type]);
 
-  // 🔥 NUEVO: Obtener asset correcto basado en beastParams reales
   const correctBeastAsset = useMemo(() => {
-    // Mapear beast type numérico a string para acceder a BEAST_ASSETS
     const getBeastTypeString = (beastType: number): 'wolf' | 'dragon' | 'snake' => {
       switch (beastType) {
         case 1: return 'wolf';
@@ -54,11 +63,7 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
     return BEAST_ASSETS[beastTypeString];
   }, [beastParams.beast_type]);
 
-  console.log("🥚 Hatching with params:", beastParams);
-  console.log("🥚 Using egg type:", eggType);
-  console.log("🐾 Expected beast:", beastDisplayInfo);
-
-  // Hook with progressive effects - usando eggType determinado
+  // Hook with progressive effects
   const {
     currentFrame,
     eggState,
@@ -67,8 +72,6 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
     showBeast,
     glowLevel
   } = useEggAnimation(eggType);
-  
-  // 🔥 ELIMINADO: beastType no usado (ahora usamos beastDisplayInfo.displayName)
 
   // Mega-burst effects hook
   const { showMegaBurst, showFullScreenFlash } = useMegaBurstEffect(eggState);
@@ -86,56 +89,46 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
   } = useSpawnBeast();
 
   /**
-   * 🔥 ACTUALIZADO: Enhanced hatching function con parámetros específicos
+   * Enhanced hatching function with proper state checks
    */
-  const handleHatchEgg = async () => {
-    // Step 1: Start egg animation
-    startEggHatching();
+  const handleHatchEgg = useCallback(async () => {
+    if (!canClick) return;
 
-    // Step 2: Execute beast spawn transaction con parámetros predeterminados
+    if (isSpawning) return;
+
     try {
-      console.log("🚀 Spawning beast with predetermined params:", beastParams);
+      // Step 1: Start egg animation
+      startEggHatching();
       
-      // 🔥 CAMBIO: Pasar beastParams específicos al spawn
+      // Step 2: Execute beast spawn transaction
       const result = await spawnBeast(beastParams);
       
       if (result.success) {
-        // Toast success message con nombre específico
         toast.success(`🐾 ${beastDisplayInfo.displayName} spawned!`, {
           duration: 3000,
           position: 'top-center'
         });
       } else {
-        // Show error but don't break the animation
         toast.error(`Spawn failed: ${result.error}`, {
           duration: 4000,
           position: 'top-center'
         });
       }
     } catch (error) {
-      console.error("Error during beast spawn:", error);
-      
-      // Show error but don't break the animation
       toast.error("Beast spawn failed. Please try again.", {
         duration: 4000,
         position: 'top-center'
       });
     }
-  };
+  }, [canClick, isSpawning, startEggHatching, beastParams, spawnBeast, beastDisplayInfo]);
 
   /**
-   * Handle continue button - check using direct store state
+   * Handle continue button with direct store access
    */
-  const handleContinue = () => {
-    // Check beast status directly from store instead of reactive hook
-    const currentStorePlayer = useAppStore.getState().player;
-    const currentBeastStatuses = useAppStore.getState().beastStatuses;
+  const handleContinue = useCallback(() => {
+    // Use direct store access to get fresh state
+    const isBeastReady = useAppStore.getState().hasLiveBeast();
     
-    const isBeastReady = currentStorePlayer?.current_beast_id && 
-      currentBeastStatuses.some(status => 
-        status.beast_id === currentStorePlayer.current_beast_id && status.is_alive
-      );
-
     if (!spawnCompleted && !isBeastReady) {
       toast("Please wait for beast spawn to complete", {
         duration: 2000,
@@ -146,7 +139,7 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
     }
 
     onLoadingComplete();
-  };
+  }, [spawnCompleted, onLoadingComplete]);
 
   /**
    * Handle transaction status updates
@@ -170,7 +163,6 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
    */
   useEffect(() => {
     if (spawnError) {
-      console.error('Beast spawn error:', spawnError);
       toast.error(`Beast spawn error: ${spawnError}`, {
         duration: 4000,
         position: 'top-center'
@@ -183,23 +175,20 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
    */
   useEffect(() => {
     return () => {
+      mountedRef.current = false;
       if (isSpawning) {
         resetSpawner();
       }
     };
   }, [isSpawning, resetSpawner]);
 
-  // Determine if continue button should be enabled
-  // Check directly from store instead of relying on reactive hooks
-  const storePlayer = useAppStore(state => state.player);
-  const storeBeastStatuses = useAppStore(state => state.beastStatuses);
-  
-  const directHasLiveBeast = storePlayer?.current_beast_id && 
-    storeBeastStatuses.some(status => 
-      status.beast_id === storePlayer.current_beast_id && status.is_alive
-    );
+  // Calculate continue button logic without reactive dependencies
+  const canContinueCalc = useMemo(() => {
+    const eggRevealed = eggState === 'revealing' && showBeast;
+    const directHasLiveBeast = useAppStore.getState().hasLiveBeast();
+    return eggRevealed && (spawnCompleted || directHasLiveBeast);
+  }, [eggState, showBeast, spawnCompleted]);
 
-  const canContinue = eggState === 'revealing' && showBeast && (spawnCompleted || directHasLiveBeast);
   const showSpawnProgress = isSpawning || (txHash && txStatus === 'PENDING');
 
   return (
@@ -219,7 +208,7 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
       <MegaBurstParticles
         trigger={showMegaBurst}
         eggPosition={{ x: 50, y: 50 }}
-        onComplete={() => {}} // Simplified completion handler
+        onComplete={() => {}}
       />
 
       {/* Full-screen prolonged flash */}
@@ -229,14 +218,14 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
 
       {/* Content Container */}
       <div className="flex flex-col items-center justify-center space-y-8 z-50 px-4">
-        {/* Header - 🔥 ACTUALIZADO: Usar nombre específico de la bestia */}
+        {/* Header */}
         <HatchHeader 
           showBeast={showBeast} 
           beastType={beastDisplayInfo.displayName} 
           eggState={eggState} 
         />
 
-        {/* Spawn Progress Indicator - 🔥 ACTUALIZADO: Mostrar nombre específico */}
+        {/* Spawn Progress Indicator */}
         {showSpawnProgress && (
           <div className="bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200 shadow-lg">
             <div className="flex items-center space-x-2">
@@ -248,19 +237,21 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
           </div>
         )}
 
-        {/* Egg Display - 🔥 ACTUALIZADO: Usar eggType determinado */}
+        {/* Egg Display */}
         {!showBeast && (
-          <EggDisplay
-            currentFrame={currentFrame}
-            eggType={eggType} // Egg type correcto basado en specie
-            eggState={eggState}
-            canClick={canClick && !isSpawning} // Disable clicking during spawn
-            glowLevel={glowLevel}
-            onHatch={handleHatchEgg} // Use enhanced hatch function
-          />
+          <div className="relative">
+            <EggDisplay
+              currentFrame={currentFrame}
+              eggType={eggType}
+              eggState={eggState}
+              canClick={canClick && !isSpawning}
+              glowLevel={glowLevel}
+              onHatch={handleHatchEgg}
+            />
+          </div>
         )}
 
-        {/* Beast Display - 🔥 CORREGIDO: Usar asset correcto basado en beastParams */}
+        {/* Beast Display */}
         {showBeast && (
           <BeastDisplay
             beastAsset={correctBeastAsset}
@@ -268,13 +259,13 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
           />
         )}
 
-        {/* Continue Button - only show when everything is complete */}
-        {canContinue && (
+        {/* Continue Button */}
+        {canContinueCalc && (
           <ContinueButton onContinue={handleContinue} />
         )}
 
-        {/* Wait message if animation done but spawn not complete - 🔥 ACTUALIZADO */}
-        {eggState === 'revealing' && showBeast && !spawnCompleted && !directHasLiveBeast && (
+        {/* Wait message if animation done but spawn not complete */}
+        {eggState === 'revealing' && showBeast && !spawnCompleted && !canContinueCalc && (
           <div className="bg-amber-100 border border-amber-400 rounded-lg px-4 py-2">
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
@@ -286,7 +277,7 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
         )}
       </div>
 
-      {/* Toast Container for status updates */}
+      {/* Toast Container */}
       <Toaster
         toastOptions={{
           className: 'bg-white/95 text-gray-800 border border-gray-200 rounded-lg shadow-xl backdrop-blur-sm font-medium',
