@@ -25,7 +25,7 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
   const constraintsRef = useRef(null);
   const portalRoot = usePortal();
   
-  // Universal hook - gets the player's current beast
+  // Get current beast data - single hook consumption to avoid conflicts
   const {
     currentBeastDisplay,
     liveBeastStatus,
@@ -33,6 +33,7 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
     isLoading
   } = useBeastDisplay();
   
+  // Initialize feeding logic and drag state
   const {
     foods,
     dragState,
@@ -41,7 +42,7 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
     handleDragEnd,
   } = useFeedLogic();
 
-  // Loading state
+  // Show loading state while beast data is being fetched
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-900 to-orange-900">
@@ -53,7 +54,7 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
     );
   }
 
-  // No beast case
+  // Show empty state when no beast is available
   if (!hasLiveBeast || !currentBeastDisplay) {
     return (
       <div 
@@ -68,7 +69,6 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
       >
         <MagicalSparkleParticles />
         
-        {/* Top Bar with empty status */}
         <TamagotchiTopBar
           coins={1250}
           gems={45}
@@ -96,6 +96,7 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
     );
   }
 
+  // Render main feeding interface
   return (
     <div
       ref={constraintsRef}
@@ -107,13 +108,13 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Toast Container */}
+      {/* Toast notifications for feeding feedback */}
       <ToastContainer />
 
-      {/* Magical Sparkle Particles */}
+      {/* Background particle effects */}
       <MagicalSparkleParticles />
 
-      {/* Top Bar - Using real data from liveBeastStatus */}
+      {/* Top status bar with coins, gems, and beast stats */}
       <TamagotchiTopBar
         coins={1250} // TODO: Make dynamic when coin system is implemented
         gems={45}    // TODO: Make dynamic when gem system is implemented
@@ -125,7 +126,7 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
         }}
       />
 
-      {/* Feed Title - Dynamic with beast's name */}
+      {/* Screen title with beast name */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -137,10 +138,14 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
         </h1>
       </motion.div>
 
-      {/* Beast (Drop Zone) */}
-      <Beast isDragging={dragState.isDragging} />
+      {/* Beast display - acts as drop zone for food items */}
+      <Beast 
+        isDragging={dragState.isDragging} 
+        beastImage={currentBeastDisplay.asset}
+        beastName={currentBeastDisplay.displayName}
+      />
 
-      {/* Food Carousel */}
+      {/* Food carousel with draggable items */}
       <FoodCarousel
         foods={foods}
         isDragging={dragState.isDragging}
@@ -149,7 +154,7 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
         onDragEnd={handleDragEnd}
       />
 
-      {/* Portal for dragged element */}
+      {/* Portal for rendering dragged food item outside normal DOM hierarchy */}
       <DragPortal
         isDragging={dragState.isDragging}
         draggedFood={dragState.draggedFood}
