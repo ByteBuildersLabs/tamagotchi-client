@@ -10,7 +10,7 @@ import { LoginScreen } from "../components/screens/Login/LoginScreen";
 import { NavBar } from "../components/layout/NavBar";
 import type { Screen } from "../components/types/screens";
 
-// 🔥 NUEVO: Imports para generación de beast params
+// Beast params generation imports
 import { generateRandomBeastParams } from "../utils/beastHelpers";
 import type { BeastSpawnParams } from "../utils/beastHelpers";
 
@@ -18,14 +18,13 @@ function AppContent() {
   const [currentScreen, setCurrentScreenState] = useState<Screen>("login");
   const [playerAddress] = useState("0x123"); // Temporary address
   
-  // 🔥 NUEVO: Estado para parámetros de bestia predeterminados
+  // State for predefined beast parameters
   const [pendingBeastParams, setPendingBeastParams] = useState<BeastSpawnParams | null>(null);
 
   const handleNavigation = (screen: Screen) => {
-    // 🔥 NUEVO: Si navega a hatch, generar parámetros
+    // Generate parameters when navigating to hatch
     if (screen === "hatch") {
       const beastParams = generateRandomBeastParams();
-      console.log("🎲 Generated beast params for navigation:", beastParams);
       setPendingBeastParams(beastParams);
     }
     
@@ -36,12 +35,11 @@ function AppContent() {
   const handleLoginComplete = useCallback((destination: 'hatch' | 'cover') => {
     if (destination === 'cover') {
       // Player has live beast - go directly to home
-      setPendingBeastParams(null); // 🔥 Limpiar params si no se necesitan
+      setPendingBeastParams(null);
       setCurrentScreenState("cover");
     } else {
       // Player needs to spawn beast - generate params and go to hatch
       const beastParams = generateRandomBeastParams();
-      console.log("🎲 Generated beast params for new player:", beastParams);
       setPendingBeastParams(beastParams);
       setCurrentScreenState("hatch");
     }
@@ -49,7 +47,7 @@ function AppContent() {
 
   // Specific callback for when HatchEgg completes
   const handleHatchComplete = useCallback(() => {
-    // 🔥 NUEVO: Limpiar parámetros usados
+    // Clear used parameters
     setPendingBeastParams(null);
     setCurrentScreenState("cover");
   }, []);
@@ -67,7 +65,7 @@ function AppContent() {
         />
       )}
 
-      {/* 🔥 ACTUALIZADO: Pasar beastParams en lugar de eggType hardcodeado */}
+      {/* Pass beastParams instead of hardcoded eggType */}
       {currentScreen === "hatch" && pendingBeastParams && (
         <HatchEggScreen
           onLoadingComplete={handleHatchComplete}  
@@ -75,7 +73,7 @@ function AppContent() {
         />
       )}
 
-      {/* 🔥 SEGURIDAD: Si no hay params, mostrar loading o redirigir */}
+      {/* Safety: If no params available, show loading or redirect */}
       {currentScreen === "hatch" && !pendingBeastParams && (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">

@@ -5,9 +5,9 @@ import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import { PlayerInfoModal } from "./components/PlayerInfoModal";
 import forestBackground from "../../../assets/backgrounds/bg-home.png";
 
-// 🔥 UPDATED: Imports para datos dinámicos con hook optimizado
+// Dynamic data imports with optimized hook
 import useAppStore from "../../../zustand/store";
-import { useLiveBeast } from "../../../dojo/hooks/useLiveBeast"; // 🔥 NEW: Single optimized hook
+import { useLiveBeast } from "../../../dojo/hooks/useLiveBeast";
 import { getBeastDisplayInfo, type BeastSpecies, type BeastType } from "../../../utils/beastHelpers";
 import { BEAST_ASSETS, type BeastType as EggBeastType } from "../Hatch/components/eggAnimation";
 
@@ -20,34 +20,33 @@ import { PlayerInfoSection } from "./components/PlayerInfoSection";
 import { ActionButtons } from "./components/ActionButtons";
 import { BeastHomeDisplay } from "./components/BeastDisplay";
 
-export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => {
+export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
   const [age] = useState(1);
   const playerName = "0xluis";
 
-  // 🔥 UPDATED: Obtener datos reales del store optimizado
+  // Get real data from optimized store
   const storePlayer = useAppStore(state => state.player);
   
-  // 🔥 NEW: Hook optimizado que reemplaza useBeasts + useBeastStatus
+  // Optimized hook that replaces useBeasts + useBeastStatus
   const { 
     liveBeast, 
     liveBeastStatus, 
     hasLiveBeast 
   } = useLiveBeast();
 
-  // 🔥 SIMPLIFIED: currentBeast ahora viene directamente del hook optimizado
   const currentBeast = liveBeast;
 
-  // 🔥 UPDATED: Obtener información de display de la bestia actual
+  // Get display information for current beast
   const currentBeastDisplay = useMemo(() => {
     if (!currentBeast) return null;
     
-    // Cast seguro a los tipos esperados
+    // Safe cast to expected types
     const displayInfo = getBeastDisplayInfo(
       currentBeast.specie as BeastSpecies, 
       currentBeast.beast_type as BeastType
     );
     
-    // Mapear beast type numérico a string para acceder a BEAST_ASSETS
+    // Map numeric beast type to string for BEAST_ASSETS access
     const getBeastTypeString = (beastType: number): EggBeastType => {
       switch (beastType) {
         case 1: return 'wolf';
@@ -68,7 +67,7 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
     };
   }, [currentBeast]);
 
-  // 🔥 UPDATED: Datos de bestia dinámicos basados en status real del hook optimizado
+  // Dynamic beast data based on real status from optimized hook
   const beastData: BeastData = useMemo(() => {
     if (!liveBeastStatus) {
       return {
@@ -102,13 +101,12 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
   };
 
   const handleProfileClick = () => {
-    console.log("Profile clicked:", playerAddress);
     openPlayerModal();
   };
 
-  // 🔥 UPDATED: Función para renderizar contenido basado en estado de bestia
+  // Render content based on beast state
   const renderBeastContent = () => {
-    // Caso 1: No hay bestia viva
+    // Case 1: No live beast
     if (!hasLiveBeast || !currentBeastDisplay) {
       return (
         <div className="flex-grow flex items-center justify-center w-full">
@@ -133,7 +131,7 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
       );
     }
 
-    // Caso 2: Bestia viva - mostrar normalmente
+    // Case 2: Live beast - display normally
     return (
       <BeastHomeDisplay 
         beastImage={currentBeastDisplay.asset}
@@ -142,7 +140,7 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
     );
   };
 
-  // 🔥 UPDATED: Determinar si mostrar action buttons
+  // Determine if action buttons should be shown
   const shouldShowActionButtons = hasLiveBeast && currentBeastDisplay;
 
   return (
@@ -158,10 +156,10 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
       {/* Magical Sparkle Particles */}
       <MagicalSparkleParticles />
        
-      {/* 🔥 UPDATED: Top Bar usando liveBeastStatus del hook optimizado */}
+      {/* Top Bar using liveBeastStatus from optimized hook */}
       <TamagotchiTopBar
-        coins={12345} // TODO: Hacer dinámico cuando tengas sistema de coins
-        gems={678}    // TODO: Hacer dinámico cuando tengas sistema de gems
+        coins={12345} // TODO: Make dynamic when coin system is implemented
+        gems={678}    // TODO: Make dynamic when gem system is implemented
         status={{
           energy: liveBeastStatus?.energy || 0,
           hunger: liveBeastStatus?.hunger || 0,
@@ -179,10 +177,10 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
         beastData={beastData}
       />
 
-      {/* Beast Display Dinámico */}
+      {/* Dynamic Beast Display */}
       {renderBeastContent()}
 
-      {/* Action Buttons - Solo mostrar si hay bestia viva */}
+      {/* Action Buttons - Only show if there's a live beast */}
       {shouldShowActionButtons && (
         <ActionButtons
           onShopClick={handleShopClick}
@@ -196,19 +194,6 @@ export const HomeScreen = ({ onNavigation, playerAddress }: HomeScreenProps) => 
         onClose={closePlayerModal}
         playerData={playerData}
       />
-
-      {/* 🔥 UPDATED: Debug info optimizado */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-20 left-4 bg-black/80 text-white p-2 rounded text-xs max-w-xs">
-          <div>Beast ID: {currentBeast?.beast_id || 'None'}</div>
-          <div>Specie: {currentBeast?.specie || 'N/A'}</div>
-          <div>Type: {currentBeast?.beast_type || 'N/A'}</div>
-          <div>Alive: {hasLiveBeast ? 'Yes' : 'No'}</div>
-          <div>Display: {currentBeastDisplay?.displayName || 'None'}</div>
-          <div>Energy: {liveBeastStatus?.energy || 0}</div>
-          <div>Hunger: {liveBeastStatus?.hunger || 0}</div>
-        </div>
-      )}
     </div>
   );
 };

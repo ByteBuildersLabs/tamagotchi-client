@@ -96,7 +96,6 @@ const useAppStore = create<AppStore>()(
       
       // Player actions
       setPlayer: (player) => {
-        console.log("🔄 [STORE] Setting player:", player);
         set({ player });
       },
       
@@ -109,16 +108,14 @@ const useAppStore = create<AppStore>()(
       })),
       
       updateCurrentBeastId: (current_beast_id) => {
-        console.log("🔄 [STORE] Updating current_beast_id:", current_beast_id);
         set((state) => ({
           player: state.player ? { ...state.player, current_beast_id } : null
         }));
       },
       
-      // Simplified live beast actions
+      // Live beast actions
       setLiveBeast: (beast, status) => {
         const isAlive = status?.is_alive || false;
-        console.log("🔄 [STORE] Setting live beast:", { beast, status, isAlive });
         
         set({
           liveBeast: {
@@ -127,19 +124,9 @@ const useAppStore = create<AppStore>()(
             isAlive
           }
         });
-        
-        // 🔥 NEW: Verify the update immediately
-        setTimeout(() => {
-          const newState = get();
-          console.log("✅ [STORE] Live beast set, new state:", {
-            liveBeast: newState.liveBeast,
-            hasLiveBeastResult: newState.hasLiveBeast()
-          });
-        }, 0);
       },
       
       updateLiveBeastStatus: (statusUpdate) => {
-        console.log("🔄 [STORE] Updating live beast status:", statusUpdate);
         set((state) => ({
           liveBeast: {
             ...state.liveBeast,
@@ -154,7 +141,6 @@ const useAppStore = create<AppStore>()(
       },
       
       clearLiveBeast: () => {
-        console.log("🔄 [STORE] Clearing live beast");
         set({
           liveBeast: {
             beast: null,
@@ -208,29 +194,17 @@ const useAppStore = create<AppStore>()(
       startGame: () => set({ gameStarted: true }),
       endGame: () => set({ gameStarted: false }),
       
-      // 🔥 ENHANCED: Convenience getters with debugging
+      // Convenience getters
       hasLiveBeast: () => {
         const state = get();
-        const result = state.liveBeast.isAlive && 
+        return state.liveBeast.isAlive && 
                state.liveBeast.beast !== null && 
                state.liveBeast.status !== null;
-               
-        console.log("🔍 [STORE-GETTER] hasLiveBeast() called:", {
-          isAlive: state.liveBeast.isAlive,
-          hasBeast: state.liveBeast.beast !== null,
-          hasStatus: state.liveBeast.status !== null,
-          result,
-          liveBeastData: state.liveBeast
-        });
-        
-        return result;
       },
       
       getCurrentBeastId: () => {
         const state = get();
-        const result = state.liveBeast.beast?.beast_id || null;
-        console.log("🔍 [STORE-GETTER] getCurrentBeastId() called:", result);
-        return result;
+        return state.liveBeast.beast?.beast_id || null;
       },
       
       // Utility actions

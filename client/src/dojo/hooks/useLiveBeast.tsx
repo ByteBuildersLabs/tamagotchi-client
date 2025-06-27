@@ -95,8 +95,6 @@ const fetchLiveBeastData = async (playerAddress: string): Promise<{
   status: BeastStatus | null;
 }> => {
   try {
-    console.log("🔄 [LIVE-BEAST] Making GraphQL request for:", playerAddress);
-
     const response = await fetch(TORII_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -107,27 +105,16 @@ const fetchLiveBeastData = async (playerAddress: string): Promise<{
     });
 
     const result = await response.json();
-    
-    console.log("📊 [LIVE-BEAST] GraphQL response:", result);
 
     // Check if we have a live beast status
     const liveBeastStatusEdges = result.data?.liveBeastStatus?.edges;
     const allBeastsEdges = result.data?.allBeasts?.edges || [];
     
-    console.log("🔍 [LIVE-BEAST] Live beast status edges:", liveBeastStatusEdges);
-    console.log("🔍 [LIVE-BEAST] All beasts edges:", allBeastsEdges);
-    
-    if (!liveBeastStatusEdges?.length) {
-      console.log("❌ [LIVE-BEAST] No live beast found for player");
-      return { beast: null, status: null };
-    }
+    if (!liveBeastStatusEdges?.length) return { beast: null, status: null };
 
     // Extract live beast status
     const rawStatus = liveBeastStatusEdges[0].node;
     const liveBeastId = hexToNumber(rawStatus.beast_id);
-    
-    console.log("🔍 [LIVE-BEAST] Raw status:", rawStatus);
-    console.log("🔍 [LIVE-BEAST] Live beast ID:", liveBeastId);
     
     const beastStatus: BeastStatus = {
       player: rawStatus.player,
@@ -142,21 +129,15 @@ const fetchLiveBeastData = async (playerAddress: string): Promise<{
       last_timestamp: hexToNumber(rawStatus.last_timestamp)
     };
 
-    console.log("✅ [LIVE-BEAST] Parsed beast status:", beastStatus);
-
     // Find the corresponding beast data
     const matchingBeastEdge = allBeastsEdges.find((edge: any) => 
       hexToNumber(edge.node.beast_id) === liveBeastId
     );
 
-    if (!matchingBeastEdge) {
-      console.warn(`⚠️ [LIVE-BEAST] Live beast status found but no beast data for beast_id: ${liveBeastId}`);
-      return { beast: null, status: beastStatus };
-    }
+    if (!matchingBeastEdge) return { beast: null, status: beastStatus };
 
     // Extract beast data
     const rawBeast = matchingBeastEdge.node;
-    console.log("🔍 [LIVE-BEAST] Raw beast:", rawBeast);
     
     const beast: Beast = {
       player: rawBeast.player,
@@ -166,27 +147,23 @@ const fetchLiveBeastData = async (playerAddress: string): Promise<{
       specie: hexToNumber(rawBeast.specie),
       beast_type: hexToNumber(rawBeast.beast_type)
     };
-
-    console.log("✅ [LIVE-BEAST] Parsed beast:", beast);
-    console.log(`🎉 [LIVE-BEAST] Live beast found: beast_id=${beast.beast_id}, specie=${beast.specie}, type=${beast.beast_type}, is_alive=${beastStatus.is_alive}`);
     
     return { beast, status: beastStatus };
     
   } catch (error) {
-    console.error("❌ [LIVE-BEAST] Error fetching live beast data:", error);
     throw error;
   }
 };
 
 /**
- * 🔥 FIXED: Optimized hook that eliminates infinite loops and ensures execution
+ * Optimized hook that manages live beast data for the current player
  */
 export const useLiveBeast = (): UseLiveBeastReturn => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const { account } = useAccount();
   
-  // 🔥 FIX: Single ref to prevent multiple refetches - no execution blocking
+  // Single ref to prevent multiple refetches
   const isRefetchingRef = useRef(false);
   
   // Get live beast data from optimized store
@@ -194,10 +171,10 @@ export const useLiveBeast = (): UseLiveBeastReturn => {
   const setLiveBeast = useAppStore(state => state.setLiveBeast);
   const clearLiveBeast = useAppStore(state => state.clearLiveBeast);
 
-  // 🔥 FIX: Stable userAddress that doesn't change unless account actually changes
+  // Stable userAddress that doesn't change unless account actually changes
   const userAddress = useMemo(() => 
     account ? addAddressPadding(account.address).toLowerCase() : '', 
-    [account?.address] // Only depend on account.address, not entire account object
+    [account?.address]
   );
 
   // Extract data from store
@@ -206,48 +183,32 @@ export const useLiveBeast = (): UseLiveBeastReturn => {
   const hasLiveBeast = liveBeastData.isAlive;
   const beastId = liveBeast?.beast_id || null;
 
-  // 🔥 FIX: Simplified refetch function without dependency issues
+  // Simplified refetch function
   const refetch = useCallback(async () => {
-    console.log("🚀 [LIVE-BEAST] Refetch called for userAddress:", userAddress);
-
-    // Simple guard - don't block execution aggressively
     if (!userAddress) {
-      console.log("❌ [LIVE-BEAST] No user address, clearing and returning");
       setIsLoading(false);
       clearLiveBeast();
       return;
     }
 
     // Only block if already refetching same address
-    if (isRefetchingRef.current) {
-      console.log("⏭️ [LIVE-BEAST] Already refetching, skipping...");
-      return;
-    }
+    if (isRefetchingRef.current) return;
 
     try {
       isRefetchingRef.current = true;
       setIsLoading(true);
       setError(null);
       
-      console.log("🔄 [LIVE-BEAST] Executing fetchLiveBeastData for:", userAddress);
-      
-      // 🔥 FIX: Direct execution without dependencies on other hooks
       const { beast, status } = await fetchLiveBeastData(userAddress);
       
-      console.log("📊 [LIVE-BEAST] Fetch result:", { beast, status });
-      
       if (beast && status && status.is_alive) {
-        console.log("✅ [LIVE-BEAST] Setting live beast in store");
         setLiveBeast(beast, status);
       } else {
-        console.log("❌ [LIVE-BEAST] No live beast found, clearing store");
         clearLiveBeast();
       }
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error("❌ [LIVE-BEAST] Failed to refetch:", errorMessage);
-      
       setError(new Error(errorMessage));
       clearLiveBeast();
     } finally {
@@ -256,14 +217,9 @@ export const useLiveBeast = (): UseLiveBeastReturn => {
     }
   }, [userAddress, setLiveBeast, clearLiveBeast]);
 
-  // 🔥 FIX: Force refetch that always executes
+  // Force refetch that always executes
   const forceRefetch = useCallback(async () => {
-    console.log("🚀 [LIVE-BEAST] FORCE REFETCH called");
-    
-    if (!userAddress) {
-      console.log("❌ [LIVE-BEAST] Force refetch: No user address");
-      return;
-    }
+    if (!userAddress) return;
 
     // Reset blocking ref
     isRefetchingRef.current = false;
@@ -272,12 +228,9 @@ export const useLiveBeast = (): UseLiveBeastReturn => {
     await refetch();
   }, [userAddress, refetch]);
 
-  // 🔥 FIX: Simple effect that only triggers on userAddress change
+  // Effect that only triggers on userAddress change
   useEffect(() => {
-    console.log("🔄 [LIVE-BEAST] UserAddress effect triggered:", userAddress);
-
     if (userAddress) {
-      console.log("✅ [LIVE-BEAST] Triggering refetch for:", userAddress);
       refetch();
     } else {
       // Clear data when no address
@@ -285,12 +238,11 @@ export const useLiveBeast = (): UseLiveBeastReturn => {
       setError(null);
       setIsLoading(false);
     }
-  }, [userAddress]); // 🔥 CRITICAL: Only userAddress dependency, no refetch
+  }, [userAddress]);
 
-  // 🔥 FIX: Separate effect for account cleanup
+  // Separate effect for account cleanup
   useEffect(() => {
     if (!account) {
-      console.log("❌ [LIVE-BEAST] No account, clearing data");
       clearLiveBeast();
       setError(null);
       setIsLoading(false);

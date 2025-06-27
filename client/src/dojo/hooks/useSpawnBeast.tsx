@@ -4,7 +4,7 @@ import { Account } from 'starknet';
 import { useDojoSDK } from '@dojoengine/sdk/react';
 
 // Hooks imports
-import { useLiveBeast } from './useLiveBeast'; // 🔥 NEW: Replace useBeasts + useBeastStatus
+import { useLiveBeast } from './useLiveBeast';
 import { usePlayer } from './usePlayer';
 import { useStarknetConnect } from './useStarknetConnect';
 
@@ -52,8 +52,8 @@ interface UseSpawnBeastReturn {
 }
 
 /**
- * 🔥 MIGRATED: Hook for spawning beasts in the Dojo contracts
- * Now uses optimized useLiveBeast instead of separate useBeasts + useBeastStatus
+ * Hook for spawning beasts in the Dojo contracts
+ * Uses optimized live beast hook for efficient data management
  */
 export const useSpawnBeast = (): UseSpawnBeastReturn => {
   const { useDojoStore, client } = useDojoSDK();
@@ -61,7 +61,7 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
   const { account } = useAccount();
   const { status } = useStarknetConnect();
   
-  // 🔥 UPDATED: Use single optimized hook instead of two separate ones
+  // Use optimized hooks for data management
   const { refetch: refetchLiveBeast } = useLiveBeast();
   const { refetch: refetchPlayer } = usePlayer();
 
@@ -149,38 +149,32 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
         // Step 3: Wait for transaction to be processed
         await new Promise(resolve => setTimeout(resolve, 3500));
         
-        // 🔥 UPDATED: Simplified refetch logic with retry
+        // Simplified refetch logic with retry
         let attempts = 0;
         const maxAttempts = 3;
         
         while (attempts < maxAttempts) {
-          // 🔥 NEW: Only two refetch calls instead of three
+          // Refetch both player and live beast data
           await Promise.all([
             refetchPlayer(),      // Refetch player data to get updated current_beast_id
-            refetchLiveBeast()    // Refetch live beast data (replaces refetchBeasts + refetchBeastStatus)
+            refetchLiveBeast()    // Refetch live beast data
           ]);
           
           // Small delay to check if data was loaded
           await new Promise(resolve => setTimeout(resolve, 1000));
           
-          // 🔥 UPDATED: Check if beast is now live using optimized store getter
+          // Check if beast is now live using optimized store getter
           const hasLiveBeast = useAppStore.getState().hasLiveBeast();
           
           // If beast is live, we can exit early
-          if (hasLiveBeast) {
-            console.log("✅ Live beast detected after spawn - breaking retry loop");
-            break;
-          }
+          if (hasLiveBeast) break;
           
           attempts++;
           
-          if (attempts < maxAttempts) {
-            console.log(`🔄 Attempt ${attempts}/${maxAttempts} - retrying beast data fetch...`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
-          }
+          if (attempts < maxAttempts) await new Promise(resolve => setTimeout(resolve, 2000));
         }
 
-        // 🔥 UPDATED: Final check using optimized store getter
+        // Final check using optimized store getter
         const isBeastLive = useAppStore.getState().hasLiveBeast();
 
         // Step 6: Complete
@@ -190,8 +184,6 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
           step: 'success',
           isSpawning: false
         }));
-
-        console.log(`🎯 Beast spawn completed: ${isBeastLive ? 'SUCCESS' : 'FAILED'}`);
 
         return {
           success: true,
@@ -208,8 +200,6 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
       }
 
     } catch (error: any) {
-      console.error("❌ Error spawning beast:", error);
-      
       const errorMessage = error?.message || error?.toString() || "Unknown error occurred";
       
       setSpawnState(prev => ({
@@ -224,7 +214,7 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
         error: errorMessage
       };
     }
-  }, [account, status, storePlayer, client, state, refetchLiveBeast, refetchPlayer]); // 🔥 UPDATED: Dependencies
+  }, [account, status, storePlayer, client, state, refetchLiveBeast, refetchPlayer]);
 
   /**
    * Spawn beast with optional parameters
@@ -232,7 +222,6 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
    */
   const spawnBeast = useCallback(async (params?: BeastSpawnParams): Promise<SpawnResult> => {
     const beastParams = params || generateRandomBeastParams();
-    console.log("🎲 Using beast params for spawn:", beastParams);
     return executeSpawnBeast(beastParams);
   }, [executeSpawnBeast]);
 
