@@ -7,6 +7,9 @@ import HomeIcon from '../../assets/icons/navBar/icon-home.webp';
 import CleanIcon from '../../assets/icons/navBar/icon-clean.webp';
 import PlayIcon from '../../assets/icons/navBar/icon-play.webp';
 
+// Real-time status integration
+import { useUpdateBeast } from '../../dojo/hooks/useUpdateBeast';
+
 type Screen = "login" | "cover" | "home" | "sleep" | "feed" | "clean" | "play";
 
 interface NavBarProps {
@@ -19,6 +22,9 @@ export function NavBar({
   activeTab = 'home',
 }: NavBarProps) {
   const [active, setActive] = useState<Screen>(activeTab);
+  
+  // Hook for background beast updates
+  const { triggerUpdate, isUpdating } = useUpdateBeast();
 
   useEffect(() => {
     setActive(activeTab);
@@ -33,8 +39,16 @@ export function NavBar({
   ];
 
   const handleClick = (id: Screen) => {
+    console.log(`🧭 Navigating to ${id}`);
+    
+    // Set active immediately for instant UI feedback
     setActive(id);
+    
+    // Trigger navigation callback immediately (non-blocking)
     onNavigation?.(id);
+    
+    // Trigger background update_beast (fire-and-forget)
+    triggerUpdate();
   };
 
   return (
@@ -63,9 +77,17 @@ export function NavBar({
                 ? 'bg-gold-gradient text-screen shadow-soft-lg'      
                 : 'bg-transparent hover:bg-gold/10 text-text-primary'
             }
+            relative
           `}
           aria-label={item.label}
         >
+          {/* Update indicator - subtle visual feedback */}
+          {isUpdating && active === item.id && (
+            <div className="absolute top-1 right-1">
+              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+            </div>
+          )}
+          
           <img
             src={item.src}
             alt={item.label}
