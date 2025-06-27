@@ -1,4 +1,4 @@
-import { Account } from 'starknet';
+import { AccountInterface } from 'starknet';
 
 /**
  * Converts hex array to decimal numbers
@@ -12,10 +12,10 @@ const hexToDecimalArray = (hexArray: string[] | undefined): number[] | undefined
  * Fetches real-time beast status from contract using read call
  * This is a gas-free call that can be made frequently
  * 
- * @param account - Connected Starknet account
+ * @param account - Connected Starknet account interface
  * @returns Array of status values as numbers or undefined if failed
  */
-const fetchStatus = async (account: Account): Promise<number[] | undefined> => {
+const fetchStatus = async (account: AccountInterface): Promise<number[] | undefined> => {
   console.info('Fetching real-time status for:', String(account?.address));
   
   try {
