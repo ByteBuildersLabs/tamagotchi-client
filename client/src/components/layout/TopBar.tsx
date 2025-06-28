@@ -49,8 +49,6 @@ export function TamagotchiTopBar({
   // Use real-time status hook
   const { 
     statusForUI, 
-    isStatusLoading,
-    lastStatusUpdate 
   } = useRealTimeStatus();
 
   // Determine which status to use: real-time first, then fallback
@@ -135,20 +133,6 @@ export function TamagotchiTopBar({
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center justify-center space-x-1 sm:space-x-1.5 bg-black/50 backdrop-blur-sm px-1.5 sm:px-2 py-1.5 rounded-lg shadow-md w-full max-w-[180px] sm:max-w-[220px] relative">
-            
-            {/* Status loading indicator */}
-            {isStatusLoading && (
-              <div className="absolute top-0 right-0 -mt-1 -mr-1">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              </div>
-            )}
-            
-            {/* Real-time status indicator */}
-            {statusForUI && lastStatusUpdate && (
-              <div className="absolute top-0 left-0 -mt-1 -ml-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              </div>
-            )}
 
             {statusItems.map((item, index) => (
               <motion.div

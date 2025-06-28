@@ -24,7 +24,7 @@ export function NavBar({
   const [active, setActive] = useState<Screen>(activeTab);
   
   // Hook for background beast updates
-  const { triggerUpdate, isUpdating } = useUpdateBeast();
+  const { triggerUpdate } = useUpdateBeast();
 
   useEffect(() => {
     setActive(activeTab);
@@ -39,7 +39,6 @@ export function NavBar({
   ];
 
   const handleClick = (id: Screen) => {
-    console.log(`🧭 Navigating to ${id}`);
     
     // Set active immediately for instant UI feedback
     setActive(id);
@@ -80,14 +79,7 @@ export function NavBar({
             relative
           `}
           aria-label={item.label}
-        >
-          {/* Update indicator - subtle visual feedback */}
-          {isUpdating && active === item.id && (
-            <div className="absolute top-1 right-1">
-              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-            </div>
-          )}
-          
+        >      
           <img
             src={item.src}
             alt={item.label}

@@ -68,8 +68,6 @@ export const useUpdateBeast = (): UseUpdateBeastReturn => {
         error: null 
       }));
       
-      console.log('🔄 Executing update_beast...');
-      
       // Execute the contract transaction
       const tx = await client.game.updateBeast(account);
       
