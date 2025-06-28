@@ -20,6 +20,9 @@ import sadIcon from "../../assets/icons/tobBar/icon-sad.png";
 // Internal components
 import CircularProgressBar from "../utils/CircularProgressBar";
 
+// Real-time status hook
+import { useRealTimeStatus } from "../../dojo/hooks/useRealTimeStatus";
+
 interface TamagotchiStatus {
   energy: number;    // 0-100
   hunger: number;    // 0-100  
@@ -30,12 +33,31 @@ interface TamagotchiStatus {
 interface TamagotchiTopBarProps {
   coins: number;
   gems: number;
-  status: TamagotchiStatus;
+  status?: TamagotchiStatus; // Made optional since we'll use real-time data
   onCoinsShopClick?: () => void;
   onGemsShopClick?: () => void;
 }
 
-export function TamagotchiTopBar({ coins, gems, status, onCoinsShopClick, onGemsShopClick }: TamagotchiTopBarProps) {
+export function TamagotchiTopBar({ 
+  coins, 
+  gems, 
+  status: fallbackStatus, // Renamed for clarity
+  onCoinsShopClick, 
+  onGemsShopClick 
+}: TamagotchiTopBarProps) {
+
+  // Use real-time status hook
+  const { 
+    statusForUI, 
+  } = useRealTimeStatus();
+
+  // Determine which status to use: real-time first, then fallback
+  const currentStatus: TamagotchiStatus = statusForUI || fallbackStatus || {
+    energy: 0,
+    hunger: 0,
+    happiness: 0,
+    hygiene: 0,
+  };
 
   // Determine the happiness icon based on the value
   const getHappinessIcon = (happiness: number) => {
@@ -47,25 +69,25 @@ export function TamagotchiTopBar({ coins, gems, status, onCoinsShopClick, onGems
   const statusItems = [
     {
       icon: energyIcon,
-      value: status.energy,
+      value: currentStatus.energy,
       label: "Energy",
       color: "#FFC107" // Golden yellow like lightning
     },
     {
       icon: hungerIcon,
-      value: status.hunger,
+      value: currentStatus.hunger,
       label: "Hunger",
       color: "#E91E63" // Orange like fruit
     },
     {
-      icon: getHappinessIcon(status.happiness),
-      value: status.happiness,
+      icon: getHappinessIcon(currentStatus.happiness),
+      value: currentStatus.happiness,
       label: "Happiness",
       color: "#FF8F00" // Pink/magenta for happiness
     },
     {
       icon: hygieneIcon,
-      value: status.hygiene,
+      value: currentStatus.hygiene,
       label: "Hygiene",
       color: "#0288D1" // Cyan blue like a water drop
     }
@@ -110,7 +132,8 @@ export function TamagotchiTopBar({ coins, gems, status, onCoinsShopClick, onGems
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="flex items-center justify-center space-x-1 sm:space-x-1.5 bg-black/50 backdrop-blur-sm px-1.5 sm:px-2 py-1.5 rounded-lg shadow-md w-full max-w-[180px] sm:max-w-[220px]">
+          <div className="flex items-center justify-center space-x-1 sm:space-x-1.5 bg-black/50 backdrop-blur-sm px-1.5 sm:px-2 py-1.5 rounded-lg shadow-md w-full max-w-[180px] sm:max-w-[220px] relative">
+
             {statusItems.map((item, index) => (
               <motion.div
                 key={item.label}

@@ -37,6 +37,11 @@ interface AppStore {
   isConnected: boolean;
   gameStarted: boolean;
   
+  // Real-time status state
+  realTimeStatus: number[];
+  lastStatusUpdate: number | null;
+  isStatusLoading: boolean;
+  
   // Player actions
   setPlayer: (player: Player | null) => void;
   updatePlayerStreak: (daily_streak: number) => void;
@@ -47,6 +52,23 @@ interface AppStore {
   setLiveBeast: (beast: Beast | null, status: BeastStatus | null) => void;
   updateLiveBeastStatus: (statusUpdate: Partial<BeastStatus>) => void;
   clearLiveBeast: () => void;
+  
+  // Real-time status actions
+  setRealTimeStatus: (status: number[]) => void;
+  updateStatusOptimistic: (statusUpdate: Partial<{
+    energy: number;
+    hunger: number;
+    happiness: number;
+    hygiene: number;
+  }>) => void;
+  clearRealTimeStatus: () => void;
+  getRealTimeStatusForUI: () => {
+    energy: number;
+    hunger: number;
+    happiness: number;
+    hygiene: number;
+  } | null;
+  validateStatusForCurrentBeast: (status: number[]) => boolean;
   
   // Food actions
   setFoods: (foods: Food[]) => void;
@@ -86,6 +108,9 @@ const initialState = {
   error: null,
   isConnected: false,
   gameStarted: false,
+  realTimeStatus: [],
+  lastStatusUpdate: null,
+  isStatusLoading: false,
 };
 
 // Create the store
@@ -148,6 +173,78 @@ const useAppStore = create<AppStore>()(
             isAlive: false
           }
         });
+      },
+      
+      // Real-time status actions
+      setRealTimeStatus: (status) => {
+        set({ 
+          realTimeStatus: status,
+          lastStatusUpdate: Date.now(),
+          isStatusLoading: false
+        });
+      },
+      
+      updateStatusOptimistic: (statusUpdate) => set((state) => {
+        if (state.realTimeStatus.length === 0) return state;
+        
+        const newStatus = [...state.realTimeStatus];
+        
+        // Array structure: [player, beast_id, is_alive, is_awake, hunger, energy, happiness, hygiene, clean_status, last_timestamp]
+        // Indices:         [0]     [1]       [2]       [3]       [4]     [5]     [6]         [7]      [8]           [9]
+        
+        if (statusUpdate.hunger !== undefined) newStatus[4] = statusUpdate.hunger;
+        if (statusUpdate.energy !== undefined) newStatus[5] = statusUpdate.energy;
+        if (statusUpdate.happiness !== undefined) newStatus[6] = statusUpdate.happiness;
+        if (statusUpdate.hygiene !== undefined) newStatus[7] = statusUpdate.hygiene;
+        
+        return {
+          realTimeStatus: newStatus,
+          lastStatusUpdate: Date.now()
+        };
+      }),
+      
+      clearRealTimeStatus: () => {
+        set({ 
+          realTimeStatus: [],
+          lastStatusUpdate: null,
+          isStatusLoading: false
+        });
+      },
+      
+      validateStatusForCurrentBeast: (status) => {
+        const state = get();
+        const currentBeastId = state.getCurrentBeastId();
+        
+        if (!currentBeastId || status.length < 10) return false;
+        
+        // status[1] is beast_id in the array
+        return status[1] === currentBeastId;
+      },
+      
+      getRealTimeStatusForUI: () => {
+        const state = get();
+        if (state.realTimeStatus.length < 10) {
+          // Fallback to liveBeast status if no real-time data
+          if (state.liveBeast.status) {
+            return {
+              energy: state.liveBeast.status.energy,
+              hunger: state.liveBeast.status.hunger,
+              happiness: state.liveBeast.status.happiness,
+              hygiene: state.liveBeast.status.hygiene,
+            };
+          }
+          return null;
+        }
+        
+        // Array structure: [player, beast_id, is_alive, is_awake, hunger, energy, happiness, hygiene, clean_status, last_timestamp]
+        // Indices:         [0]     [1]       [2]       [3]       [4]     [5]     [6]         [7]      [8]           [9]
+        
+        return {
+          energy: state.realTimeStatus[5] || 0,
+          hunger: state.realTimeStatus[4] || 0,
+          happiness: state.realTimeStatus[6] || 0,
+          hygiene: state.realTimeStatus[7] || 0,
+        };
       },
       
       // Food actions
@@ -219,6 +316,8 @@ const useAppStore = create<AppStore>()(
         foods: state.foods,
         highestScores: state.highestScores,
         isConnected: state.isConnected,
+        realTimeStatus: state.realTimeStatus,
+        lastStatusUpdate: state.lastStatusUpdate,
       }),
     }
   )
