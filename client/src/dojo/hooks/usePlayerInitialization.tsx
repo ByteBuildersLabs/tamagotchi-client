@@ -1,14 +1,18 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useAccount } from '@starknet-react/core';
 import { useSpawnPlayer } from './useSpawnPlayer';
 import { useLiveBeast } from './useLiveBeast';
+import { useRealTimeStatus } from './useRealTimeStatus';
+import { useUpdateBeast } from './useUpdateBeast';
 import useAppStore from '../../zustand/store';
+import fetchStatus from '../../utils/fetchStatus';
 
 // Types
 interface InitializationState {
   isInitializing: boolean;
   error: string | null;
   completed: boolean;
-  step: 'idle' | 'spawning_player' | 'checking_beast' | 'complete';
+  step: 'idle' | 'spawning_player' | 'checking_beast' | 'validating_beast' | 'complete';
   playerExists: boolean;
   hasLiveBeast: boolean;
   shouldGoToHatch: boolean;
@@ -25,7 +29,7 @@ interface InitializationResult {
 }
 
 interface UsePlayerInitializationReturn {
-  // State
+  // State 
   isInitializing: boolean;
   error: string | null;
   completed: boolean;
@@ -45,10 +49,12 @@ interface UsePlayerInitializationReturn {
 }
 
 /**
- * Coordinator hook for complete player initialization
- * Uses optimized live beast hook for efficient beast management
+ * Enhanced coordinator hook for complete player initialization
+ * includes beast status validation with contract sync
  */
 export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
+  const { account } = useAccount();
+  
   // Hooks dependencies
   const {
     initializePlayer,
@@ -67,7 +73,11 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
     refetch: refetchLiveBeast
   } = useLiveBeast();
 
-  // Local state for coordination
+  // NEW: Add beast validation hooks
+  const { fetchLatestStatus } = useRealTimeStatus();
+  const { updateBeast } = useUpdateBeast();
+
+  // Local state for coordination 
   const [initState, setInitState] = useState<InitializationState>({
     isInitializing: false,
     error: null,
@@ -80,8 +90,99 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
   });
 
   /**
-   * Main initialization coordinator function
-   * Simplified logic using optimized live beast management
+   * Enhanced beast validation with contract sync
+   * This is the key addition for your problem
+   */
+  const validateBeastWithContractSync = useCallback(async (): Promise<boolean> => {
+    if (!account) {
+      console.log('⚠️ No account for beast validation');
+      return false;
+    }
+    
+    try {
+      console.log('🔍 Starting enhanced beast validation...');
+      
+      // Step 1: Fetch real-time status from contract first
+      console.log('📡 Fetching contract status with fetchStatus...');
+      const contractStatus = await fetchStatus(account);
+      
+      // Handle different fetchStatus return values:
+      // undefined = no beast exists (Option::unwrap failed - expected)
+      // null = actual error occurred
+      // array = beast data received
+      if (contractStatus === undefined) {
+        console.log('ℹ️ Player has no live beast (expected - Option::unwrap failed)');
+        return false;
+      }
+      
+      if (contractStatus === null) {
+        console.log('❌ Error fetching contract status - network or contract issue');
+        return false;
+      }
+      
+      if (!contractStatus || contractStatus.length < 10) {
+        console.log('❌ Invalid contract status format');
+        return false;
+      }
+      
+      // Step 2: Check if beast is alive in contract
+      const isAliveInContract = contractStatus[2] === 1; // is_alive field
+      console.log('🏠 Contract beast status:', {
+        beast_id: contractStatus[1],
+        is_alive: isAliveInContract,
+        hunger: contractStatus[4],
+        energy: contractStatus[5],
+        happiness: contractStatus[6],
+        hygiene: contractStatus[7]
+      });
+      
+      if (!isAliveInContract) {
+        console.log('💀 Beast is dead in contract - will redirect to hatch');
+        return false;
+      }
+      
+      // Step 3: Sync with Torii using updateBeast to ensure indexer is up to date
+      console.log('🔄 Executing updateBeast to sync contract state with Torii...');
+      const updateSuccess = await updateBeast();
+      
+      if (updateSuccess) {
+        console.log('✅ updateBeast successful - waiting for Torii sync...');
+        
+        // Wait for transaction to be processed
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Step 4: Fetch updated data from Torii via fetchLatestStatus
+        console.log('📋 Fetching latest status from Torii...');
+        await fetchLatestStatus();
+        
+        // Small delay for store update
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Step 5: Refetch beast data to ensure store is updated
+        await refetchLiveBeast();
+        
+        // Another small delay to ensure beast data is processed
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } else {
+        console.log('⚠️ updateBeast failed - using contract status as fallback');
+      }
+      
+      // Step 6: Final validation from store
+      const finalBeastStatus = useAppStore.getState().hasLiveBeast();
+      console.log('🏪 Final beast status from store after sync:', finalBeastStatus);
+      
+      return finalBeastStatus;
+      
+    } catch (error) {
+      console.error('❌ Beast validation with sync failed:', error);
+      // Fallback to current store status
+      return useAppStore.getState().hasLiveBeast();
+    }
+  }, [account, updateBeast, fetchLatestStatus, refetchLiveBeast]);
+
+  /**
+   * Enhanced main initialization coordinator function
+   * Now includes beast validation step
    */
   const initializeComplete = useCallback(async (): Promise<InitializationResult> => {
     try {
@@ -93,7 +194,7 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
         completed: false
       }));
 
-      // Step 1: Initialize/spawn player
+      // Step 1: Initialize/spawn player 
       const playerResult = await initializePlayer();
 
       if (!playerResult.success) {
@@ -106,30 +207,37 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
         playerExists: playerResult.playerExists
       }));
 
-      // Step 2: Check live beast status using optimized approach
-      // Small delay to ensure player data is in store
+      // Step 2: Initial beast check using your existing approach
       await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Refetch live beast data to get latest information
       await refetchLiveBeast();
-
-      // Another small delay to ensure live beast data is processed
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Get fresh hasLiveBeast value directly from store using optimized getter
-      const currentHasLiveBeast = useAppStore.getState().hasLiveBeast();
+      // Step 3: Enhanced beast validation with contract sync
+      setInitState(prev => ({
+        ...prev,
+        step: 'validating_beast'
+      }));
 
-      // Step 3: Determine navigation based on live beast status
-      const shouldGoToHome = currentHasLiveBeast;
-      const shouldGoToHatch = !currentHasLiveBeast;
+      console.log('🚀 Starting enhanced beast validation process...');
+      const validatedBeastStatus = await validateBeastWithContractSync();
 
-      // Step 4: Complete initialization
+      // Step 4: Determine navigation based on validated beast status
+      const shouldGoToHome = validatedBeastStatus;
+      const shouldGoToHatch = !validatedBeastStatus;
+
+      console.log('🎯 Enhanced navigation decision:', {
+        validatedBeastStatus,
+        shouldGoToHome,
+        shouldGoToHatch
+      });
+
+      // Step 5: Complete initialization
       setInitState(prev => ({
         ...prev,
         step: 'complete',
         completed: true,
         isInitializing: false,
-        hasLiveBeast: currentHasLiveBeast,
+        hasLiveBeast: validatedBeastStatus,
         shouldGoToHatch,
         shouldGoToHome
       }));
@@ -137,7 +245,7 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
       return {
         success: true,
         playerExists: playerResult.playerExists,
-        hasLiveBeast: currentHasLiveBeast,
+        hasLiveBeast: validatedBeastStatus,
         shouldGoToHatch,
         shouldGoToHome
       };
@@ -162,10 +270,10 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
         error: errorMessage
       };
     }
-  }, [initializePlayer, refetchLiveBeast]);
+  }, [initializePlayer, validateBeastWithContractSync]);
 
   /**
-   * Reset all initialization state
+   * Reset all initialization state 
    */
   const resetInitialization = useCallback(() => {
     // Reset our local state
@@ -196,7 +304,7 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
     }
   }, [playerError, liveBeastError]);
 
-  // Update hasLiveBeast when it changes
+  // Update hasLiveBeast when it changes 
   useEffect(() => {
     setInitState(prev => ({
       ...prev,
@@ -205,7 +313,7 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
   }, [hasLiveBeast]);
 
   return {
-    // State
+    // State 
     isInitializing: initState.isInitializing || playerSpawning || liveBeastLoading,
     error: initState.error,
     completed: initState.completed,
@@ -215,7 +323,7 @@ export const usePlayerInitialization = (): UsePlayerInitializationReturn => {
     shouldGoToHatch: initState.shouldGoToHatch,
     shouldGoToHome: initState.shouldGoToHome,
     
-    // Player spawn state passthrough
+    // Player spawn state passthrough 
     playerSpawnTxHash: playerTxHash,
     playerSpawnTxStatus: playerTxStatus,
     

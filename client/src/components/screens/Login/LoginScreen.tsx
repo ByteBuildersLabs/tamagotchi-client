@@ -13,13 +13,14 @@ interface LoginScreenProps {
 }
 
 /**
- * Main Login/Cover component that handles the intro sequence
- * and redirects to appropriate screen based on player's beast status
+ * Enhanced Login/Cover component that handles the intro sequence
+ * and redirects to appropriate screen based on VALIDATED player's beast status
+ * includes fetchStatus + updateBeast validation before navigation
  */
 export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const { view, currentCircle } = useLoginAnimations();
   
-  // Integrate wallet connection hook
+  // Integrate useStarknetConnect hook 
   const { 
     status, 
     handleConnect: connectWallet, 
@@ -28,7 +29,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     hasTriedConnect
   } = useStarknetConnect();
 
-  // Integrate player initialization coordinator hook
+  // Integrate player initialization coordinator hook 
   const { 
     initializeComplete,
     error: initializationError,
@@ -43,15 +44,13 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
   const { account } = useAccount();
 
-  // Get player from store
+  // Get player from store 
   const storePlayer = useAppStore(state => state.player);
 
-  // Ref to prevent multiple initializations
+  // Ref to prevent multiple initializations 
   const hasInitialized = useRef(false);
 
-  /**
-   * Handle connect button click - trigger Cartridge Controller
-   */
+  // Handle connect button click - trigger Cartridge Controller
   const handleConnect = async () => {
     try {
       await connectWallet();
@@ -60,33 +59,50 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     }
   };
 
-  /**
-   * Trigger complete player initialization on wallet connect
-   */
+  // Trigger complete player initialization on wallet connect
   useEffect(() => {
     if (status === 'connected' && hasTriedConnect && account && !hasInitialized.current) {
       hasInitialized.current = true;
       
+      // Enhanced: Show validation loading toast
+      toast.loading('Validating player and beast status...', {
+        id: 'init-validation',
+        duration: 0
+      });
+      
       initializeComplete().then(() => {
-        // Initialization completed successfully
+        // Enhanced: Dismiss loading toast and show success
+        toast.dismiss('init-validation');
+        toast.success('Validation completed!', { duration: 2000 });
       }).catch(error => {
         console.error("Initialization failed:", error);
+        toast.dismiss('init-validation');
+        toast.error('Validation failed');
         hasInitialized.current = false; // Reset on error
       });
     }
   }, [status, hasTriedConnect, account, initializeComplete]);
 
   /**
-   * Monitor initialization completion and navigate appropriately
+   * Enhanced navigation logic with validated beast status
+   * Now the beast status has been validated with fetchStatus + updateBeast
    */
   useEffect(() => {
     // Only navigate when initialization is complete
     if (status === 'connected' && address && completed && storePlayer) {
-      // Navigate based on beast status
+      console.log('🎯 Navigation with validated beast status:', {
+        shouldGoToHome,
+        shouldGoToHatch,
+        hasLiveBeast
+      });
+      
+      // Navigate based on VALIDATED beast status
       setTimeout(() => {
         if (shouldGoToHome) {
+          console.log('✅ Navigating to cover - beast validated as alive');
           onLoginSuccess('cover');
         } else if (shouldGoToHatch) {
+          console.log('🥚 Navigating to hatch - beast validated as dead/nonexistent');
           onLoginSuccess('hatch');
         }
       }, 1500);
@@ -104,7 +120,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   ]);
 
   /**
-   * Handle connection errors
+   * Handle connection errors 
    */
   useEffect(() => {
     if (connectionError) {
@@ -117,7 +133,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   }, [connectionError]);
 
   /**
-   * Handle initialization errors
+   * Handle initialization errors 
    */
   useEffect(() => {
     if (initializationError && initializationError !== "Already initializing") {
@@ -130,7 +146,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   }, [initializationError]);
 
   /**
-   * Show transaction progress toasts
+   * Show transaction progress toasts 
    */
   useEffect(() => {
     if (playerSpawnTxHash && playerSpawnTxStatus === 'SUCCESS') {
@@ -147,17 +163,17 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   }, [playerSpawnTxHash, playerSpawnTxStatus]);
 
   /**
-   * Show beast status information
+   * Enhanced beast status information with validation context
    */
   useEffect(() => {
     if (completed) {
       if (hasLiveBeast) {
-        toast.success('🐾 Beast found!', {
+        toast.success('🐾 Beast validated and ready!', {
           duration: 2000,
           position: 'top-center'
         });
       } else {
-        toast('🥚 No beast found. Time to hatch!', {
+        toast('🥚 No live beast found. Time to hatch!', {
           duration: 2000,
           position: 'top-center',
           icon: '🥚'
@@ -166,7 +182,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     }
   }, [completed, hasLiveBeast]);
 
-  // Render different views based on animation state
+  // Render different views based on animation state 
   switch (view) {
     case 'universe':
       return <UniverseView />;
@@ -180,7 +196,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             onConnect={handleConnect}
           />
           
-          {/* Toast Container for status updates */}
+          {/* Enhanced Toast Container with loading support */}
           <Toaster
             toastOptions={{
               className: 'bg-white/95 text-gray-800 border border-gray-200 rounded-lg shadow-xl backdrop-blur-sm font-medium',
@@ -190,6 +206,9 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
               error: { 
                 iconTheme: { primary: '#EF4444', secondary: '#FFFFFF' }
               },
+              loading: {
+                iconTheme: { primary: '#3B82F6', secondary: '#FFFFFF' }
+              }
             }}
           />
         </>
