@@ -1,10 +1,19 @@
 import { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 import { FoodItem, DragState } from '../../../../types/feed.types';
-import { INITIAL_FOODS, DROP_TOLERANCE, BEAST_DROP_ZONE_ID } from '../../../../../constants/feed.constants';
+import initialFoodItems, { DROP_TOLERANCE, BEAST_DROP_ZONE_ID, FOOD_UI_CONFIG } from '../../../../../constants/feed.constants';
 
 export const useFeedLogic = () => {
-  const [foods, setFoods] = useState<FoodItem[]>(INITIAL_FOODS);
+  const [foods, setFoods] = useState<FoodItem[]>(
+    initialFoodItems.map(item => ({
+      id: item.id,
+      name: item.name,
+      icon: item.img,  
+      count: item.count,
+      hungerRestore: 20,
+      color: FOOD_UI_CONFIG.FOOD_COLORS[item.id] || '#6B7280'
+    }))
+);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     draggedFood: null,
@@ -13,7 +22,7 @@ export const useFeedLogic = () => {
   
   const draggedFoodRef = useRef<FoodItem | null>(null);
 
-  const updateFoodCount = (foodId: string) => {
+  const updateFoodCount = (foodId: number) => {
     setFoods(prevFoods =>
       prevFoods.map(food =>
         food.id === foodId && food.count > 0

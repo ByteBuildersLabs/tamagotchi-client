@@ -1,21 +1,21 @@
 // Simple food configuration that matches contract IDs
 
-import Apple from '../assets/img/food/food-apple.svg';
-import Banana from '../assets/img/food/food-banana.svg';
-import Cherry from '../assets/img/food/food-cherry.svg';
-import Burguer from '../assets/img/food/food-burger.svg';
-import CakeChoco from '../assets/img/food/food-cake-chocolate.svg';
-import CakeStrawberry from '../assets/img/food/food-cake-strawberry.svg';
-import Cheese from '../assets/img/food/cheese.svg';
-import Chiken from '../assets/img/food/chicken.svg';
-import Eggs from '../assets/img/food/food-eggs-fried.png';
-import Fish from '../assets/img/food/fish.svg';
-import FrenchFries from '../assets/img/food/food-fries.svg';
-import Blueberry from '../assets/img/food/food-blueberry.svg';
-import Beef from '../assets/img/food/meat.svg';
-import Pizza from '../assets/img/food/pizza.svg';
-import Corn from '../assets/img/food/food-corn.svg';
-import Potato from '../assets/img/food/potato.svg';
+import Apple from '../assets/Food/food-apple.svg';
+import Banana from '../assets/Food/food-banana.svg';
+import Cherry from '../assets/Food/food-cherry.svg';
+import Burguer from '../assets/Food/food-burger.svg';
+import CakeChoco from '../assets/Food/food-cake-chocolate.svg';
+import CakeStrawberry from '../assets/Food/food-cake-strawberry.svg';
+import Cheese from '../assets/Food/cheese.svg';
+import Chiken from '../assets/Food/chicken.svg';
+import Eggs from '../assets/Food/food-eggs-fried.png';
+import Fish from '../assets/Food/fish.svg';
+import FrenchFries from '../assets/Food/food-fries.svg';
+import Blueberry from '../assets/Food/food-blueberry.svg';
+import Beef from '../assets/Food/meat.svg';
+import Pizza from '../assets/Food/pizza.svg';
+import Corn from '../assets/Food/food-corn.svg';
+import Potato from '../assets/Food/potato.svg';
 
 /**
  * Food items configuration - IDs match contract exactly
@@ -105,6 +105,11 @@ export const FOOD_UI_CONFIG = {
     16: "#A78BFA", // Potato - Purple
   } as Record<number, string>,
 } as const;
+
+// Export individual constants for easier importing
+export const DROP_TOLERANCE = FOOD_UI_CONFIG.DROP_TOLERANCE;
+export const BEAST_DROP_ZONE_ID = FOOD_UI_CONFIG.BEAST_DROP_ZONE_ID;
+export const SLIDER_SETTINGS = FOOD_UI_CONFIG.SLIDER_SETTINGS;
 
 /**
  * Carousel custom styles

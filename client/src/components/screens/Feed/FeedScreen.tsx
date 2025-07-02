@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 
 // Layout and shared components
@@ -7,6 +7,9 @@ import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 
 // Universal hook for beast display
 import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
+
+// Food inventory hook to fetch food data from Dojo
+import { useFoodInventory } from "../../../dojo/hooks/useFoodInventory";
 
 // Feed components
 import { Beast } from "./components/beasts";
@@ -30,25 +33,65 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
     currentBeastDisplay,
     liveBeastStatus,
     hasLiveBeast,
-    isLoading
+    isLoading: beastLoading
   } = useBeastDisplay();
   
-  // Initialize feeding logic and drag state
+  // Get food inventory data from Dojo
   const {
     foods,
+    isLoading: foodLoading,
+    error: foodError,
+    refetch: refetchFood,
+    hasFoodAvailable
+  } = useFoodInventory();
+  
+  // Initialize feeding logic with Dojo contract food data
+  const {
     dragState,
     handleDragStart,
     handleDrag,
     handleDragEnd,
   } = useFeedLogic();
 
-  // Show loading state while beast data is being fetched
-  if (isLoading) {
+  // Auto-refetch food when entering feed screen
+  useEffect(() => {
+    // Refetch food inventory when component mounts or beast changes
+    if (hasLiveBeast) refetchFood();
+
+  }, [hasLiveBeast, refetchFood]);
+
+  // Show loading state while data is being fetched
+  if (beastLoading || foodLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-900 to-orange-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-white">Loading your beast...</p>
+          <p className="text-white">
+            {beastLoading ? "Loading your beast..." : "Loading your food inventory..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if food failed to load
+  if (foodError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-900 to-orange-900">
+        <div className="text-center">
+          <div className="text-6xl opacity-50 mb-4">❌</div>
+          <h2 className="text-2xl font-luckiest text-cream drop-shadow-lg mb-4">
+            Failed to Load Food
+          </h2>
+          <p className="text-white/80 mb-6">
+            {foodError.message}
+          </p>
+          <button
+            onClick={() => refetchFood()}
+            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -89,6 +132,53 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
             >
               Hatch New Beast
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show no food available state
+  if (!hasFoodAvailable) {
+    return (
+      <div 
+        ref={constraintsRef}
+        className="relative min-h-screen w-full flex flex-col items-center overflow-hidden font-rubik"
+        style={{
+          backgroundImage: `url(${forestBackground})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <MagicalSparkleParticles />
+        
+        <TamagotchiTopBar
+          coins={1250}
+          gems={45}
+          status={{
+            energy: liveBeastStatus?.energy || 0,
+            hunger: liveBeastStatus?.hunger || 0,
+            happiness: liveBeastStatus?.happiness || 0,
+            hygiene: liveBeastStatus?.hygiene || 0
+          }}
+        />
+
+        <div className="flex-grow flex items-center justify-center w-full">
+          <div className="text-center space-y-6 z-10">
+            <div className="text-6xl opacity-50">🍽️</div>
+            <h2 className="text-2xl font-luckiest text-cream drop-shadow-lg">
+              No Food Available!
+            </h2>
+            <p className="text-white/80 drop-shadow-md">
+              You don't have any food to feed your {currentBeastDisplay.displayName}
+            </p>
+            <button 
+              onClick={() => refetchFood()}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
+            >
+              Refresh Food
             </button>
           </div>
         </div>
@@ -147,7 +237,7 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
 
       {/* Food carousel with draggable items */}
       <FoodCarousel
-        foods={foods}
+        foods={foods} 
         isDragging={dragState.isDragging}
         onDragStart={handleDragStart}
         onDrag={handleDrag}

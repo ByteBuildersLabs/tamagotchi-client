@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BEAST_DROP_ZONE_ID } from '../../../../constants/feed.constants';
+import { FOOD_UI_CONFIG } from '../../../../constants/feed.constants';
 
 // Fallback image for when beast image is not available
 import babyWolfBeast from "../../../../assets/beasts/baby-wolf.png";
@@ -38,7 +38,7 @@ export const Beast = ({ isDragging, beastImage, beastName }: BeastAnimationProps
   return (
     <div className="flex-grow flex items-center justify-center w-full relative" style={{ zIndex: 5 }}>
       <motion.div
-        id={BEAST_DROP_ZONE_ID} // ID used for drop detection in feeding logic
+        id={FOOD_UI_CONFIG.BEAST_DROP_ZONE_ID} // ID used for drop detection in feeding logic
         className="relative"
       >
         <motion.img
