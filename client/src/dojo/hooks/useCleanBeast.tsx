@@ -96,21 +96,7 @@ export const useCleanBeast = (): UseCleanBeastReturn => {
         error: null,
       });
 
-      // Show loading toast
-      toast.loading('🧼 Cleaning your beast...', {
-        id: 'cleaning-toast',
-        position: 'top-center',
-        style: {
-          background: '#3B82F6',
-          color: 'white',
-          fontWeight: 'bold',
-          borderRadius: '12px',
-          padding: '12px 16px',
-          fontSize: '16px',
-        },
-      });
-
-      // Execute transaction 
+      // Execute transaction (no loading toast - handled by UI)
       const tx = await client.game.clean(account as Account);
       
       // Check transaction result
@@ -120,21 +106,6 @@ export const useCleanBeast = (): UseCleanBeastReturn => {
           isCleaningInProgress: false,
           transactionHash: tx.transaction_hash,
           error: null,
-        });
-
-        // Show success toast
-        toast.success('🌧️ Beast cleaned successfully!', {
-          id: 'cleaning-toast', // Replace loading toast
-          duration: 3000,
-          position: 'top-center',
-          style: {
-            background: '#10B981',
-            color: 'white',
-            fontWeight: 'bold',
-            borderRadius: '12px',
-            padding: '12px 16px',
-            fontSize: '16px',
-          },
         });
 
         return {
@@ -159,7 +130,6 @@ export const useCleanBeast = (): UseCleanBeastReturn => {
 
       // Show error toast
       toast.error(`Failed to clean beast: ${errorMessage}`, {
-        id: 'cleaning-toast', // Replace loading toast
         duration: 4000,
         position: 'top-center',
         style: {

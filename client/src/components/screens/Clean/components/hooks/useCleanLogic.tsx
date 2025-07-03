@@ -16,8 +16,11 @@ interface UseCleanLogicReturn {
   // Rain system state
   isRainActive: boolean;
   
+  // Clean process state
+  isProcessingClean: boolean;
+  
   // Actions
-  handleCloudClick: () => Promise<void>;
+  handleCloudClick: () => Promise<boolean>; // Returns success state
   
   // Computed
   isInteractionDisabled: boolean;
@@ -62,9 +65,9 @@ export const useCleanLogic = (rainDuration: number = 20): UseCleanLogicReturn =>
 
   /**
    * Handle successful clean with post-cleaning updates
-   * Follows the same pattern as useFeedLogic
+   * Returns success state for CleanScreen to handle UI feedback
    */
-  const handleSuccessfulClean = useCallback(async () => {
+  const handleSuccessfulClean = useCallback(async (): Promise<boolean> => {
     try {
       // Execute blockchain transaction
       const result = await cleanBeast();
@@ -105,28 +108,31 @@ export const useCleanLogic = (rainDuration: number = 20): UseCleanLogicReturn =>
           }
         }, 1500); // Reduced delay for faster feedback
         
+        return true; // Success
+        
       } else {
         // Error handled by useCleanBeast hook (error toast already shown)
         console.error('Clean transaction failed:', result.error);
         setIsProcessingClean(false);
+        return false; // Failed
       }
       
     } catch (error) {
       console.error('Unexpected error in handleSuccessfulClean:', error);
-      toast.error('An unexpected error occurred during cleaning');
       setIsProcessingClean(false);
+      return false; // Failed
     }
   }, [cleanBeast, startRain, updateBeast, fetchLatestStatus]);
 
   /**
    * Handle cloud click - main action for clean screen
-   * Integrates transaction with rain animation system
+   * Returns success state for CleanScreen to handle success feedback
    */
-  const handleCloudClick = useCallback(async () => {
+  const handleCloudClick = useCallback(async (): Promise<boolean> => {
     // Early return if interaction is disabled
     if (isInteractionDisabled) {
       console.log('⏸️ Cloud interaction disabled');
-      return;
+      return false;
     }
     
     // Prevent multiple simultaneous clean operations
@@ -143,7 +149,7 @@ export const useCleanLogic = (rainDuration: number = 20): UseCleanLogicReturn =>
           fontSize: '16px',
         },
       });
-      return;
+      return false;
     }
     
     // Check if cleaning is possible
@@ -160,20 +166,22 @@ export const useCleanLogic = (rainDuration: number = 20): UseCleanLogicReturn =>
           fontSize: '16px',
         },
       });
-      return;
+      return false;
     }
     
     try {
       setIsProcessingClean(true);
       console.log('☁️ Cloud clicked - starting clean sequence...');
       
-      // Execute the cleaning sequence
-      await handleSuccessfulClean();
+      // Execute the cleaning sequence and return success state
+      const success = await handleSuccessfulClean();
+      return success;
       
     } catch (error) {
       console.error('❌ Error in handleCloudClick:', error);
       toast.error('Failed to start cleaning process');
       setIsProcessingClean(false);
+      return false;
     }
   }, [
     isInteractionDisabled,
@@ -190,6 +198,9 @@ export const useCleanLogic = (rainDuration: number = 20): UseCleanLogicReturn =>
     
     // Animation state
     isRainActive,
+    
+    // Clean process state
+    isProcessingClean,
     
     // Actions
     handleCloudClick,
