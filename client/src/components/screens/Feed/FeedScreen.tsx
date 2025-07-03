@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import { motion } from "framer-motion";
 
 // Layout and shared components
@@ -8,16 +8,13 @@ import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 // Universal hook for beast display
 import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 
-// Food inventory hook to fetch food data from Dojo
-import { useFoodInventory } from "../../../dojo/hooks/useFoodInventory";
-
 // Feed components
 import { Beast } from "./components/beasts";
 import { FoodCarousel } from "./components/FoodCarousel";
 import { DragPortal } from "./components/DragPortal";
 import { ToastContainer } from "./components/ToastContainer";
 
-// Hooks and types
+// Main feed logic hook (includes all food inventory + transaction logic)
 import { useFeedLogic, usePortal } from "./components/hooks/useFeedLogic";
 import { FeedScreenProps } from "../../types/feed.types";
 
@@ -28,7 +25,7 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
   const constraintsRef = useRef(null);
   const portalRoot = usePortal();
   
-  // Get current beast data - single hook consumption to avoid conflicts
+  // Get current beast data
   const {
     currentBeastDisplay,
     liveBeastStatus,
@@ -36,32 +33,24 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
     isLoading: beastLoading
   } = useBeastDisplay();
   
-  // Get food inventory data from Dojo
+  // Get complete feeding logic (includes food inventory + transactions)
   const {
     foods,
     isLoading: foodLoading,
-    error: foodError,
-    refetch: refetchFood,
-    hasFoodAvailable
-  } = useFoodInventory();
-  
-  // Initialize feeding logic with Dojo contract food data
-  const {
     dragState,
+    isFeeding,
+    isCarouselDisabled,
     handleDragStart,
     handleDrag,
     handleDragEnd,
   } = useFeedLogic();
 
-  // Auto-refetch food when entering feed screen
-  useEffect(() => {
-    // Refetch food inventory when component mounts or beast changes
-    if (hasLiveBeast) refetchFood();
-
-  }, [hasLiveBeast, refetchFood]);
+  // Computed states
+  const hasFoodAvailable = foods.some(food => food.count > 0);
+  const isLoading = beastLoading || foodLoading;
 
   // Show loading state while data is being fetched
-  if (beastLoading || foodLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-900 to-orange-900">
         <div className="text-center">
@@ -69,29 +58,6 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
           <p className="text-white">
             {beastLoading ? "Loading your beast..." : "Loading your food inventory..."}
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state if food failed to load
-  if (foodError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-900 to-orange-900">
-        <div className="text-center">
-          <div className="text-6xl opacity-50 mb-4">❌</div>
-          <h2 className="text-2xl font-luckiest text-cream drop-shadow-lg mb-4">
-            Failed to Load Food
-          </h2>
-          <p className="text-white/80 mb-6">
-            {foodError.message}
-          </p>
-          <button
-            onClick={() => refetchFood()}
-            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
-          >
-            Try Again
-          </button>
         </div>
       </div>
     );
@@ -174,12 +140,9 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
             <p className="text-white/80 drop-shadow-md">
               You don't have any food to feed your {currentBeastDisplay.displayName}
             </p>
-            <button 
-              onClick={() => refetchFood()}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
-            >
-              Refresh Food
-            </button>
+            <p className="text-white/60 text-sm">
+              {isFeeding ? "Feeding in progress..." : "Try refreshing or check your inventory"}
+            </p>
           </div>
         </div>
       </div>
@@ -225,20 +188,23 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
       >
         <h1 className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg">
           Feed Your {currentBeastDisplay.displayName}
+          {isFeeding && <span className="text-lg text-yellow-300 ml-2">🍽️</span>}
         </h1>
       </motion.div>
 
       {/* Beast display - acts as drop zone for food items */}
       <Beast 
-        isDragging={dragState.isDragging} 
+        isDragging={dragState.isDragging}
+        isFeeding={isFeeding} // NEW: Pass feeding state to beast
         beastImage={currentBeastDisplay.asset}
         beastName={currentBeastDisplay.displayName}
       />
 
       {/* Food carousel with draggable items */}
       <FoodCarousel
-        foods={foods} 
+        foods={foods}
         isDragging={dragState.isDragging}
+        isDisabled={isCarouselDisabled} // NEW: Pass disabled state
         onDragStart={handleDragStart}
         onDrag={handleDrag}
         onDragEnd={handleDragEnd}
@@ -251,6 +217,18 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
         portalPosition={dragState.portalPosition}
         portalRoot={portalRoot.current}
       />
+
+      {/* Feeding indicator overlay */}
+      {isFeeding && (
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 pointer-events-none">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
+              <span className="text-gray-800 font-semibold">Feeding your beast...</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

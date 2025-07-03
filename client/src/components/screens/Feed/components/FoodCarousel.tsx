@@ -10,41 +10,55 @@ import ArrowRightIcon from '../../../../assets/icons/extras/icon-arrow-right.png
 export const FoodCarousel = ({
   foods,
   isDragging,
+  isDisabled = false, 
   onDragStart,
   onDrag,
   onDragEnd
 }: FoodCarouselProps) => {
   const sliderRef = useRef<Slider>(null);
 
+  // Enhanced slider settings with disabled state
   const sliderSettings = {
     ...SLIDER_SETTINGS,
-    touchMove: !isDragging,
-    swipe: !isDragging,
-    draggable: !isDragging,
+    touchMove: !isDragging && !isDisabled, // Disable touch when disabled
+    swipe: !isDragging && !isDisabled,     // Disable swipe when disabled
+    draggable: !isDragging && !isDisabled, // Disable dragging when disabled
   };
 
   const goToPrevious = () => {
-    sliderRef.current?.slickPrev();
+    if (!isDisabled) {
+      sliderRef.current?.slickPrev();
+    }
   };
 
   const goToNext = () => {
-    sliderRef.current?.slickNext();
+    if (!isDisabled) {
+      sliderRef.current?.slickNext();
+    }
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={{ 
+        opacity: isDisabled ? 0.5 : 1, // Dim when disabled
+        y: 0 
+      }}
       transition={{ delay: 0.4, duration: 0.5 }}
-      className="fixed bottom-[calc(theme(spacing.16)+0.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30"
+      className={`fixed bottom-[calc(theme(spacing.16)+0.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30 ${
+        isDisabled ? 'pointer-events-none' : '' // Disable pointer events when disabled
+      }`}
     >
       <div className="flex items-center justify-center space-x-2 px-2">
         {/* Previous Button */}
         <motion.button
           onClick={goToPrevious}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          className="p-1 sm:p-1 z-40 flex items-center justify-center"
+          disabled={isDisabled}
+          whileHover={!isDisabled ? { scale: 1.1 } : {}} // No hover effect when disabled
+          whileTap={!isDisabled ? { scale: 0.95 } : {}}  // No tap effect when disabled
+          className={`p-1 sm:p-1 z-40 flex items-center justify-center transition-opacity ${
+            isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          }`}
         >
           <img 
             src={ArrowLeftIcon} 
@@ -54,7 +68,9 @@ export const FoodCarousel = ({
         </motion.button>
 
         {/* Carousel Container */}
-        <div className="w-[22rem] h-28 max-w-[calc(100vw-120px)]">
+        <div className={`w-[22rem] h-28 max-w-[calc(100vw-120px)] relative ${
+          isDisabled ? 'overflow-hidden' : ''
+        }`}>
           <Slider ref={sliderRef} {...sliderSettings}>
             {foods.map((food) => (
               <FoodItem
@@ -62,20 +78,36 @@ export const FoodCarousel = ({
                 food={food}
                 isDragging={isDragging}
                 draggedFood={null} // This should be passed from parent
+                isDisabled={isDisabled}
                 onDragStart={onDragStart}
                 onDrag={onDrag}
                 onDragEnd={onDragEnd}
               />
             ))}
           </Slider>
+          
+          {/* Disabled overlay */}
+          {isDisabled && (
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] rounded-lg flex items-center justify-center z-10">
+              <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+                  <span className="text-gray-800 text-sm font-medium">Feeding...</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Next Button */}
         <motion.button
           onClick={goToNext}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          className="p-1 sm:p-1 z-40 flex items-center justify-center"
+          disabled={isDisabled}
+          whileHover={!isDisabled ? { scale: 1.1 } : {}} // No hover effect when disabled
+          whileTap={!isDisabled ? { scale: 0.95 } : {}}  // No tap effect when disabled
+          className={`p-1 sm:p-1 z-40 flex items-center justify-center transition-opacity ${
+            isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          }`}
         >
           <img 
             src={ArrowRightIcon} 

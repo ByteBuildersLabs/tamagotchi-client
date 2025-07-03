@@ -1,19 +1,61 @@
 import { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
-import { FoodItem, DragState } from '../../../../types/feed.types';
-import initialFoodItems, { DROP_TOLERANCE, BEAST_DROP_ZONE_ID, FOOD_UI_CONFIG } from '../../../../../constants/feed.constants';
 
-export const useFeedLogic = () => {
-  const [foods, setFoods] = useState<FoodItem[]>(
-    initialFoodItems.map(item => ({
-      id: item.id,
-      name: item.name,
-      icon: item.img,  
-      count: item.count,
-      hungerRestore: 20,
-      color: FOOD_UI_CONFIG.FOOD_COLORS[item.id] || '#6B7280'
-    }))
-);
+// Types and constants
+import { FoodItem, DragState } from '../../../../types/feed.types';
+import { DROP_TOLERANCE, BEAST_DROP_ZONE_ID } from '../../../../../constants/feed.constants';
+
+// Hooks
+import { useFoodInventory } from '../../../../../dojo/hooks/useFoodInventory';
+import { useFeedBeast } from '../../../../../dojo/hooks/useFeedBeast';
+import { useRealTimeStatus } from '../../../../../dojo/hooks/useRealTimeStatus';
+import { useUpdateBeast } from '../../../../../dojo/hooks/useUpdateBeast';
+
+// Hook return interface
+interface UseFeedLogicReturn {
+  // Data from blockchain
+  foods: FoodItem[];
+  isLoading: boolean;
+  
+  // Drag state
+  dragState: DragState;
+  
+  // Transaction state
+  isFeeding: boolean;
+  canFeed: boolean;
+  
+  // Actions
+  handleDragStart: (food: FoodItem) => void;
+  handleDrag: (event: any, info: any) => void;
+  handleDragEnd: (event: any, info: any) => void;
+  
+  // Computed
+  isCarouselDisabled: boolean;
+}
+
+export const useFeedLogic = (): UseFeedLogicReturn => {
+  // Get food inventory from blockchain
+  const {
+    foods,
+    isLoading,
+    refetch: refetchFood,
+    hasFoodAvailable
+  } = useFoodInventory();
+  
+  // Get feed transaction capabilities
+  const {
+    feedBeast,
+    isFeeding,
+    canFeed
+  } = useFeedBeast();
+  
+  // Get real-time status management
+  const { fetchLatestStatus } = useRealTimeStatus();
+  
+  // Get beast update capabilities
+  const { updateBeast } = useUpdateBeast();
+  
+  // Drag state management
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     draggedFood: null,
@@ -22,18 +64,18 @@ export const useFeedLogic = () => {
   
   const draggedFoodRef = useRef<FoodItem | null>(null);
 
-  const updateFoodCount = (foodId: number) => {
-    setFoods(prevFoods =>
-      prevFoods.map(food =>
-        food.id === foodId && food.count > 0
-          ? { ...food, count: food.count - 1 }
-          : food
-      )
-    );
-  };
-
+  // Handle drag start - with validation for feeding state
   const handleDragStart = (food: FoodItem) => {
-    if (food.count <= 0) return;
+    // Prevent drag if feeding in progress or no food available
+    if (food.count <= 0 || isFeeding || !canFeed) {
+      if (isFeeding) {
+        toast.error('Please wait for current feeding to complete', {
+          duration: 2000,
+          position: 'top-center',
+        });
+      }
+      return;
+    }
     
     setDragState(prev => ({
       ...prev,
@@ -43,6 +85,7 @@ export const useFeedLogic = () => {
     draggedFoodRef.current = food;
   };
 
+  // Handle drag movement
   const handleDrag = (_: any, info: any) => {
     setDragState(prev => ({
       ...prev,
@@ -50,7 +93,8 @@ export const useFeedLogic = () => {
     }));
   };
 
-  const handleDragEnd = (_event: any, info: any) => {
+  // Handle drag end - with contract integration
+  const handleDragEnd = async (_event: any, info: any) => {
     setDragState(prev => ({ ...prev, isDragging: false }));
 
     const currentDraggedFood = draggedFoodRef.current;
@@ -61,6 +105,7 @@ export const useFeedLogic = () => {
       return;
     }
 
+    // Calculate drop distance
     const beastRect = beastElement.getBoundingClientRect();
     const dropX = info.point.x;
     const dropY = info.point.y;
@@ -71,8 +116,9 @@ export const useFeedLogic = () => {
       Math.pow(dropX - beastCenterX, 2) + Math.pow(dropY - beastCenterY, 2)
     );
 
-    if (distance < DROP_TOLERANCE && currentDraggedFood.count > 0) {
-      handleSuccessfulFeed(currentDraggedFood);
+    // Check if drop is within tolerance and food is available
+    if (distance < DROP_TOLERANCE && currentDraggedFood.count > 0 && canFeed) {
+      await handleSuccessfulFeed(currentDraggedFood);
     } else {
       handleFailedFeed();
     }
@@ -80,58 +126,119 @@ export const useFeedLogic = () => {
     resetDragState();
   };
 
-  const handleSuccessfulFeed = (food: FoodItem) => {
-    updateFoodCount(food.id);
-    toast.success(`🎉 Beast fed with ${food.name}!`, {
-      duration: 3000,
-      position: 'top-center',
-      style: {
-        background: food.color,
-        color: 'white',
-        fontWeight: 'bold',
-        borderRadius: '12px',
-        padding: '12px 16px',
-        fontSize: '16px',
-        zIndex: 99999,
-      },
-      iconTheme: {
-        primary: 'white',
-        secondary: food.color,
-      },
-    });
+  // Handle successful feed with blockchain transaction
+  const handleSuccessfulFeed = async (food: FoodItem) => {
+    try {
+      // Execute blockchain transaction
+      const result = await feedBeast(food.id);
+      
+      if (result.success) {
+        // Transaction handled by useFeedBeast (optimistic update + toast)
+        
+        // Post-feeding sequence: Update beast → Fetch status → Refetch food
+        setTimeout(async () => {
+          try {
+            console.log('🔄 Starting post-feeding updates...');
+            
+            // Step 1: Update beast (this triggers contract status recalculation)
+            const updateSuccess = await updateBeast();
+            
+            if (updateSuccess) {
+              console.log('✅ Beast updated successfully');
+              
+              // Step 2: Fetch latest status (after beast update)
+              await fetchLatestStatus();
+              console.log('✅ Status fetched successfully');
+            } else {
+              console.warn('⚠️ Beast update failed, fetching status anyway');
+              await fetchLatestStatus();
+            }
+            
+            // Step 3: Refetch food inventory
+            await refetchFood();
+            console.log('✅ Food inventory refreshed');
+            
+          } catch (error) {
+            console.error('❌ Error in post-feeding updates:', error);
+            // Still try to refetch food even if status update fails
+            await refetchFood();
+          }
+        }, 2000); // Wait 2 seconds for blockchain confirmation
+        
+      } else {
+        // Error handled by useFeedBeast hook (revert + error toast)
+        console.error('Feed transaction failed:', result.error);
+      }
+      
+    } catch (error) {
+      console.error('Unexpected error in handleSuccessfulFeed:', error);
+      toast.error('An unexpected error occurred');
+    }
   };
 
+  // Handle failed feed (missed drop zone)
   const handleFailedFeed = () => {
-    toast.error(`Drop food on your beast to feed it! 🎯`, {
-      duration: 2000,
-      position: 'top-center',
-      style: {
-        background: '#EF4444',
-        color: 'white',
-        fontWeight: 'bold',
-        borderRadius: '12px',
-        padding: '12px 16px',
-        fontSize: '16px',
-        zIndex: 99999,
-      },
-    });
+    if (isFeeding) {
+      toast.error('Feeding in progress, please wait!', {
+        duration: 2000,
+        position: 'top-center',
+        style: {
+          background: '#F59E0B',
+          color: 'white',
+          fontWeight: 'bold',
+          borderRadius: '12px',
+          padding: '12px 16px',
+          fontSize: '16px',
+        },
+      });
+    } else {
+      toast.error('Drop food on your beast to feed it! 🎯', {
+        duration: 2000,
+        position: 'top-center',
+        style: {
+          background: '#EF4444',
+          color: 'white',
+          fontWeight: 'bold',
+          borderRadius: '12px',
+          padding: '12px 16px',
+          fontSize: '16px',
+        },
+      });
+    }
   };
 
+  // Reset drag state
   const resetDragState = () => {
     setDragState(prev => ({ ...prev, draggedFood: null }));
     draggedFoodRef.current = null;
   };
 
+  // Computed values
+  const isCarouselDisabled = isFeeding || isLoading || !hasFoodAvailable;
+
   return {
+    // Data from the contract
     foods,
+    isLoading,
+    
+    // Drag state
     dragState,
+    
+    // Transaction state
+    isFeeding,
+    canFeed,
+    
+    // Actions
     handleDragStart,
     handleDrag,
     handleDragEnd,
+    
+    // Computed
+    isCarouselDisabled,
   };
 };
 
-// hooks/usePortal.ts
+// hooks/usePortal.ts - No changes needed
 export const usePortal = () => {
   const portalRoot = useRef<HTMLDivElement | null>(null);
 
