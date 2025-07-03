@@ -12,6 +12,7 @@ export interface CloudControllerProps {
   cloudFrames: string[];
   isAnimating: boolean;
   currentFrameIndex: number;
+  disabled?: boolean;
 }
 
 export interface BeastDisplayProps {

@@ -1,6 +1,7 @@
 import { TamagotchiTopBar } from "../../layout/TopBar";
-import { useState } from "react";
+import { useCallback } from "react";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 import cleanBackground from "../../../assets/backgrounds/bg-clean.png";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import RainParticles from "./components/RainParticles";
@@ -9,9 +10,8 @@ import { CleanScreenProps } from "../../types/clean.types";
 // Universal hook for beast display
 import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 
-// Hooks
-import { useCloudAnimation } from "./components/hooks/useCloudAnimation";
-import { useRainSystem } from "./components/hooks/useRainSystem";
+// Clean logic integration hook
+import { useCleanLogic } from "./components/hooks/useCleanLogic";
 
 // Components
 import { CloudController } from "./components/CloudController";
@@ -32,32 +32,51 @@ export const CleanScreen = ({
     isLoading
   } = useBeastDisplay();
 
-  const [isCloudOn, setIsCloudOn] = useState(true);
-  
-  // Custom hooks to handle specific logic for rain and cloud animations
-  const cloudFrames = [cloudOff];
-  const { 
-    frameIndex, 
-    stopAnimation, 
-    startAnimation 
-  } = useCloudAnimation(cloudFrames);
-  
-  const { 
-    isRainActive, 
-    startRain, 
-    handleRainComplete,
-    duration: rainSystemDuration 
-  } = useRainSystem(rainDuration);
+  // Integrated clean logic hook
+  const {
+    isCleaningInProgress,
+    isProcessingClean,
+    isRainActive,
+    canClean,
+    handleCloudClick,
+    isInteractionDisabled
+  } = useCleanLogic(rainDuration);
 
-  const handleCloudClick = () => {
-    if (isCloudOn) {
-      stopAnimation();
-      startRain();
-    } else {
-      startAnimation();
+  // Cloud frames for animation
+  const cloudFrames = [cloudOff];
+
+  /**
+   * Enhanced cloud click handler with success feedback
+   * Coordinates transaction + animation + success toast
+   */
+  const handleCloudClickWithFeedback = useCallback(async () => {
+    console.log('☁️ Cloud clicked with feedback...');
+    
+    const success = await handleCloudClick();
+    
+    if (success) {
+      toast.success('🌧️ Your beast feels fresh and clean!', {
+        duration: 3000,
+        position: 'top-center',
+        style: {
+          background: '#10B981',
+          color: 'white',
+          fontWeight: 'bold',
+          borderRadius: '12px',
+          padding: '12px 16px',
+          fontSize: '16px',
+        },
+      });
     }
-    setIsCloudOn(!isCloudOn);
-  };
+  }, [handleCloudClick]);
+
+  /**
+   * Handle rain complete - cleanup after animation
+   */
+  const handleRainComplete = useCallback(() => {
+    console.log(`Rain animation completed after ${rainDuration} seconds!`);
+    // Additional cleanup if needed
+  }, [rainDuration]);
 
   // Loading state
   if (isLoading) {
@@ -127,7 +146,7 @@ export const CleanScreen = ({
       <MagicalSparkleParticles />
       <RainParticles
         isActive={isRainActive}
-        duration={rainSystemDuration}
+        duration={rainDuration}
         onComplete={handleRainComplete}
       />
 
@@ -145,30 +164,58 @@ export const CleanScreen = ({
 
       {/* Main Content */}
       <div className="flex flex-col items-center mt-8 space-y-6 z-10 pointer-events-none select-none">
-        {/* Header - Dynamic with beast name */}
+        {/* Header - Simple and clean */}
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg pointer-events-auto"
+          className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg pointer-events-auto text-center"
         >
           Clean Your {currentBeastDisplay.displayName}
         </motion.h1>
         
-        {/* Modular components */}
-        <CloudController
-          onCloudClick={handleCloudClick}
-          cloudFrames={cloudFrames}
-          currentFrameIndex={frameIndex} 
-          isCloudOn={false} 
-          isAnimating={false}
-        />
+        {/* Cloud Controller with enhanced states */}
+        <div className="relative">
+          {/* Loading overlay during transaction */}
+          {(isCleaningInProgress || isProcessingClean) && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute inset-0 bg-blue-500/20 rounded-full flex items-center justify-center z-10"
+            >
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+            </motion.div>
+          )}
+          
+          <CloudController
+            onCloudClick={handleCloudClickWithFeedback}
+            cloudFrames={cloudFrames}
+            currentFrameIndex={0}
+            isCloudOn={!isInteractionDisabled}
+            isAnimating={isCleaningInProgress || isProcessingClean}
+            disabled={isInteractionDisabled}
+          />
+        </div>
         
-        {/* Beast Display */}
+        {/* Beast Display - Clean without overlays */}
         <BeastDisplay 
           beastImage={currentBeastDisplay.asset}
-          altText={`${currentBeastDisplay.displayName} getting cleaned`}
+          altText={`${currentBeastDisplay.displayName} ready for cleaning`}
         />
+
+        {/* Simple status indicator - only when needed */}
+        {!canClean && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="text-center pointer-events-auto"
+          >
+            <p className="text-red-300 text-sm font-medium drop-shadow-lg">
+              ⚠️ Cannot clean right now
+            </p>
+          </motion.div>
+        )}
       </div>
     </div>
   );
