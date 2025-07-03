@@ -10,6 +10,9 @@ import {
   HighestScore 
 } from '../dojo/models.gen';
 
+// Import feed transaction state
+import { FeedTransactionState } from '../components/types/feed.types';
+
 // Simplified Beast State - only what we actually need
 interface LiveBeastData {
   beast: Beast | null;
@@ -27,6 +30,9 @@ interface AppStore {
   
   // Food state
   foods: Food[];
+
+  // Feed transaction state
+  feedTransaction: FeedTransactionState;
   
   // Scores state
   highestScores: HighestScore[];
@@ -75,6 +81,10 @@ interface AppStore {
   updateFoodAmount: (player: string, id: number, amount: number) => void;
   addFood: (food: Food) => void;
   
+  // Feed transaction actions
+  setFeedTransaction: (transaction: Partial<FeedTransactionState>) => void;
+  resetFeedTransaction: () => void;
+  
   // Score actions
   setHighestScores: (scores: HighestScore[]) => void;
   updateHighestScore: (minigameId: number, score: number) => void;
@@ -92,6 +102,9 @@ interface AppStore {
   // Convenience getters
   hasLiveBeast: () => boolean;
   getCurrentBeastId: () => number | null;
+
+  // Simple getter to check if feeding is possible
+  canFeedBeast: () => boolean;
 }
 
 // Initial state
@@ -103,6 +116,15 @@ const initialState = {
     isAlive: false
   },
   foods: [],
+
+  // Feed transaction initial state
+  feedTransaction: {
+    isFeeding: false,
+    feedingFoodId: null,
+    transactionHash: null,
+    error: null,
+  },
+  
   highestScores: [],
   isLoading: false,
   error: null,
@@ -260,6 +282,20 @@ const useAppStore = create<AppStore>()(
         foods: [...state.foods, food]
       })),
       
+      // Feed transaction actions
+      setFeedTransaction: (transaction) => set((state) => ({
+        feedTransaction: { ...state.feedTransaction, ...transaction }
+      })),
+      
+      resetFeedTransaction: () => set({
+        feedTransaction: {
+          isFeeding: false,
+          feedingFoodId: null,
+          transactionHash: null,
+          error: null,
+        }
+      }),
+      
       // Score actions
       setHighestScores: (highestScores) => set({ highestScores }),
       
@@ -304,6 +340,14 @@ const useAppStore = create<AppStore>()(
         return state.liveBeast.beast?.beast_id || null;
       },
       
+      // Simple getter to check if feeding is possible
+      canFeedBeast: () => {
+        const state = get();
+        return !state.feedTransaction.isFeeding && 
+               state.hasLiveBeast() && 
+               state.foods.some(food => food.amount > 0);
+      },
+      
       // Utility actions
       resetStore: () => set(initialState),
     }),
@@ -318,6 +362,7 @@ const useAppStore = create<AppStore>()(
         isConnected: state.isConnected,
         realTimeStatus: state.realTimeStatus,
         lastStatusUpdate: state.lastStatusUpdate,
+        // NOTE: NO persisto feedTransaction porque es temporal
       }),
     }
   )
