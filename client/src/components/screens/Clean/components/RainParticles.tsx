@@ -16,29 +16,19 @@ interface RainParticlesProps {
 
 function RainParticles({ isActive, duration, onComplete }: RainParticlesProps): JSX.Element | null {
   const [engineLoaded, setEngineLoaded] = useState(false);
-  const [showRain, setShowRain] = useState(false);
 
   useEffect(() => {
     initParticlesEngine((engine: Engine) => loadSlim(engine))
       .then(() => setEngineLoaded(true));
   }, []);
 
+  // Respond to isActive changes
   useEffect(() => {
-    if (isActive) {
-      setShowRain(true);
-      
-      const timer = setTimeout(() => {
-        setShowRain(false);
-        if (onComplete) {
-          onComplete();
-        }
-      }, duration * 1000);
-
-      return () => clearTimeout(timer);
-    } else {
-      setShowRain(false);
+    // Only call onComplete when rain stops (not when it starts)
+    if (!isActive && onComplete) {
+      onComplete();
     }
-  }, [isActive, duration, onComplete]);
+  }, [isActive, onComplete]);
 
   const rainOptions = useMemo<RecursivePartial<IOptions>>(
     () => ({
@@ -136,7 +126,7 @@ function RainParticles({ isActive, duration, onComplete }: RainParticlesProps): 
         direction: MoveDirection.bottom,
         life: {
           count: 0,
-          duration: duration * 1000, 
+          duration: duration * 1000,
           delay: 0,
         },
         rate: {
@@ -156,7 +146,10 @@ function RainParticles({ isActive, duration, onComplete }: RainParticlesProps): 
     [duration]
   );
 
-  if (!engineLoaded || !showRain) return null;
+  // Show particles immediately when isActive is true
+  if (!engineLoaded || !isActive) {
+    return null;
+  }
 
   return (
     <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">

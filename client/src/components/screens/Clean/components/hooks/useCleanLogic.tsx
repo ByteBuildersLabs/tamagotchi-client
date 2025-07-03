@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import toast from "react-hot-toast";
 
 // Hooks imports
@@ -29,9 +29,8 @@ interface UseCleanLogicReturn {
 /**
  * Hook for integrating clean beast transaction with rain animation system
  * Coordinates the sequence: Click → TX → Rain → Status Update
- * Follows the same pattern as useFeedLogic for consistency
  */
-export const useCleanLogic = (rainDuration: number = 20): UseCleanLogicReturn => {
+export const useCleanLogic = (rainDuration: number = 5): UseCleanLogicReturn => {
   
   // Get clean transaction capabilities
   const {
@@ -54,12 +53,11 @@ export const useCleanLogic = (rainDuration: number = 20): UseCleanLogicReturn =>
   
   // Local state for coordination
   const [isProcessingClean, setIsProcessingClean] = useState(false);
+  const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Computed values - Define early to avoid hoisting issues
+  // Only disable during transaction, not during rain animation
   const isInteractionDisabled = Boolean(
     isCleaningInProgress || 
-    isProcessingClean || 
-    isRainActive || 
     !canClean
   );
 
@@ -74,53 +72,44 @@ export const useCleanLogic = (rainDuration: number = 20): UseCleanLogicReturn =>
       
       if (result.success) {
         // Start rain animation immediately after successful transaction
-        console.log('✅ Clean transaction successful, starting rain animation...');
         startRain();
         
-        // Post-cleaning sequence: Update beast → Fetch status
-        // Delay to ensure transaction is processed
+        // Reset processing state quickly to allow consecutive clicks
+        if (processingTimeoutRef.current) {
+          clearTimeout(processingTimeoutRef.current);
+        }
+        
+        processingTimeoutRef.current = setTimeout(() => {
+          setIsProcessingClean(false);
+        }, 500);
+        
+        // Background updates (non-blocking)
         setTimeout(async () => {
           try {
-            console.log('🔄 Starting post-cleaning updates...');
-            
-            // Step 1: Update beast (this triggers contract status recalculation)
-            console.log('🔄 Updating beast status...');
             const updateSuccess = await updateBeast();
-            
             if (updateSuccess) {
-              console.log('✅ Beast updated successfully');
-              
-              // Step 2: Fetch latest status SILENTLY (no loading states to avoid re-renders)
-              console.log('🔄 Fetching updated status...');
               await fetchLatestStatus();
-              console.log('✅ Status fetched and updated in background');
             } else {
-              console.warn('⚠️ Beast update failed, fetching status anyway');
               await fetchLatestStatus();
             }
-            
           } catch (error) {
-            console.error('❌ Error in post-cleaning updates:', error);
-            // Still try to fetch status even if beast update fails
+            console.error('Error in post-cleaning updates:', error);
             await fetchLatestStatus();
-          } finally {
-            setIsProcessingClean(false);
           }
-        }, 1500); // Reduced delay for faster feedback
+        }, 100);
         
-        return true; // Success
+        return true;
         
       } else {
-        // Error handled by useCleanBeast hook (error toast already shown)
         console.error('Clean transaction failed:', result.error);
         setIsProcessingClean(false);
-        return false; // Failed
+        return false;
       }
       
     } catch (error) {
       console.error('Unexpected error in handleSuccessfulClean:', error);
       setIsProcessingClean(false);
-      return false; // Failed
+      return false;
     }
   }, [cleanBeast, startRain, updateBeast, fetchLatestStatus]);
 
@@ -129,65 +118,41 @@ export const useCleanLogic = (rainDuration: number = 20): UseCleanLogicReturn =>
    * Returns success state for CleanScreen to handle success feedback
    */
   const handleCloudClick = useCallback(async (): Promise<boolean> => {
-    // Early return if interaction is disabled
-    if (isInteractionDisabled) {
-      console.log('⏸️ Cloud interaction disabled');
-      return false;
-    }
-    
-    // Prevent multiple simultaneous clean operations
-    if (isCleaningInProgress || isProcessingClean) {
-      toast.error('Cleaning already in progress, please wait!', {
-        duration: 2000,
-        position: 'top-center',
-        style: {
-          background: '#F59E0B',
-          color: 'white',
-          fontWeight: 'bold',
-          borderRadius: '12px',
-          padding: '12px 16px',
-          fontSize: '16px',
-        },
-      });
-      return false;
-    }
-    
-    // Check if cleaning is possible
+    // Validate if cleaning is possible
     if (!canClean) {
       toast.error('Cannot clean right now. Check wallet and beast status.', {
         duration: 3000,
         position: 'top-center',
-        style: {
-          background: '#EF4444',
-          color: 'white',
-          fontWeight: 'bold',
-          borderRadius: '12px',
-          padding: '12px 16px',
-          fontSize: '16px',
-        },
+      });
+      return false;
+    }
+    
+    // Only block if blockchain transaction is active
+    if (isCleaningInProgress) {
+      toast.error('Blockchain transaction in progress, please wait!', {
+        duration: 2000,
+        position: 'top-center',
       });
       return false;
     }
     
     try {
       setIsProcessingClean(true);
-      console.log('☁️ Cloud clicked - starting clean sequence...');
       
-      // Execute the cleaning sequence and return success state
+      // Execute the cleaning sequence
       const success = await handleSuccessfulClean();
+      
       return success;
       
     } catch (error) {
-      console.error('❌ Error in handleCloudClick:', error);
+      console.error('Error in handleCloudClick:', error);
       toast.error('Failed to start cleaning process');
       setIsProcessingClean(false);
       return false;
     }
   }, [
-    isInteractionDisabled,
-    isCleaningInProgress,
-    isProcessingClean,
     canClean,
+    isCleaningInProgress,
     handleSuccessfulClean
   ]);
 
