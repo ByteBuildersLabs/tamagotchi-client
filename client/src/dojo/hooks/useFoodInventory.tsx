@@ -55,6 +55,8 @@ const hexToNumber = (hexValue: string | number): number => {
   return 0;
 };
 
+
+
 // API function to fetch food data
 const fetchFoodInventory = async (playerAddress: string): Promise<Food[]> => {
   try {
@@ -123,27 +125,14 @@ export const useFoodInventory = (): UseFoodInventoryReturn => {
       // Fetch raw food data from contract
       const contractFoods = await fetchFoodInventory(userAddress);
       
-      // Create complete Food[] array for store (Dojo model format)
-      const storeFoods: Food[] = [];
+      // Create Food[] array for store - ONLY foods that exist in contract
+      const storeFoods: Food[] = contractFoods.map(contractFood => ({
+        player: contractFood.player,
+        id: contractFood.id,
+        amount: contractFood.amount,
+      }));
       
-      // Get all possible food IDs (1-16)
-      for (let foodId = 1; foodId <= 16; foodId++) {
-        const contractFood = contractFoods.find(food => hexToNumber(food.id) === foodId);
-        
-        if (contractFood) {
-          // Food exists in contract, use contract data
-          storeFoods.push(contractFood);
-        } else {
-          // Food doesn't exist in contract, create with 0 amount
-          storeFoods.push({
-            player: userAddress,
-            id: foodId,
-            amount: 0,
-          });
-        }
-      }
-      
-      // Update store with Food[] data (Dojo model format)
+      // Update store with Food[] data (only existing foods)
       setStoreFoods(storeFoods);
       
     } catch (err) {
@@ -170,6 +159,7 @@ export const useFoodInventory = (): UseFoodInventoryReturn => {
   }, [fetchAndMapFoodInventory]);
 
   // Convert store Food[] to FoodItem[] for UI compatibility
+  // Now only includes foods that actually exist (no count: 0 items)
   const foods = useMemo((): FoodItem[] => {
     return storeFoods.map(food => ({
       id: hexToNumber(food.id),
@@ -181,7 +171,7 @@ export const useFoodInventory = (): UseFoodInventoryReturn => {
     }));
   }, [storeFoods]);
 
-  // Computed values
+  // Available foods (only those with count > 0) - filtered from existing foods
   const availableFoods = useMemo(() => 
     foods.filter(food => food.count > 0),
     [foods]
@@ -198,11 +188,11 @@ export const useFoodInventory = (): UseFoodInventoryReturn => {
   );
 
   return {
-    foods,
+    foods: availableFoods,       
     isLoading,
     error,
     refetch,
-    availableFoods,
+    availableFoods,               
     totalFoodCount,
     hasFoodAvailable,
   };
