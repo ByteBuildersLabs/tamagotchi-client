@@ -9,7 +9,6 @@ import useAppStore from '../../zustand/store';
 
 // Types imports
 import { FeedTransactionState } from '../../components/types/feed.types';
-import { FOOD_UI_CONFIG } from '../../constants/feed.constants';
 
 // Hooks imports
 import { useStarknetConnect } from './useStarknetConnect';
@@ -99,21 +98,8 @@ export const useFeedBeast = (): UseFeedBeastReturn => {
         error: null,
       });
 
-      // Show loading toast
-      const loadingToast = toast.loading('Feeding your beast...', {
-        position: 'top-center',
-        style: {
-          background: FOOD_UI_CONFIG.FOOD_COLORS[foodId] || '#6B7280',
-          color: 'white',
-          fontWeight: 'bold',
-          borderRadius: '12px',
-          padding: '12px 16px',
-          fontSize: '16px',
-        },
-      });
-
       // Optimistic update: decrease food amount by 1
-      updateFoodAmount(player.address, foodId, -1); 
+      updateFoodAmount(player.address, foodId, -1); // -1 means decrease by 1
 
       // Execute transaction 
       const tx = await client.game.feed(account as Account, foodId);
@@ -126,21 +112,6 @@ export const useFeedBeast = (): UseFeedBeastReturn => {
           feedingFoodId: null,
           transactionHash: tx.transaction_hash,
           error: null,
-        });
-
-        // Dismiss loading toast and show success
-        toast.dismiss(loadingToast);
-        toast.success('🎉 Beast fed successfully!', {
-          duration: 3000,
-          position: 'top-center',
-          style: {
-            background: FOOD_UI_CONFIG.FOOD_COLORS[foodId] || '#10B981',
-            color: 'white',
-            fontWeight: 'bold',
-            borderRadius: '12px',
-            padding: '12px 16px',
-            fontSize: '16px',
-          },
         });
 
         return {

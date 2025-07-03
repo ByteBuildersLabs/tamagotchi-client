@@ -188,7 +188,6 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
       >
         <h1 className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg">
           Feed Your {currentBeastDisplay.displayName}
-          {isFeeding && <span className="text-lg text-yellow-300 ml-2">🍽️</span>}
         </h1>
       </motion.div>
 
@@ -217,18 +216,6 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
         portalPosition={dragState.portalPosition}
         portalRoot={portalRoot.current}
       />
-
-      {/* Feeding indicator overlay */}
-      {isFeeding && (
-        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 pointer-events-none">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
-            <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
-              <span className="text-gray-800 font-semibold">Feeding your beast...</span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

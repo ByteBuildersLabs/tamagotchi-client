@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 
 // Types and constants
 import { FoodItem, DragState } from '../../../../types/feed.types';
-import { DROP_TOLERANCE, BEAST_DROP_ZONE_ID } from '../../../../../constants/feed.constants';
+import { DROP_TOLERANCE, BEAST_DROP_ZONE_ID, FOOD_UI_CONFIG } from '../../../../../constants/feed.constants';
 
 // Hooks
 import { useFoodInventory } from '../../../../../dojo/hooks/useFoodInventory';
@@ -133,7 +133,19 @@ export const useFeedLogic = (): UseFeedLogicReturn => {
       const result = await feedBeast(food.id);
       
       if (result.success) {
-        // Transaction handled by useFeedBeast (optimistic update + toast)
+        // Show single success toast here
+        toast.success(`🎉 ${food.name} fed to your beast!`, {
+          duration: 3000,
+          position: 'top-center',
+          style: {
+            background: FOOD_UI_CONFIG.FOOD_COLORS[food.id] || '#10B981',
+            color: 'white',
+            fontWeight: 'bold',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            fontSize: '16px',
+          },
+        });
         
         // Post-feeding sequence: Update beast → Fetch status → Refetch food
         setTimeout(async () => {
@@ -146,15 +158,17 @@ export const useFeedLogic = (): UseFeedLogicReturn => {
             if (updateSuccess) {
               console.log('✅ Beast updated successfully');
               
-              // Step 2: Fetch latest status (after beast update)
+              // Step 2: Fetch latest status SILENTLY (no loading states to avoid re-renders)
+              console.log('🔄 Fetching updated status...');
               await fetchLatestStatus();
-              console.log('✅ Status fetched successfully');
+              console.log('✅ Status fetched and updated in background');
             } else {
               console.warn('⚠️ Beast update failed, fetching status anyway');
               await fetchLatestStatus();
             }
             
-            // Step 3: Refetch food inventory
+            // Step 3: Refetch food inventory SILENTLY
+            console.log('🔄 Refreshing food inventory...');
             await refetchFood();
             console.log('✅ Food inventory refreshed');
             
@@ -163,7 +177,7 @@ export const useFeedLogic = (): UseFeedLogicReturn => {
             // Still try to refetch food even if status update fails
             await refetchFood();
           }
-        }, 2000); // Wait 2 seconds for blockchain confirmation
+        }, 1500); // Reduced delay for faster feedback
         
       } else {
         // Error handled by useFeedBeast hook (revert + error toast)
@@ -217,7 +231,7 @@ export const useFeedLogic = (): UseFeedLogicReturn => {
   const isCarouselDisabled = isFeeding || isLoading || !hasFoodAvailable;
 
   return {
-    // Data from the contract
+    // Data from blockchain
     foods,
     isLoading,
     

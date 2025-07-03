@@ -70,28 +70,6 @@ export const Beast = ({
           whileHover={beastAnimation.whileHover}
         />
 
-        {/* Feeding Indicator */}
-        {isFeeding && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10"
-          >
-            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-              <div className="flex items-center space-x-1">
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                >
-                  🍽️
-                </motion.span>
-                <span>Feeding...</span>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
         {/* Drag Target Indicator */}
         {isDragging && !isFeeding && (
           <motion.div
@@ -108,39 +86,6 @@ export const Beast = ({
               🎯
             </motion.div>
           </motion.div>
-        )}
-
-        {/* Sparkle effects when feeding */}
-        {isFeeding && (
-          <div className="absolute inset-0 pointer-events-none">
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ 
-                  opacity: 0, 
-                  scale: 0,
-                  x: 0,
-                  y: 0
-                }}
-                animate={{ 
-                  opacity: [0, 1, 0],
-                  scale: [0, 1, 0],
-                  x: [0, Math.random() * 100 - 50],
-                  y: [0, Math.random() * 100 - 50],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.3,
-                  ease: "easeOut"
-                }}
-                className="absolute top-1/2 left-1/2 w-2 h-2 bg-yellow-400 rounded-full z-9"
-                style={{
-                  boxShadow: '0 0 10px #fbbf24'
-                }}
-              />
-            ))}
-          </div>
         )}
       </motion.div>
     </div>

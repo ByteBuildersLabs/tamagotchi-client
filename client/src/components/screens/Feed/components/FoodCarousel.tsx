@@ -92,7 +92,6 @@ export const FoodCarousel = ({
               <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
-                  <span className="text-gray-800 text-sm font-medium">Feeding...</span>
                 </div>
               </div>
             </div>
