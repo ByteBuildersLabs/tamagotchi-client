@@ -20,23 +20,51 @@ const cloudAnimation = {
     },
   },
   whileHover: { scale: 1.03, rotate: 2 },
+  whileTap: { scale: 0.95 },
 };
 
 export const CloudController = ({ 
   onCloudClick, 
   cloudFrames, 
-  currentFrameIndex 
+  currentFrameIndex,
+  disabled = false
 }: CloudControllerProps) => {
+  
+  const handleClick = () => {
+    if (!disabled) {
+      onCloudClick();
+    }
+  };
+
   return (
     <motion.img
       src={cloudFrames[currentFrameIndex]}
       alt="Cloud Controller"
-      className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto cursor-pointer"
+      className={`
+        h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] 
+        object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] 
+        pointer-events-auto transition-all duration-300
+        ${disabled 
+          ? 'cursor-not-allowed opacity-60 grayscale' 
+          : 'cursor-pointer hover:brightness-110'
+        }
+      `}
       initial={cloudAnimation.initial}
-      animate={{ ...cloudAnimation.animate, y: 10 }}
-      whileHover={cloudAnimation.whileHover}
-      whileTap={{ scale: 0.95 }}
-      onClick={onCloudClick}
+      animate={{ 
+        ...cloudAnimation.animate, 
+        y: 10,
+        // Add subtle disabled animation
+        ...(disabled && {
+          scale: 1,
+          opacity: 0.6,
+        })
+      }}
+      whileHover={disabled ? {} : cloudAnimation.whileHover}
+      whileTap={disabled ? {} : cloudAnimation.whileTap}
+      onClick={handleClick}
+      style={{
+        filter: disabled ? 'grayscale(0.5) brightness(0.8)' : 'none',
+      }}
     />
   );
 };
