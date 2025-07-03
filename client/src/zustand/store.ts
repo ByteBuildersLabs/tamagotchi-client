@@ -10,8 +10,9 @@ import {
   HighestScore 
 } from '../dojo/models.gen';
 
-// Import feed transaction state
+// Import transaction states
 import { FeedTransactionState } from '../components/types/feed.types';
+import { CleanTransactionState } from '../components/types/clean.types';
 
 // Simplified Beast State - only what we actually need
 interface LiveBeastData {
@@ -31,8 +32,9 @@ interface AppStore {
   // Food state
   foods: Food[];
 
-  // Feed transaction state
+  // Transaction states
   feedTransaction: FeedTransactionState;
+  cleanTransaction: CleanTransactionState;
   
   // Scores state
   highestScores: HighestScore[];
@@ -81,9 +83,12 @@ interface AppStore {
   updateFoodAmount: (player: string, id: number, amount: number) => void;
   addFood: (food: Food) => void;
   
-  // Feed transaction actions
+  // Transaction actions
   setFeedTransaction: (transaction: Partial<FeedTransactionState>) => void;
   resetFeedTransaction: () => void;
+  
+  setCleanTransaction: (transaction: Partial<CleanTransactionState>) => void;
+  resetCleanTransaction: () => void;
   
   // Score actions
   setHighestScores: (scores: HighestScore[]) => void;
@@ -103,7 +108,7 @@ interface AppStore {
   hasLiveBeast: () => boolean;
   getCurrentBeastId: () => number | null;
 
-  // Simple getter to check if feeding is possible
+  // Simple getter to check if any actions are in progress
   canFeedBeast: () => boolean;
 }
 
@@ -117,10 +122,16 @@ const initialState = {
   },
   foods: [],
 
-  // Feed transaction initial state
+  // Transaction initial states
   feedTransaction: {
     isFeeding: false,
     feedingFoodId: null,
+    transactionHash: null,
+    error: null,
+  },
+  
+  cleanTransaction: {
+    isCleaningInProgress: false,
     transactionHash: null,
     error: null,
   },
@@ -282,7 +293,7 @@ const useAppStore = create<AppStore>()(
         foods: [...state.foods, food]
       })),
       
-      // Feed transaction actions
+      // Transaction actions
       setFeedTransaction: (transaction) => set((state) => ({
         feedTransaction: { ...state.feedTransaction, ...transaction }
       })),
@@ -291,6 +302,18 @@ const useAppStore = create<AppStore>()(
         feedTransaction: {
           isFeeding: false,
           feedingFoodId: null,
+          transactionHash: null,
+          error: null,
+        }
+      }),
+      
+      setCleanTransaction: (transaction) => set((state) => ({
+        cleanTransaction: { ...state.cleanTransaction, ...transaction }
+      })),
+      
+      resetCleanTransaction: () => set({
+        cleanTransaction: {
+          isCleaningInProgress: false,
           transactionHash: null,
           error: null,
         }
@@ -340,10 +363,11 @@ const useAppStore = create<AppStore>()(
         return state.liveBeast.beast?.beast_id || null;
       },
       
-      // Simple getter to check if feeding is possible
+      // Simple getter to check if any actions are in progress
       canFeedBeast: () => {
         const state = get();
         return !state.feedTransaction.isFeeding && 
+               !state.cleanTransaction.isCleaningInProgress &&
                state.hasLiveBeast() && 
                state.foods.some(food => food.amount > 0);
       },
@@ -362,7 +386,6 @@ const useAppStore = create<AppStore>()(
         isConnected: state.isConnected,
         realTimeStatus: state.realTimeStatus,
         lastStatusUpdate: state.lastStatusUpdate,
-        // NOTE: NO persisto feedTransaction porque es temporal
       }),
     }
   )
