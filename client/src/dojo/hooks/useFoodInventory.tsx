@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAccount } from '@starknet-react/core';
 import { addAddressPadding } from 'starknet';
 
@@ -102,9 +102,6 @@ export const useFoodInventory = (): UseFoodInventoryReturn => {
   const storeFoods = useAppStore(state => state.foods);
   const setStoreFoods = useAppStore(state => state.setFoods);
   
-  // Track if we've done initial fetch to avoid unnecessary re-fetches
-  const hasFetchedRef = useRef(false);
-  
   // Memoize the formatted user address
   const userAddress = useMemo(() => 
     account ? addAddressPadding(account.address) : null,
@@ -145,17 +142,14 @@ export const useFoodInventory = (): UseFoodInventoryReturn => {
 
   // Auto-fetch on mount and when user address changes
   useEffect(() => {
-    if (userAddress && !hasFetchedRef.current) {
+    if (userAddress) {
       fetchAndMapFoodInventory();
-      hasFetchedRef.current = true;
     }
   }, [userAddress, fetchAndMapFoodInventory]);
 
-  // Public refetch function (for manual refresh)
+  // Public refetch function (simplified - no flag management needed)
   const refetch = useCallback(async () => {
-    hasFetchedRef.current = false; // Reset flag to allow refetch
     await fetchAndMapFoodInventory();
-    hasFetchedRef.current = true;
   }, [fetchAndMapFoodInventory]);
 
   // Convert store Food[] to FoodItem[] for UI compatibility
@@ -188,7 +182,7 @@ export const useFoodInventory = (): UseFoodInventoryReturn => {
   );
 
   return {
-    foods: availableFoods,       
+    foods: availableFoods,
     isLoading,
     error,
     refetch,
