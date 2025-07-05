@@ -1,5 +1,6 @@
 import { TamagotchiTopBar } from "../../layout/TopBar";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import sleepBackground from "../../../assets/backgrounds/bg-sleep.png";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import { SleepScreenProps } from "../../types/sleep.types";
@@ -7,9 +8,11 @@ import { SleepScreenProps } from "../../types/sleep.types";
 // Universal hook for beast display
 import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 
-// Hooks
+// Main sleep logic hook (replaces individual hooks)
+import { useSleepLogic } from "./components/hooks/useSleepLogic";
+
+// Animation hook (kept for campfire animations)
 import { useCampfireAnimation } from "./components/hooks/useCampfireAnimation";
-import { useCampfireState } from "./components/hooks/useCampfireState";
 
 // Components
 import { CampfireController } from "./components/CampfireController";
@@ -41,6 +44,15 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
     isLoading
   } = useBeastDisplay();
 
+  // Main sleep logic hook
+  const {
+    isBeastSleeping,
+    isSleepTransactionInProgress,
+    handleCampfireClick,
+    isCampfireOn,
+    isInteractionDisabled
+  } = useSleepLogic();
+
   // Frame configuration
   const extinguishedFrames = [
     extinguishedFrame0,
@@ -60,9 +72,7 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
     litFrame5,
   ];
 
-  // Custom hooks
-  const { isCampfireOn, toggleCampfire } = useCampfireState();
-  
+  // Animation hook (kept for frame cycling)
   const {
     litFrameIndex,
     extinguishedFrameIndex,
@@ -74,13 +84,34 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
     animationInterval: 700
   });
 
-  const handleCampfireClick = () => {
-    if (isCampfireOn) {
+  // Sync campfire animations with beast sleep state
+  // When beast state changes, trigger appropriate animation
+  useEffect(() => {
+    if (isBeastSleeping && isCampfireOn) {
+      // Beast is sleeping but campfire shows as lit - start extinguished animation
       startExtinguishedAnimation();
-    } else {
+    } else if (!isBeastSleeping && !isCampfireOn) {
+      // Beast is awake but campfire shows as extinguished - start lit animation  
       startLitAnimation();
     }
-    toggleCampfire();
+  }, [isBeastSleeping, isCampfireOn, startLitAnimation, startExtinguishedAnimation]);
+
+  // Updated campfire click handler
+  const handleCampfireClickWithAnimation = async () => {
+
+    if (isInteractionDisabled) return;
+
+    // Start appropriate animation immediately for responsive UI
+    if (isBeastSleeping) {
+      // Waking up - start lit animation
+      startLitAnimation();
+    } else {
+      // Going to sleep - start extinguished animation
+      startExtinguishedAnimation();
+    }
+
+    // Execute the main sleep/awake logic
+    await handleCampfireClick();
   };
 
   // Loading state
@@ -153,16 +184,31 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
         }}
       />
 
-      {/* Sleep Title */}
+      {/* Sleep Title - Updated to show current state */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
         className="mt-4 z-10"
       >
-        <h1 className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg">
-          Sleep Your {currentBeastDisplay.displayName}
+        <h1 className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg text-center">
+          {isBeastSleeping ? (
+            <>Your {currentBeastDisplay.displayName} is Sleeping 😴</>
+          ) : (
+            <>Sleep Your {currentBeastDisplay.displayName}</>
+          )}
         </h1>
+        
+        {/* Subtitle with current state */}
+        <p className="text-center text-cream/80 text-sm mt-2 drop-shadow-md">
+          {isSleepTransactionInProgress ? (
+            "Processing transaction..."
+          ) : isBeastSleeping ? (
+            "Click the campfire to wake them up! 🔥"
+          ) : (
+            "Click the campfire to put them to sleep! 🌙"
+          )}
+        </p>
       </motion.div>
 
       {/* Center: Beast and Campfire together */}
@@ -170,12 +216,13 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
         {/* Beast Display - Using the actual image of the player's beast */}
         <BeastSleepDisplay 
           beastImage={currentBeastDisplay.asset}
-          altText={`Sleeping ${currentBeastDisplay.displayName}`}
+          altText={`${isBeastSleeping ? 'Sleeping' : 'Awake'} ${currentBeastDisplay.displayName}`}
         />
 
+        {/* 🔥 Updated Campfire Controller with new handler */}
         <CampfireController
-          isCampfireOn={isCampfireOn}
-          onCampfireClick={handleCampfireClick}
+          isCampfireOn={!isBeastSleeping}
+          onCampfireClick={handleCampfireClickWithAnimation} 
           litFrames={litFrames}
           extinguishedFrames={extinguishedFrames}
           litFrameIndex={litFrameIndex}
@@ -183,6 +230,23 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
           trunkImage={trunkIcon}
         />
       </div>
+
+      {/* Loading indicator during transactions */}
+      {isSleepTransactionInProgress && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30"
+        >
+          <div className="bg-black/70 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center space-x-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cream"></div>
+            <span className="text-cream text-sm font-medium">
+              {isBeastSleeping ? "Waking up beast..." : "Putting beast to sleep..."}
+            </span>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };
