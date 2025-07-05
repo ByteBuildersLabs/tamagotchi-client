@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface CampfireAnimationConfig {
   litFrames: string[];
@@ -41,19 +41,19 @@ export const useCampfireAnimation = ({
     return () => clearInterval(interval);
   }, [hasMultipleExtinguishedFrames, isExtinguishedAnimating, extinguishedFrames.length, animationInterval]);
 
-  const startLitAnimation = () => {
+  const startLitAnimation = useCallback(() => {
+    if (isLitAnimating) return;
+    
     setIsExtinguishedAnimating(false);
-    setExtinguishedFrameIndex(0);
     setIsLitAnimating(true);
-    setLitFrameIndex(0);
-  };
+  }, [isLitAnimating]);
 
-  const startExtinguishedAnimation = () => {
+  const startExtinguishedAnimation = useCallback(() => {
+    if (isExtinguishedAnimating) return; 
+    
     setIsLitAnimating(false);
-    setLitFrameIndex(0);
     setIsExtinguishedAnimating(true);
-    setExtinguishedFrameIndex(0);
-  };
+  }, [isExtinguishedAnimating]);
 
   return {
     litFrameIndex,

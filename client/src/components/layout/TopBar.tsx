@@ -33,7 +33,7 @@ interface TamagotchiStatus {
 interface TamagotchiTopBarProps {
   coins: number;
   gems: number;
-  status?: TamagotchiStatus; // Made optional since we'll use real-time data
+  status?: TamagotchiStatus; 
   onCoinsShopClick?: () => void;
   onGemsShopClick?: () => void;
 }
@@ -41,15 +41,13 @@ interface TamagotchiTopBarProps {
 export function TamagotchiTopBar({ 
   coins, 
   gems, 
-  status: fallbackStatus, // Renamed for clarity
+  status: fallbackStatus,
   onCoinsShopClick, 
   onGemsShopClick 
 }: TamagotchiTopBarProps) {
 
   // Use real-time status hook
-  const { 
-    statusForUI, 
-  } = useRealTimeStatus();
+  const { statusForUI } = useRealTimeStatus();
 
   // Determine which status to use: real-time first, then fallback
   const currentStatus: TamagotchiStatus = statusForUI || fallbackStatus || {
@@ -59,11 +57,21 @@ export function TamagotchiTopBar({
     hygiene: 0,
   };
 
-  // Determine the happiness icon based on the value
+  const isAwake = statusForUI?.isAwake ?? true;
+
+  // Determine happiness icon
   const getHappinessIcon = (happiness: number) => {
     if (happiness >= 70) return happyIcon;
     if (happiness >= 30) return neutralIcon;
     return sadIcon;
+  };
+
+  // 🆕 Color based on energy and sleep state
+  const getEnergyColor = (energy: number, awake: boolean) => {
+    if (!awake) return "#6B7280";           // Gray when sleeping
+    if (energy >= 70) return "#FFC107";      // Yellow when high
+    if (energy >= 30) return "#FF8F00";      // Orange medium
+    return "#E91E63";                       // Red when low
   };
 
   const statusItems = [
@@ -71,31 +79,30 @@ export function TamagotchiTopBar({
       icon: energyIcon,
       value: currentStatus.energy,
       label: "Energy",
-      color: "#FFC107" // Golden yellow like lightning
+      color: getEnergyColor(currentStatus.energy, isAwake),
     },
     {
       icon: hungerIcon,
       value: currentStatus.hunger,
       label: "Hunger",
-      color: "#E91E63" // Orange like fruit
+      color: isAwake ? "#E91E63" : "#6B7280",
     },
     {
       icon: getHappinessIcon(currentStatus.happiness),
       value: currentStatus.happiness,
       label: "Happiness",
-      color: "#FF8F00" // Pink/magenta for happiness
+      color: isAwake ? "#FF8F00" : "#6B7280",
     },
     {
       icon: hygieneIcon,
       value: currentStatus.hygiene,
       label: "Hygiene",
-      color: "#0288D1" // Cyan blue like a water drop
+      color: isAwake ? "#0288D1" : "#6B7280",
     }
   ];
 
   return (
     <div className="relative z-10 w-full px-2 py-2">
-      {/* Single row: Coins, Status, and Gems - Mobile First */}
       <div className="flex items-center gap-1 sm:gap-2">
 
         {/* Left Section - Coins */}
@@ -109,23 +116,15 @@ export function TamagotchiTopBar({
             onClick={onCoinsShopClick}
             className="mr-0.5 flex items-center justify-center rounded-full h-8 w-8 sm:h-6 sm:w-6 drop-shadow-sm transition-colors flex-shrink-0 p-0.5"
           >
-            <img
-              src={plusIcon}
-              alt="Add coins"
-              className="h-full w-full object-contain"
-            />
+            <img src={plusIcon} alt="Add coins" className="h-full w-full object-contain" />
           </button>
           <span className="text-white font-bold text-xs sm:text-sm truncate drop-shadow-md min-w-0 flex-1 text-center">
             {coins.toLocaleString()}
           </span>
-          <img
-            src={coinIcon}
-            alt="Coins"
-            className="h-8 w-8 sm:h-7 sm:w-7 ml-0.5 flex-shrink-0"
-          />
+          <img src={coinIcon} alt="Coins" className="h-8 w-8 sm:h-7 sm:w-7 ml-0.5 flex-shrink-0" />
         </motion.div>
 
-        {/* Center Section - Tamagotchi Status */}
+        {/* Center Section - Status */}
         <motion.div
           className="flex items-center justify-center flex-1 min-w-0"
           initial={{ y: -20, opacity: 0 }}
@@ -133,14 +132,13 @@ export function TamagotchiTopBar({
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center justify-center space-x-1 sm:space-x-1.5 bg-black/50 backdrop-blur-sm px-1.5 sm:px-2 py-1.5 rounded-lg shadow-md w-full max-w-[180px] sm:max-w-[220px] relative">
-
-            {statusItems.map((item, index) => (
+            {statusItems.map((item, idx) => (
               <motion.div
                 key={item.label}
                 className="flex items-center justify-center flex-shrink-0"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
+                transition={{ delay: 0.4 + idx * 0.1 }}
               >
                 <div className="w-7 h-7 sm:w-8 sm:h-8">
                   <CircularProgressBar
@@ -167,20 +165,12 @@ export function TamagotchiTopBar({
             onClick={onGemsShopClick}
             className="mr-0.5 flex items-center justify-center rounded-full h-8 w-8 sm:h-6 sm:w-6 drop-shadow-sm transition-colors flex-shrink-0 p-0.5"
           >
-            <img
-              src={plusIcon}
-              alt="Add gems"
-              className="h-full w-full object-contain"
-            />
+            <img src={plusIcon} alt="Add gems" className="h-full w-full object-contain" />
           </button>
           <span className="text-white font-bold text-xs sm:text-sm truncate drop-shadow-md min-w-0 flex-1 text-center">
             {gems.toLocaleString()}
           </span>
-          <img
-            src={gemIcon}
-            alt="Gems"
-            className="h-8 w-8 sm:h-7 sm:w-7 ml-0.5 flex-shrink-0"
-          />
+          <img src={gemIcon} alt="Gems" className="h-8 w-8 sm:h-7 sm:w-7 ml-0.5 flex-shrink-0" />
         </motion.div>
       </div>
     </div>
