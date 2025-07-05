@@ -9,12 +9,13 @@ interface UseRealTimeStatusReturn {
   lastStatusUpdate: number | null;
   isStatusLoading: boolean;
   
-  // Formatted status for UI
+  // 🆕 UPDATED: Formatted status for UI (now includes isAwake)
   statusForUI: {
     energy: number;
     hunger: number;
     happiness: number;
     hygiene: number;
+    isAwake: boolean; // 🆕 NEW: Include is_awake status
   } | null;
   
   // Actions
@@ -76,6 +77,8 @@ export const useRealTimeStatus = (): UseRealTimeStatusReturn => {
           setRealTimeStatus(newStatus);
           console.log('✅ Real-time status updated:', {
             beast_id: newStatus[1],
+            is_alive: Boolean(newStatus[2]),
+            is_awake: Boolean(newStatus[3]),
             hunger: newStatus[4],
             energy: newStatus[5],
             happiness: newStatus[6],
@@ -167,7 +170,7 @@ export const useRealTimeStatus = (): UseRealTimeStatusReturn => {
     };
   }, [stopPolling]);
   
-  // Get formatted status for UI
+  // 🆕 UPDATED: Get formatted status for UI (now includes isAwake)
   const statusForUI = getRealTimeStatusForUI();
   
   return {

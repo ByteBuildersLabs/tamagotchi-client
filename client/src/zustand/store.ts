@@ -75,6 +75,7 @@ interface AppStore {
     hunger: number;
     happiness: number;
     hygiene: number;
+    isAwake: boolean;
   } | null;
   validateStatusForCurrentBeast: (status: number[]) => boolean;
   
@@ -264,6 +265,7 @@ const useAppStore = create<AppStore>()(
               hunger: state.liveBeast.status.hunger,
               happiness: state.liveBeast.status.happiness,
               hygiene: state.liveBeast.status.hygiene,
+              isAwake: true,
             };
           }
           return null;
@@ -277,6 +279,7 @@ const useAppStore = create<AppStore>()(
           hunger: state.realTimeStatus[4] || 0,
           happiness: state.realTimeStatus[6] || 0,
           hygiene: state.realTimeStatus[7] || 0,
+          isAwake: Boolean(state.realTimeStatus[3]), 
         };
       },
       

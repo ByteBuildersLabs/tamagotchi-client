@@ -198,17 +198,6 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
             <>Sleep Your {currentBeastDisplay.displayName}</>
           )}
         </h1>
-        
-        {/* Subtitle with current state */}
-        <p className="text-center text-cream/80 text-sm mt-2 drop-shadow-md">
-          {isSleepTransactionInProgress ? (
-            "Processing transaction..."
-          ) : isBeastSleeping ? (
-            "Click the campfire to wake them up! 🔥"
-          ) : (
-            "Click the campfire to put them to sleep! 🌙"
-          )}
-        </p>
       </motion.div>
 
       {/* Center: Beast and Campfire together */}
@@ -241,9 +230,6 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
         >
           <div className="bg-black/70 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center space-x-3">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cream"></div>
-            <span className="text-cream text-sm font-medium">
-              {isBeastSleeping ? "Waking up beast..." : "Putting beast to sleep..."}
-            </span>
           </div>
         </motion.div>
       )}
