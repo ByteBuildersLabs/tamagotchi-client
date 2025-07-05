@@ -49,7 +49,6 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
     isBeastSleeping,
     isSleepTransactionInProgress,
     handleCampfireClick,
-    isCampfireOn,
     isInteractionDisabled
   } = useSleepLogic();
 
@@ -84,33 +83,18 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
     animationInterval: 700
   });
 
-  // Sync campfire animations with beast sleep state
-  // When beast state changes, trigger appropriate animation
+  // 🔧 FINAL FIX: Only start animation when beast state changes, not constantly
   useEffect(() => {
-    if (isBeastSleeping && isCampfireOn) {
-      // Beast is sleeping but campfire shows as lit - start extinguished animation
-      startExtinguishedAnimation();
-    } else if (!isBeastSleeping && !isCampfireOn) {
-      // Beast is awake but campfire shows as extinguished - start lit animation  
-      startLitAnimation();
-    }
-  }, [isBeastSleeping, isCampfireOn, startLitAnimation, startExtinguishedAnimation]);
-
-  // Updated campfire click handler
-  const handleCampfireClickWithAnimation = async () => {
-
-    if (isInteractionDisabled) return;
-
-    // Start appropriate animation immediately for responsive UI
     if (isBeastSleeping) {
-      // Waking up - start lit animation
-      startLitAnimation();
-    } else {
-      // Going to sleep - start extinguished animation
       startExtinguishedAnimation();
+    } else {
+      startLitAnimation();
     }
+  }, [isBeastSleeping]); // Only depend on isBeastSleeping, not the functions
 
-    // Execute the main sleep/awake logic
+  // Simple click handler - no animation manipulation
+  const handleCampfireClickWithAnimation = async () => {
+    if (isInteractionDisabled) return;
     await handleCampfireClick();
   };
 
@@ -208,9 +192,9 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
           altText={`${isBeastSleeping ? 'Sleeping' : 'Awake'} ${currentBeastDisplay.displayName}`}
         />
 
-        {/* 🔥 Updated Campfire Controller with new handler */}
+        {/* Campfire Controller */}
         <CampfireController
-          isCampfireOn={!isBeastSleeping}
+          isCampfireOn={!isBeastSleeping} // Awake = lit, Sleeping = extinguished
           onCampfireClick={handleCampfireClickWithAnimation} 
           litFrames={litFrames}
           extinguishedFrames={extinguishedFrames}

@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { useSleepAwake } from '../../../../../dojo/hooks/useSleepAwake';
 import { useRealTimeStatus } from '../../../../../dojo/hooks/useRealTimeStatus';
 import { useUpdateBeast } from '../../../../../dojo/hooks/useUpdateBeast';
-import { useCampfireState } from './useCampfireState';
 
 interface UseSleepLogicReturn {
   // Beast state
@@ -15,15 +14,12 @@ interface UseSleepLogicReturn {
   // Navigation control
   shouldBlockNavigation: boolean;
   
-  // Campfire state (forwarded from useCampfireState)
-  isCampfireOn: boolean;
-  
   // Computed
   isInteractionDisabled: boolean;
 }
 
 /**
- * Hook that integrates Sleep/Awake transactions with campfire animations and navigation control
+ * Hook that integrates Sleep/Awake transactions with navigation control
  * Coordinates the complete sleep/awake flow including blockchain updates and UI synchronization
  */
 export const useSleepLogic = (): UseSleepLogicReturn => {
@@ -40,9 +36,6 @@ export const useSleepLogic = (): UseSleepLogicReturn => {
   
   // Get beast update capabilities
   const { updateBeast } = useUpdateBeast();
-  
-  // Get campfire state management
-  const { isCampfireOn, toggleCampfire } = useCampfireState();
   
   /**
    * Determine if beast is currently sleeping
@@ -64,14 +57,10 @@ export const useSleepLogic = (): UseSleepLogicReturn => {
   
   /**
    * Main campfire click handler
-   * Integrates transaction execution with campfire animations and status updates
+   * animations be controlled by beast state
    */
   const handleCampfireClick = useCallback(async () => {
-    // Don't allow interaction during transactions or when status is unknown
-    if (isInteractionDisabled) {
-      console.log('⏸️ Campfire interaction disabled during transaction or unknown status');
-      return;
-    }
+    if (isInteractionDisabled) return;
     
     try {
       let result;
@@ -79,25 +68,10 @@ export const useSleepLogic = (): UseSleepLogicReturn => {
       // Determine action based on current beast state
       if (isBeastSleeping) {
         console.log('🔥 Beast is sleeping, attempting to wake up...');
-        
-        // Execute wake up transaction
         result = await wakeUp();
-        
-        // Update campfire visual state on success
-        if (result.success) {
-          toggleCampfire(); // This will make campfire "lit" (on)
-        }
-        
       } else {
         console.log('🌙 Beast is awake, attempting to put to sleep...');
-        
-        // Execute sleep transaction
         result = await putToSleep();
-        
-        // Update campfire visual state on success
-        if (result.success) {
-          toggleCampfire(); // This will make campfire "extinguished" (off)
-        }
       }
       
       // Post-transaction sequence (same pattern as Feed/Clean)
@@ -136,7 +110,6 @@ export const useSleepLogic = (): UseSleepLogicReturn => {
         }, 1500); // Wait for blockchain confirmation
       } else {
         console.error('❌ Sleep/Awake transaction failed:', result.error);
-        // Transaction failed, don't update campfire state or trigger updates
       }
       
     } catch (error) {
@@ -147,7 +120,6 @@ export const useSleepLogic = (): UseSleepLogicReturn => {
     isBeastSleeping,
     wakeUp,
     putToSleep,
-    toggleCampfire,
     updateBeast,
     fetchLatestStatus
   ]);
@@ -159,7 +131,6 @@ export const useSleepLogic = (): UseSleepLogicReturn => {
     
     // Campfire integration
     handleCampfireClick,
-    isCampfireOn,
     
     // Navigation control
     shouldBlockNavigation,

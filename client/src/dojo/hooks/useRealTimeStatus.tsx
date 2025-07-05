@@ -170,7 +170,7 @@ export const useRealTimeStatus = (): UseRealTimeStatusReturn => {
     };
   }, [stopPolling]);
   
-  // 🆕 UPDATED: Get formatted status for UI (now includes isAwake)
+  // Get formatted status for UI (now includes isAwake)
   const statusForUI = getRealTimeStatusForUI();
   
   return {
