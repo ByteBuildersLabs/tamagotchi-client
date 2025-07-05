@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { toast } from "react-hot-toast";
 import { CoverScreen } from "../components/screens/Cover/CoverScreen";
 import { HatchEggScreen } from "../components/screens/Hatch/HatchEggScreen";
 import { HomeScreen } from "../components/screens/Home/HomeScreen";
@@ -14,6 +15,9 @@ import type { Screen } from "../components/types/screens";
 import { generateRandomBeastParams } from "../utils/beastHelpers";
 import type { BeastSpawnParams } from "../utils/beastHelpers";
 
+// Sleep logic for navigation blocking
+import { useSleepLogic } from "../components/screens/Sleep/components/hooks/useSleepLogic";
+
 function AppContent() {
   const [currentScreen, setCurrentScreenState] = useState<Screen>("login");
   const [playerAddress] = useState("0x123"); // Temporary address
@@ -21,13 +25,35 @@ function AppContent() {
   // State for predefined beast parameters
   const [pendingBeastParams, setPendingBeastParams] = useState<BeastSpawnParams | null>(null);
 
+  // Get sleep logic for navigation blocking
+  const { shouldBlockNavigation } = useSleepLogic();
+
   const handleNavigation = (screen: Screen) => {
+    // 🚫 NAVIGATION BLOCKING LOGIC
+    // Block navigation when beast is sleeping, except to sleep screen
+    if (shouldBlockNavigation && screen !== "sleep") {
+      toast.error("Your beast is sleeping! 😴 Wake them up first.", {
+        duration: 4000,
+        style: {
+          background: '#1f2937',
+          color: '#f3f4f6',
+          border: '1px solid #374151',
+          borderRadius: '8px',
+          fontSize: '14px',
+        },
+        icon: '🌙',
+        position: 'top-center',
+      });
+      return; // Block navigation
+    }
+
     // Generate parameters when navigating to hatch
     if (screen === "hatch") {
       const beastParams = generateRandomBeastParams();
       setPendingBeastParams(beastParams);
     }
     
+    // 🎯 NORMAL NAVIGATION
     setCurrentScreenState(screen);
   };
 
@@ -123,11 +149,12 @@ function AppContent() {
         />
       )}
 
-      {/* NavBar */}
+      {/* NavBar - Pass shouldBlockNavigation for visual feedback */}
       {currentScreen !== "cover" && currentScreen !== "login" && currentScreen !== "hatch" && (
         <NavBar
           activeTab={currentScreen as "home" | "sleep" | "feed" | "clean" | "play"}
           onNavigation={handleNavigation}
+          shouldBlockNavigation={shouldBlockNavigation}
         />
       )}
     </div>
