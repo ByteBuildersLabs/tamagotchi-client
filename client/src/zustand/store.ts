@@ -79,6 +79,9 @@ interface AppStore {
   } | null;
   validateStatusForCurrentBeast: (status: number[]) => boolean;
   
+  // Contract-first sync functions
+  syncWithContractData: (contractStatus: number[]) => void;
+  
   // Food actions
   setFoods: (foods: Food[]) => void;
   updateFoodAmount: (player: string, id: number, amount: number) => void;
@@ -172,16 +175,22 @@ const useAppStore = create<AppStore>()(
         }));
       },
       
-      // Live beast actions
       setLiveBeast: (beast, status) => {
         const isAlive = status?.is_alive || false;
-        
-        set({
-          liveBeast: {
-            beast,
-            status,
-            isAlive
-          }
+        set((state) => {
+          // AUTO-SYNC: Always sync player.current_beast_id with beast.beast_id
+          const updatedPlayer = beast && state.player 
+            ? { ...state.player, current_beast_id: beast.beast_id }
+            : state.player;
+          
+          return {
+            player: updatedPlayer,
+            liveBeast: {
+              beast,
+              status,
+              isAlive
+            }
+          };
         });
       },
       
@@ -209,8 +218,40 @@ const useAppStore = create<AppStore>()(
         });
       },
       
-      // Real-time status actions
+      // Contract sync function
+      syncWithContractData: (contractStatus) => {
+        if (!contractStatus || contractStatus.length < 10) return;
+        
+        const contractBeastId = contractStatus[1];
+        const state = get();
+        
+        // Update player.current_beast_id if different
+        if (state.player && state.player.current_beast_id !== contractBeastId) {
+          set((state) => ({
+            player: state.player ? { ...state.player, current_beast_id: contractBeastId } : null
+          }));
+        }
+        
+        // Update liveBeast if exists but has different ID
+        if (state.liveBeast.beast && state.liveBeast.beast.beast_id !== contractBeastId) {
+          set((state) => ({
+            liveBeast: {
+              ...state.liveBeast,
+              beast: state.liveBeast.beast ? 
+                { ...state.liveBeast.beast, beast_id: contractBeastId } : null,
+              status: state.liveBeast.status ? 
+                { ...state.liveBeast.status, beast_id: contractBeastId } : null
+            }
+          }));
+        }
+      },
+      
+      // Real-time status actions with auto-sync
       setRealTimeStatus: (status) => {
+        // AUTO-SYNC before setting status
+        const state = get();
+        state.syncWithContractData(status);
+        
         set({ 
           realTimeStatus: status,
           lastStatusUpdate: Date.now(),
@@ -245,14 +286,29 @@ const useAppStore = create<AppStore>()(
         });
       },
       
+      // Contract-first validation with auto-sync
       validateStatusForCurrentBeast: (status) => {
         const state = get();
+        
+        if (!status || status.length < 10) {
+          return false;
+        }
+        
+        const statusBeastId = status[1];
         const currentBeastId = state.getCurrentBeastId();
         
-        if (!currentBeastId || status.length < 10) return false;
+        // AUTO-SYNC: If there's a mismatch, sync automatically
+        if (statusBeastId !== currentBeastId) {
+          // Sync store with contract data
+          state.syncWithContractData(status);
+          
+          // After sync, the status should be valid
+          const newCurrentBeastId = state.getCurrentBeastId();
+          return statusBeastId === newCurrentBeastId;
+        }
         
-        // status[1] is beast_id in the array
-        return status[1] === currentBeastId;
+        // If already matching, it's valid
+        return true;
       },
       
       getRealTimeStatusForUI: () => {
@@ -361,9 +417,17 @@ const useAppStore = create<AppStore>()(
                state.liveBeast.status !== null;
       },
       
+      // Contract-first getCurrentBeastId
       getCurrentBeastId: () => {
         const state = get();
-        return state.liveBeast.beast?.beast_id || null;
+        
+        // PRIORITY: realTimeStatus (contract) > liveBeast > player
+        const contractBeastId = state.realTimeStatus.length >= 10 ? state.realTimeStatus[1] : null;
+        const liveBeastId = state.liveBeast.beast?.beast_id;
+        const playerBeastId = state.player?.current_beast_id;
+        
+        // Contract-first: use contract ID if available
+        return contractBeastId || liveBeastId || playerBeastId || null;
       },
       
       // Simple getter to check if any actions are in progress
@@ -379,7 +443,7 @@ const useAppStore = create<AppStore>()(
       resetStore: () => set(initialState),
     }),
     {
-      name: 'tamagotchi-store', // localStorage key
+      name: 'tamagotchi-store',
       partialize: (state) => ({
         // Only persist certain parts of the state
         player: state.player,

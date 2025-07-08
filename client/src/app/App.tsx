@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { CoverScreen } from "../components/screens/Cover/CoverScreen";
 import { HatchEggScreen } from "../components/screens/Hatch/HatchEggScreen";
@@ -18,6 +18,10 @@ import type { BeastSpawnParams } from "../utils/beastHelpers";
 // Sleep logic for navigation blocking
 import { useSleepLogic } from "../components/screens/Sleep/components/hooks/useSleepLogic";
 
+// Wallet and cache management
+import { useAccount } from "@starknet-react/core";
+import useAppStore from "../zustand/store";
+
 function AppContent() {
   const [currentScreen, setCurrentScreenState] = useState<Screen>("login");
   const [playerAddress] = useState("0x123"); // Temporary address
@@ -28,8 +32,64 @@ function AppContent() {
   // Get sleep logic for navigation blocking
   const { shouldBlockNavigation } = useSleepLogic();
 
+  // Wallet management for cache cleanup
+  const { account } = useAccount();
+  const resetStore = useAppStore(state => state.resetStore);
+
+  // Clear cache on wallet change
+  useEffect(() => {
+    if (account?.address) {
+      console.log('🔄 Wallet connected/changed, cleaning cache for:', account.address);
+      
+      // Clear all tamagotchi localStorage
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('tamagotchi-store')) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => {
+        console.log('🧹 Clearing cache:', key);
+        localStorage.removeItem(key);
+      });
+      
+      // Reset Zustand store to prevent contamination
+      resetStore();
+      
+      if (keysToRemove.length > 0) {
+        console.log('✅ Cache cleanup completed for wallet:', account.address);
+      }
+    }
+  }, [account?.address, resetStore]);
+
+  // Clear cache on app start (aggressive approach)
+  useEffect(() => {
+    console.log('🚀 App started, performing initial cache cleanup...');
+    
+    // Clear all tamagotchi cache on app start
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('tamagotchi-store')) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    // Reset store
+    resetStore();
+    
+    if (keysToRemove.length > 0) {
+      console.log('✅ Initial cache cleanup completed');
+    }
+  }, []); // Only run once on mount
+
   const handleNavigation = (screen: Screen) => {
-    // 🚫 NAVIGATION BLOCKING LOGIC
     // Block navigation when beast is sleeping, except to sleep screen
     if (shouldBlockNavigation && screen !== "sleep") {
       toast.error("Your beast is sleeping! 😴 Wake them up first.", {
@@ -53,7 +113,7 @@ function AppContent() {
       setPendingBeastParams(beastParams);
     }
     
-    // 🎯 NORMAL NAVIGATION
+    // NORMAL NAVIGATION
     setCurrentScreenState(screen);
   };
 
