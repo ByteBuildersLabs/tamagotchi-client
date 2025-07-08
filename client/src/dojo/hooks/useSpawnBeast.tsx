@@ -7,6 +7,7 @@ import { useDojoSDK } from '@dojoengine/sdk/react';
 import { useLiveBeast } from './useLiveBeast';
 import { usePlayer } from './usePlayer';
 import { useStarknetConnect } from './useStarknetConnect';
+import { usePostSpawnSync } from './usePostSpawnSync'; 
 
 // Helpers imports
 import { 
@@ -23,16 +24,19 @@ interface SpawnState {
   isSpawning: boolean;
   error: string | null;
   completed: boolean;
-  step: 'preparing' | 'spawning' | 'confirming' | 'fetching' | 'success';
+  step: 'preparing' | 'spawning' | 'confirming' | 'syncing' | 'success';
   txHash: string | null;
   txStatus: 'PENDING' | 'SUCCESS' | 'REJECTED' | null;
   spawnedBeastParams: BeastSpawnParams | null;
+  syncSuccess: boolean; 
 }
 
 interface SpawnResult {
   success: boolean;
   transactionHash?: string;
   beastParams?: BeastSpawnParams;
+  syncSuccess?: boolean; 
+  finalBeastId?: number | null; 
   error?: string;
 }
 
@@ -45,6 +49,7 @@ interface UseSpawnBeastReturn {
   txHash: string | null;
   txStatus: 'PENDING' | 'SUCCESS' | 'REJECTED' | null;
   spawnedBeastParams: BeastSpawnParams | null;
+  syncSuccess: boolean; 
   
   // Actions
   spawnBeast: (params?: BeastSpawnParams) => Promise<SpawnResult>; 
@@ -52,8 +57,8 @@ interface UseSpawnBeastReturn {
 }
 
 /**
- * Hook for spawning beasts in the Dojo contracts
- * Uses optimized live beast hook for efficient data management
+ * Hook for spawning beasts with automatic post-spawn sync
+ * includes definitive sync solution for contract-Torii alignment
  */
 export const useSpawnBeast = (): UseSpawnBeastReturn => {
   const { useDojoStore, client } = useDojoSDK();
@@ -64,8 +69,11 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
   // Use optimized hooks for data management
   const { refetch: refetchLiveBeast } = useLiveBeast();
   const { refetch: refetchPlayer } = usePlayer();
+  
+  // Post-spawn sync hook
+  const { syncAfterSpawn } = usePostSpawnSync();
 
-  // Local state for spawn process
+  // Enhanced local state for spawn process
   const [spawnState, setSpawnState] = useState<SpawnState>({
     isSpawning: false,
     error: null,
@@ -74,14 +82,14 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
     txHash: null,
     txStatus: null,
     spawnedBeastParams: null,
+    syncSuccess: false, 
   });
 
   // Get player from store
   const storePlayer = useAppStore(state => state.player);
 
   /**
-   * Internal spawn beast function
-   * Handles the actual contract interaction
+   * Internal spawn beast function with comprehensive sync
    */
   const executeSpawnBeast = useCallback(async (params: BeastSpawnParams): Promise<SpawnResult> => {
     // Validation: Check if wallet is connected
@@ -118,13 +126,15 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
         isSpawning: true,
         error: null,
         step: 'preparing',
-        spawnedBeastParams: params
+        spawnedBeastParams: params,
+        syncSuccess: false
       }));
 
-      // Step 1: Prepare transaction
+      // Step 1: Prepare and execute transaction
       setSpawnState(prev => ({ ...prev, step: 'spawning' }));
 
-      // Execute spawn_beast transaction
+      console.log('🥚 Executing spawn_beast transaction...', params);
+      
       const tx = await client.game.spawnBeast(
         account as Account,
         params.specie,
@@ -140,85 +150,125 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
 
       // Step 2: Wait for transaction confirmation
       if (tx && tx.code === "SUCCESS") {
+        console.log('✅ Spawn transaction successful:', tx.transaction_hash);
+        
         setSpawnState(prev => ({
           ...prev,
           txStatus: 'SUCCESS',
-          step: 'fetching'
+          step: 'syncing' // 🆕 NEW: Dedicated sync step
         }));
 
-        // Step 3: Wait for transaction to be processed
-        await new Promise(resolve => setTimeout(resolve, 3500));
+        // 🆕 NEW: Step 3 - Execute comprehensive post-spawn sync
+        console.log('🔄 Starting post-spawn synchronization...');
         
-        // Simplified refetch logic with retry
-        let attempts = 0;
-        const maxAttempts = 3;
+        const syncResult = await syncAfterSpawn(tx.transaction_hash, params);
         
-        while (attempts < maxAttempts) {
-          // Refetch both player and live beast data
-          await Promise.all([
-            refetchPlayer(),      // Refetch player data to get updated current_beast_id
-            refetchLiveBeast()    // Refetch live beast data
-          ]);
+        if (syncResult.success) {
+          console.log('✅ Post-spawn sync completed successfully');
           
-          // Small delay to check if data was loaded
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          setSpawnState(prev => ({
+            ...prev,
+            completed: true,
+            step: 'success',
+            isSpawning: false,
+            syncSuccess: true
+          }));
+
+          return {
+            success: true,
+            transactionHash: tx.transaction_hash,
+            beastParams: params,
+            syncSuccess: true,
+            finalBeastId: syncResult.finalBeastId
+          };
+        } else {
+          // Sync failed but transaction succeeded
+          console.log('⚠️ Transaction succeeded but sync failed:', syncResult.error);
           
-          // Check if beast is now live using optimized store getter
-          const hasLiveBeast = useAppStore.getState().hasLiveBeast();
-          
-          // If beast is live, we can exit early
-          if (hasLiveBeast) break;
-          
-          attempts++;
-          
-          if (attempts < maxAttempts) await new Promise(resolve => setTimeout(resolve, 2000));
+          // Fallback: Try basic refetch
+          console.log('🔄 Attempting fallback refetch...');
+          try {
+            await Promise.all([
+              refetchPlayer(),
+              refetchLiveBeast()
+            ]);
+            
+            // Check if fallback worked
+            const hasLiveBeast = useAppStore.getState().hasLiveBeast();
+            
+            setSpawnState(prev => ({
+              ...prev,
+              completed: hasLiveBeast,
+              step: hasLiveBeast ? 'success' : 'syncing',
+              isSpawning: false,
+              syncSuccess: hasLiveBeast,
+              error: hasLiveBeast ? null : 'Sync incomplete - beast may appear after refresh'
+            }));
+            
+            return {
+              success: true, // Transaction succeeded
+              transactionHash: tx.transaction_hash,
+              beastParams: params,
+              syncSuccess: hasLiveBeast,
+              finalBeastId: useAppStore.getState().getCurrentBeastId(),
+              error: hasLiveBeast ? undefined : 'Sync incomplete'
+            };
+            
+          } catch (fallbackError) {
+            console.error('❌ Fallback refetch also failed:', fallbackError);
+            
+            setSpawnState(prev => ({
+              ...prev,
+              completed: false,
+              isSpawning: false,
+              syncSuccess: false,
+              error: 'Transaction succeeded but data sync failed'
+            }));
+            
+            return {
+              success: true, // Transaction still succeeded
+              transactionHash: tx.transaction_hash,
+              beastParams: params,
+              syncSuccess: false,
+              error: 'Transaction succeeded but data sync failed'
+            };
+          }
         }
-
-        // Final check using optimized store getter
-        const isBeastLive = useAppStore.getState().hasLiveBeast();
-
-        // Step 6: Complete
-        setSpawnState(prev => ({
-          ...prev,
-          completed: isBeastLive,
-          step: 'success',
-          isSpawning: false
-        }));
-
-        return {
-          success: true,
-          transactionHash: tx.transaction_hash,
-          beastParams: params
-        };
       } else {
-        // Update transaction status to rejected
+        // Transaction failed
         setSpawnState(prev => ({
           ...prev,
-          txStatus: 'REJECTED'
+          txStatus: 'REJECTED',
+          isSpawning: false,
+          error: 'Transaction failed'
         }));
+        
         throw new Error("Spawn transaction failed with code: " + tx?.code);
       }
 
     } catch (error: any) {
       const errorMessage = error?.message || error?.toString() || "Unknown error occurred";
       
+      console.error('❌ Spawn beast failed:', errorMessage);
+      
       setSpawnState(prev => ({
         ...prev,
         error: errorMessage,
         txStatus: 'REJECTED',
-        isSpawning: false
+        isSpawning: false,
+        syncSuccess: false
       }));
 
       return {
         success: false,
-        error: errorMessage
+        error: errorMessage,
+        syncSuccess: false
       };
     }
-  }, [account, status, storePlayer, client, state, refetchLiveBeast, refetchPlayer]);
+  }, [account, status, storePlayer, client, state, refetchLiveBeast, refetchPlayer, syncAfterSpawn]);
 
   /**
    * Spawn beast with optional parameters
-   * If no parameters are provided, generate random ones
    */
   const spawnBeast = useCallback(async (params?: BeastSpawnParams): Promise<SpawnResult> => {
     const beastParams = params || generateRandomBeastParams();
@@ -237,6 +287,7 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
       txHash: null,
       txStatus: null,
       spawnedBeastParams: null,
+      syncSuccess: false,
     });
   }, []);
 
@@ -249,6 +300,7 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
     txHash: spawnState.txHash,
     txStatus: spawnState.txStatus,
     spawnedBeastParams: spawnState.spawnedBeastParams,
+    syncSuccess: spawnState.syncSuccess, 
     
     // Actions
     spawnBeast,
