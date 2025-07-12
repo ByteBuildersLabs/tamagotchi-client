@@ -5,9 +5,9 @@ import { constants } from "starknet";
 
 const { VITE_PUBLIC_DEPLOY_TYPE } = import.meta.env;
 
-const CONTRACT_ADDRESS_ACHIEVEMENTS = '0x70061966613c3788149d4bed8c391403ee19bc23f02d9ff6a056cfb646820e2'
-const CONTRACT_ADDRESS_TAMAGOTCHI_SYSTEM = '0x782425ff2132a84992b9e9e497c1305a7e48f6cf3928fd93b7e44ed8efea2ad'
-const CONTRACT_ADDRESS_PLAYER_SYSTEM = '0x4c315f29212f78341dc80bc80cd0a04b4e5deafef9bd7528cb2fc7de7098fc8'
+const CONTRACT_ADDRESS_ACHIEVEMENTS = '0x6e6e2651a6c0e3d5829f4833b664dbbfd9fbac1f93bbe352801f9532a6e84e0'
+const CONTRACT_ADDRESS_TAMAGOTCHI_SYSTEM = '0x5ca90d27bd019b06be5375af35d3075d4c8ee847e0221aae83565525eeb95fd'
+const CONTRACT_ADDRESS_PLAYER_SYSTEM = '0x5492cc68a3a2aeee0bf83f2bfe47e45815a31e8537e6c6ccc6400261e8fac60'
 
 const policies: SessionPolicies = {
   contracts: {
@@ -65,7 +65,7 @@ const policies: SessionPolicies = {
 const colorMode: ColorMode = "dark";
 const theme = "bytebeasts-tamagotchi";
 const namespace = "tamagotchi";
-const slot = "bbv2";
+const slot = "tamagotchi23";
 
 const options: ControllerOptions = {
   chains: [
