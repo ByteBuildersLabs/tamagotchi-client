@@ -23,7 +23,7 @@ const fetchStatus = async (account: AccountInterface): Promise<number[] | undefi
   
   try {
     const response = await account?.callContract({
-      contractAddress: "0x782425ff2132a84992b9e9e497c1305a7e48f6cf3928fd93b7e44ed8efea2ad",
+      contractAddress: "0x5ca90d27bd019b06be5375af35d3075d4c8ee847e0221aae83565525eeb95fd",
       entrypoint: "get_timestamp_based_status_with_address",
       calldata: [String(account?.address)],
     });
