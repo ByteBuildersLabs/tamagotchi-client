@@ -30,40 +30,42 @@ interface HatchEggScreenProps {
 }
 
 export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScreenProps) => {
-  // Refs to prevent infinite re-renders
+  // Mounted ref to prevent updates after unmount
   const mountedRef = useRef(true);
-
-  // Ensure mounted ref stays true during component lifecycle
   useEffect(() => {
     mountedRef.current = true;
-    
     return () => {
       mountedRef.current = false;
     };
   }, []);
 
-  // Memoize static values to prevent re-calculations
-  const eggType: EggType = useMemo(() => getEggTypeBySpecie(beastParams.specie), [beastParams.specie]);
-  
-  const beastDisplayInfo = useMemo(() => {
-    return getBeastDisplayInfo(beastParams.specie, beastParams.beast_type);
-  }, [beastParams.specie, beastParams.beast_type]);
-
+  // Static memoized values
+  const eggType: EggType = useMemo(
+    () => getEggTypeBySpecie(beastParams.specie),
+    [beastParams.specie]
+  );
+  const beastDisplayInfo = useMemo(
+    () => getBeastDisplayInfo(beastParams.specie, beastParams.beast_type),
+    [beastParams.specie, beastParams.beast_type]
+  );
   const correctBeastAsset = useMemo(() => {
-    const getBeastTypeString = (beastType: number): 'wolf' | 'dragon' | 'snake' => {
-      switch (beastType) {
-        case 1: return 'wolf';
-        case 2: return 'dragon';  
-        case 3: return 'snake';
-        default: return 'wolf';
+    const getBeastTypeString = (type: number): 'wolf' | 'dragon' | 'snake' => {
+      switch (type) {
+        case 1:
+          return 'wolf';
+        case 2:
+          return 'dragon';
+        case 3:
+          return 'snake';
+        default:
+          return 'wolf';
       }
     };
-    
     const beastTypeString = getBeastTypeString(beastParams.beast_type);
     return BEAST_ASSETS[beastTypeString];
   }, [beastParams.beast_type]);
 
-  // Hook with progressive effects
+  // Animation hooks
   const {
     currentFrame,
     eggState,
@@ -72,11 +74,9 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
     showBeast,
     glowLevel
   } = useEggAnimation(eggType);
-
-  // Mega-burst effects hook
   const { showMegaBurst, showFullScreenFlash } = useMegaBurstEffect(eggState);
 
-  // Beast spawning hook
+  // Spawn hook with sync
   const {
     spawnBeast,
     isSpawning,
@@ -85,51 +85,51 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
     currentStep,
     txHash,
     txStatus,
+    syncSuccess,
     resetSpawner
   } = useSpawnBeast();
 
-  /**
-   * Enhanced hatching function with proper state checks
-   */
+  // Handle hatch click
   const handleHatchEgg = useCallback(async () => {
-    if (!canClick) return;
-
-    if (isSpawning) return;
-
+    if (!canClick || isSpawning) return;
     try {
-      // Step 1: Start egg animation
       startEggHatching();
-      
-      // Step 2: Execute beast spawn transaction
+      console.log('🥚 Starting beast spawn with params:', beastParams);
+
       const result = await spawnBeast(beastParams);
-      
       if (result.success) {
-        toast.success(`🐾 ${beastDisplayInfo.displayName} spawned!`, {
-          duration: 3000,
-          position: 'top-center'
-        });
+        if (result.syncSuccess) {
+          toast.success(
+            `🐾 ${beastDisplayInfo.displayName} spawned and ready!`,
+            { duration: 3000, position: 'top-center' }
+          );
+        } else if (result.transactionHash) {
+          toast.success(
+            `🐾 ${beastDisplayInfo.displayName} spawned! (Syncing...)`,
+            { duration: 4000, position: 'top-center' }
+          );
+        }
       } else {
-        toast.error(`Spawn failed: ${result.error}`, {
-          duration: 4000,
-          position: 'top-center'
-        });
+        toast.error(
+          `Spawn failed: ${result.error}`,
+          { duration: 4000, position: 'top-center' }
+        );
       }
     } catch (error) {
-      toast.error("Beast spawn failed. Please try again.", {
-        duration: 4000,
-        position: 'top-center'
-      });
+      console.error('❌ Beast spawn error:', error);
+      toast.error(
+        "Beast spawn failed. Please try again.",
+        { duration: 4000, position: 'top-center' }
+      );
     }
-  }, [canClick, isSpawning, startEggHatching, beastParams, spawnBeast, beastDisplayInfo]);
+  }, [canClick, isSpawning, startEggHatching, spawnBeast, beastParams, beastDisplayInfo]);
 
-  /**
-   * Handle continue button with direct store access
-   */
   const handleContinue = useCallback(() => {
-    // Use direct store access to get fresh state
-    const isBeastReady = useAppStore.getState().hasLiveBeast();
     
-    if (!spawnCompleted && !isBeastReady) {
+    const state = useAppStore.getState();
+    const hasBeast = state.hasLiveBeast();
+
+    if (!spawnCompleted && !hasBeast) {
       toast("Please wait for beast spawn to complete", {
         duration: 2000,
         position: 'top-center',
@@ -138,12 +138,20 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
       return;
     }
 
-    onLoadingComplete();
-  }, [spawnCompleted, onLoadingComplete]);
+    if (!syncSuccess && !hasBeast) {
+      toast("Beast is syncing... Please wait a moment", {
+        duration: 3000,
+        position: 'top-center',
+        icon: '🔄'
+      });
+      return;
+    }
 
-  /**
-   * Handle transaction status updates
-   */
+    console.log('✅ Proceeding to next screen');
+    onLoadingComplete();
+  }, [spawnCompleted, syncSuccess, onLoadingComplete]);
+
+  // Transaction status effects
   useEffect(() => {
     if (txHash && txStatus === 'SUCCESS') {
       toast.success('Transaction confirmed!', {
@@ -158,38 +166,33 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
     }
   }, [txHash, txStatus]);
 
-  /**
-   * Handle spawn errors
-   */
+  // Spawn error effect
   useEffect(() => {
     if (spawnError) {
-      toast.error(`Beast spawn error: ${spawnError}`, {
-        duration: 4000,
-        position: 'top-center'
-      });
+      toast.error(
+        `Beast spawn error: ${spawnError}`,
+        { duration: 4000, position: 'top-center' }
+      );
     }
   }, [spawnError]);
 
-  /**
-   * Cleanup on unmount
-   */
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       mountedRef.current = false;
-      if (isSpawning) {
-        resetSpawner();
-      }
+      if (isSpawning) resetSpawner();
     };
   }, [isSpawning, resetSpawner]);
 
-  // Calculate continue button logic without reactive dependencies
+  // Continue calculation
   const canContinueCalc = useMemo(() => {
     const eggRevealed = eggState === 'revealing' && showBeast;
-    const directHasLiveBeast = useAppStore.getState().hasLiveBeast();
-    return eggRevealed && (spawnCompleted || directHasLiveBeast);
-  }, [eggState, showBeast, spawnCompleted]);
+    const hasLive = useAppStore.getState().hasLiveBeast();
+    return eggRevealed && ((spawnCompleted && syncSuccess) || hasLive);
+  }, [eggState, showBeast, spawnCompleted, syncSuccess]);
 
   const showSpawnProgress = isSpawning || (txHash && txStatus === 'PENDING');
+  const showSyncProgress = spawnCompleted && !syncSuccess && currentStep === 'syncing';
 
   return (
     <div
@@ -219,10 +222,10 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
       {/* Content Container */}
       <div className="flex flex-col items-center justify-center space-y-8 z-50 px-4">
         {/* Header */}
-        <HatchHeader 
-          showBeast={showBeast} 
-          beastType={beastDisplayInfo.displayName} 
-          eggState={eggState} 
+        <HatchHeader
+          showBeast={showBeast}
+          beastType={beastDisplayInfo.displayName}
+          eggState={eggState}
         />
 
         {/* Spawn Progress Indicator */}
@@ -231,7 +234,21 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
               <span className="text-sm font-medium text-gray-700">
-                {isSpawning ? `Spawning ${beastDisplayInfo.displayName}... (${currentStep})` : 'Transaction pending...'}
+                {isSpawning
+                  ? `Spawning ${beastDisplayInfo.displayName}... (${currentStep})`
+                  : 'Transaction pending...'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Sync Progress Indicator */}
+        {showSyncProgress && (
+          <div className="bg-blue-50/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-blue-200 shadow-lg">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span className="text-sm font-medium text-blue-700">
+                Synchronizing beast data...
               </span>
             </div>
           </div>
@@ -260,11 +277,9 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
         )}
 
         {/* Continue Button */}
-        {canContinueCalc && (
-          <ContinueButton onContinue={handleContinue} />
-        )}
+        {canContinueCalc && <ContinueButton onContinue={handleContinue} />}
 
-        {/* Wait message if animation done but spawn not complete */}
+        {/* Wait messages with sync awareness */}
         {eggState === 'revealing' && showBeast && !spawnCompleted && !canContinueCalc && (
           <div className="bg-amber-100 border border-amber-400 rounded-lg px-4 py-2">
             <div className="flex items-center space-x-2">
@@ -281,12 +296,12 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
       <Toaster
         toastOptions={{
           className: 'bg-white/95 text-gray-800 border border-gray-200 rounded-lg shadow-xl backdrop-blur-sm font-medium',
-          success: { 
+          success: {
             iconTheme: { primary: '#10B981', secondary: '#FFFFFF' }
           },
           error: { 
             iconTheme: { primary: '#EF4444', secondary: '#FFFFFF' }
-          },
+          }
         }}
       />
     </div>
