@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { TamagotchiTopBar } from "../../layout/TopBar";
 import { HomeScreenProps, BeastData, PlayerData } from "../../types/home.types";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
@@ -11,6 +11,9 @@ import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 // Store
 import useAppStore from "../../../zustand/store";
 
+// Music Context
+import { useMusic } from "../../../context/MusicContext";
+
 // Components y hooks
 import { usePlayerModal } from "./components/hooks/usePlayerModal";
 import { useHomeNavigation } from "./components/hooks/useHomeNavigation";
@@ -22,6 +25,9 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
   const [age] = useState(1);
   const playerName = "0xluis";
 
+  // Music context
+  const { setCurrentScreen } = useMusic();
+
   // Universal hook to encapsulate beast display logic
   const {
     currentBeastDisplay,
@@ -29,6 +35,11 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
     hasLiveBeast,
     isLoading
   } = useBeastDisplay();
+
+  // Set current screen for music control
+  useEffect(() => {
+    setCurrentScreen("home");
+  }, [setCurrentScreen]);
 
   // Store data
   const storePlayer = useAppStore(state => state.player);

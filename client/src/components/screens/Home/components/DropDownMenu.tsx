@@ -4,12 +4,17 @@ import { useAccount, useDisconnect } from "@starknet-react/core";
 // // Components
 import { ShareModal } from "./ShareModal";
 
+// Context
+import { useMusic } from "../../../../context/MusicContext";
+
 // Assets
 import menuIcon from "../../../../assets/icons/menu/icon-menu.webp";
 import closeIcon from "../../../../assets/icons/extras/icon-close.png";
 import profileIcon from "../../../../assets/icons/menu/svg/icon-profile.svg";
 import shareIcon from "../../../../assets/icons/menu/svg/icon-share.svg";
 import logoutIcon from "../../../../assets/icons/menu/svg/icon-logout.svg";
+import soundOnIcon from "../../../../assets/icons/menu/svg/icon-sound-on.svg";
+import soundOffIcon from "../../../../assets/icons/menu/svg/icon-sound-off.svg";
 
 type DropdownMenuProps = {
   onNavigateLogin: () => void;
@@ -31,6 +36,7 @@ export const DropdownMenu = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { connector } = useAccount();
   const { disconnect } = useDisconnect();
+  const { isMuted, toggleMute } = useMusic();
 
   const toggleMenu = useCallback(() => {
     setIsOpen(prev => !prev);
@@ -118,6 +124,15 @@ export const DropdownMenu = ({
           >
             <img src={shareIcon} alt="" className="w-5 h-5" />
             <span className="text-dark font-luckiest">Share on X</span>
+          </button>
+
+          <button
+            onClick={toggleMute}
+            className="flex items-center space-x-3 w-full hover:scale-105 transition-transform"
+            role="menuitem"
+          >
+            <img src={isMuted ? soundOffIcon : soundOnIcon} alt="" className="w-5 h-5" />
+            <span className="text-dark font-luckiest">{isMuted ? "Unmute" : "Mute"}</span>
           </button>
 
           <button

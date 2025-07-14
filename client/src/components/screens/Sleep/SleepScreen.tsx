@@ -8,6 +8,9 @@ import { SleepScreenProps } from "../../types/sleep.types";
 // Universal hook for beast display
 import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 
+// Music Context
+import { useMusic } from "../../../context/MusicContext";
+
 // Main sleep logic hook
 import { useSleepLogic } from "./components/hooks/useSleepLogic";
 
@@ -36,6 +39,9 @@ import litFrame5 from "../../../assets/icons/campfire/Animation/lit/lit-frame-5.
 import trunkIcon from "../../../assets/icons/campfire/icon-trunk.png";
 
 export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
+  // Music context
+  const { setCurrentScreen } = useMusic();
+
   // Universal hook - gets the player's current beast
   const {
     currentBeastDisplay,
@@ -43,6 +49,11 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
     hasLiveBeast,
     isLoading
   } = useBeastDisplay();
+
+  // Set current screen for music control
+  useEffect(() => {
+    setCurrentScreen("sleep");
+  }, [setCurrentScreen]);
 
   // Main sleep logic hook
   const {

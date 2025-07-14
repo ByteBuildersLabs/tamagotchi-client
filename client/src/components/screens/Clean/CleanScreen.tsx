@@ -1,5 +1,5 @@
 import { TamagotchiTopBar } from "../../layout/TopBar";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import cleanBackground from "../../../assets/backgrounds/bg-clean.png";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
@@ -8,6 +8,9 @@ import { CleanScreenProps } from "../../types/clean.types";
 
 // Universal hook for beast display
 import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
+
+// Music Context
+import { useMusic } from "../../../context/MusicContext";
 
 // Clean logic integration hook
 import { useCleanLogic } from "./components/hooks/useCleanLogic";
@@ -23,6 +26,9 @@ export const CleanScreen = ({
   onNavigation,
   rainDuration = 3
 }: CleanScreenProps) => {
+  // Music context
+  const { setCurrentScreen } = useMusic();
+
   // Universal hook - gets the player's current beast
   const {
     currentBeastDisplay,
@@ -30,6 +36,11 @@ export const CleanScreen = ({
     hasLiveBeast,
     isLoading
   } = useBeastDisplay();
+
+  // Set current screen for music control
+  useEffect(() => {
+    setCurrentScreen("clean");
+  }, [setCurrentScreen]);
 
   // Integrated clean logic hook
   const {
