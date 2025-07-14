@@ -199,6 +199,8 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
 
     // Apply gravity
     game.velocity += game.gravity * dt;
+    
+    // Limit the maximum fall speed
     const MAX_FALL_SPEED = 15;
     if (game.velocity > MAX_FALL_SPEED) game.velocity = MAX_FALL_SPEED;
 
@@ -210,7 +212,7 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
       beastRef.current.style.transform = `translateY(${game.birdY}px) rotate(${Math.min(Math.max(game.velocity * 3, -30), 90)}deg)`;
     }
 
-    // Check boundaries
+    // Check boundaries 
     if (game.birdY < 0) {
       game.birdY = 0;
       game.velocity = 0;
@@ -222,14 +224,15 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
   // Update pipes
   const updatePipes = (dt: number) => {
     const game = gameConfig.current;
-    const pipeSpeed = game.pipeSpeedPPS * dt;
+    
+    const pipeSpeed = gameConfig.current.pipeSpeedPPS * dt;
 
     game.pipes.forEach(pipe => {
       // Move pipe
       pipe.x -= pipeSpeed;
       pipe.element.style.left = `${pipe.x}px`;
 
-      // Check scoring
+      // Check scoring - EXACTO como el original
       if (!pipe.scored && pipe.x + PIPE_WIDTH < game.birdX) {
         pipe.scored = true;
         currentScoreRef.current += 1;
@@ -239,7 +242,7 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
         }
       }
 
-      // Check collision
+      // Check collision - EXACTA implementación del original
       const birdColliderLeft = game.birdX + BIRD_COLLIDER_OFFSET_X;
       const birdColliderTop = game.birdY + BIRD_COLLIDER_OFFSET_Y;
       const birdColliderRight = birdColliderLeft + BIRD_COLLIDER_WIDTH;
@@ -252,8 +255,10 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
       const bottomPipeColliderTop = pipe.bottomY + COLLIDER_MARGIN;
 
       if (
+        // Bird collider está dentro de los límites horizontales del pipe collider
         birdColliderRight > pipeColliderLeft &&
         birdColliderLeft < pipeColliderRight &&
+        // Bird collider está dentro de los límites verticales de los pipe colliders ajustados
         (birdColliderTop < topPipeColliderBottom || birdColliderBottom > bottomPipeColliderTop)
       ) {
         endGame();
