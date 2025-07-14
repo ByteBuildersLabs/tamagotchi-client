@@ -7,9 +7,11 @@ import { SleepScreen } from "../components/screens/Sleep/SleepScreen";
 import { FeedScreen } from "../components/screens/Feed/FeedScreen";
 import { CleanScreen } from "../components/screens/Clean/CleanScreen";
 import { PlayScreen } from "../components/screens/Play/PlayScreen";
+import { GameScreen } from "../components/screens/Play/components/GameScreen";
 import { LoginScreen } from "../components/screens/Login/LoginScreen";
 import { NavBar } from "../components/layout/NavBar";
 import type { Screen } from "../components/types/screens";
+import { GameId } from "../components/types/play.types";
 
 // Beast params generation imports
 import { generateRandomBeastParams } from "../utils/beastHelpers";
@@ -25,6 +27,7 @@ import useAppStore from "../zustand/store";
 function AppContent() {
   const [currentScreen, setCurrentScreenState] = useState<Screen>("login");
   const [playerAddress] = useState("0x123"); // Temporary address
+  const [currentGameId, setCurrentGameId] = useState<GameId | null>(null);
   
   // State for predefined beast parameters
   const [pendingBeastParams, setPendingBeastParams] = useState<BeastSpawnParams | null>(null);
@@ -32,7 +35,7 @@ function AppContent() {
   // Get sleep logic for navigation blocking
   const { shouldBlockNavigation } = useSleepLogic();
 
-  // Wallet management for cache cleanup
+  // Wallet and cache management
   const { account } = useAccount();
   const resetStore = useAppStore(state => state.resetStore);
 
@@ -89,7 +92,8 @@ function AppContent() {
     }
   }, []); // Only run once on mount
 
-  const handleNavigation = (screen: Screen) => {
+  // Updated navigation handler to support games
+  const handleNavigation = (screen: Screen, gameId?: GameId) => {
     // Block navigation when beast is sleeping, except to sleep screen
     if (shouldBlockNavigation && screen !== "sleep") {
       toast.error("Your beast is sleeping! 😴 Wake them up first.", {
@@ -107,15 +111,35 @@ function AppContent() {
       return; // Block navigation
     }
 
+    // Handle game navigation
+    if (screen === "game" && gameId) {
+      console.log(`🎮 Navigating to game: ${gameId}`);
+      setCurrentGameId(gameId);
+      setCurrentScreenState("game");
+      return;
+    }
+
     // Generate parameters when navigating to hatch
     if (screen === "hatch") {
       const beastParams = generateRandomBeastParams();
       setPendingBeastParams(beastParams);
     }
     
+    // Clear game state when leaving game screen
+    if (currentScreen === "game") {
+      setCurrentGameId(null);
+    }
+    
     // NORMAL NAVIGATION
     setCurrentScreenState(screen);
   };
+
+  // Handle exiting games back to play screen
+  const handleExitGame = useCallback(() => {
+    console.log('🔙 Exiting game, returning to play screen');
+    setCurrentGameId(null);
+    setCurrentScreenState("play");
+  }, []);
 
   // Callback for when Login completes - dynamic navigation based on beast status
   const handleLoginComplete = useCallback((destination: 'hatch' | 'cover') => {
@@ -209,8 +233,24 @@ function AppContent() {
         />
       )}
 
-      {/* NavBar - Pass shouldBlockNavigation for visual feedback */}
-      {currentScreen !== "cover" && currentScreen !== "login" && currentScreen !== "hatch" && (
+      {/* Game Screen for mini-games */}
+      {currentScreen === "game" && currentGameId && (
+        <GameScreen
+          gameId={currentGameId}
+          onExitGame={handleExitGame} dojoContext={{
+            client: undefined,
+            account: undefined,
+            handleAction: function (_actionName: string): Promise<any> {
+              throw new Error("Function not implemented.");
+            }
+          }}        />
+      )}
+
+      {/* NavBar - Hide on game screen for fullscreen experience */}
+      {currentScreen !== "cover" && 
+       currentScreen !== "login" && 
+       currentScreen !== "hatch" && 
+       currentScreen !== "game" && (
         <NavBar
           activeTab={currentScreen as "home" | "sleep" | "feed" | "clean" | "play"}
           onNavigation={handleNavigation}

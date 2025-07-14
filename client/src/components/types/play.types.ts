@@ -13,13 +13,13 @@ export interface MiniGame {
   description: string;
   icon: string;
   isActive: boolean;
-  component?: React.ComponentType<MiniGameScreenProps>;
+  component?: React.ComponentType<MiniGameScreenProps>; // Optional until implemented
 }
 
 // Props that all mini-game screen components will receive
 export interface MiniGameScreenProps {
   // Navigation - only for returning to play screen
-  onExitGame: () => void; 
+  onExitGame: () => void; // Returns to PlayScreen
   gameId: GameId;
   
   // Beast data
@@ -31,7 +31,9 @@ export interface MiniGameScreenProps {
   playerAddress: string;
   
   // Dojo integration
-  dojoContext: DojoContext;
+  handleAction?: (actionName: string, actionFn: () => Promise<any>) => Promise<any>;
+  client?: any;
+  account?: any;
 }
 
 // Result returned when game completes
@@ -59,11 +61,11 @@ export interface ScoreRange {
   label: string;
 }
 
-// Dojo context passed to mini-games
+// Dojo context passed to mini-games (simplified)
 export interface DojoContext {
-  client: any;
-  account: any;
-  handleAction: (actionName: string, actionFn: () => Promise<any>) => Promise<any>;
+  client?: any;
+  account?: any;
+  handleAction?: (actionName: string, actionFn: () => Promise<any>) => Promise<any>;
 }
 
 // Game statistics for tracking

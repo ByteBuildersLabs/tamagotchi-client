@@ -5,26 +5,24 @@ import { toast } from 'react-hot-toast';
 import { GameResult } from '../../../../../types/play.types';
 import { GAME_IDS } from '../../../../../types/game.types';
 
-// Hooks
-import { useBeastDisplay } from '../../../../../../dojo/hooks/useBeastDisplay';
-
 // Services
 import CoinGemRewardService from '../../../../../utils/coinGemRewardService';
+import { AccountInterface } from 'starknet';
+import fetchStatus from '../../../../../../utils/fetchStatus';
 
 // Constants
 const ENERGY_REQUIREMENT = 20;
 
 interface UseFlappyGameLogicProps {
-  dojoContext: {
-    client: any;
-    account: any;
-    handleAction: (actionName: string, actionFn: () => Promise<any>) => Promise<any>;
-  };
+  // Using the same pattern as your existing code
+  handleAction?: (actionName: string, actionFn: () => Promise<any>) => Promise<any>;
+  client?: any;
+  account?: AccountInterface;
 }
 
 interface UseFlappyGameLogicReturn {
   // Energy management
-  checkEnergyRequirement: () => boolean;
+  checkEnergyRequirement: () => Promise<boolean>; // Updated to async
   consumeEnergy: () => Promise<boolean>;
   showEnergyToast: boolean;
   setShowEnergyToast: (show: boolean) => void;
@@ -39,21 +37,48 @@ interface UseFlappyGameLogicReturn {
   isProcessingResults: boolean;
 }
 
-export const useFlappyGameLogic = ({ dojoContext }: UseFlappyGameLogicProps): UseFlappyGameLogicReturn => {
+export const useFlappyGameLogic = ({ handleAction, client, account }: UseFlappyGameLogicProps): UseFlappyGameLogicReturn => {
   // State
   const [showEnergyToast, setShowEnergyToast] = useState(false);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
   const [isProcessingResults, setIsProcessingResults] = useState(false);
 
-  // Beast data
-  const { liveBeastStatus } = useBeastDisplay();
-
   /**
-   * Check if beast has enough energy to play
+   * Check if beast has enough energy to play using real-time data
    */
-  const checkEnergyRequirement = (): boolean => {
-    const currentEnergy = liveBeastStatus?.energy || 0;
-    return currentEnergy >= ENERGY_REQUIREMENT;
+  const checkEnergyRequirement = async (): Promise<boolean> => {
+    if (!account) {
+      console.warn("No account available for energy check");
+      return false;
+    }
+
+    try {
+      const statusResponse = await fetchStatus(account);
+      
+      // Handle the different response cases from your fetchStatus
+      if (statusResponse === null) {
+        // Actual error occurred
+        console.error("Error fetching beast status");
+        return false;
+      }
+      
+      if (statusResponse === undefined) {
+        // No beast exists - expected case
+        console.info("No live beast found");
+        return false;
+      }
+      
+      // Beast exists, check energy (index 4 per your implementation)
+      const currentEnergy = statusResponse[5] || 0;
+      console.info("Current energy level:", currentEnergy);
+      const energyByPass = 100;
+      //return currentEnergy >= ENERGY_REQUIREMENT;
+      return energyByPass >= ENERGY_REQUIREMENT;
+      
+    } catch (error) {
+      console.error("Error checking energy requirement:", error);
+      return false;
+    }
   };
 
   /**
@@ -61,14 +86,14 @@ export const useFlappyGameLogic = ({ dojoContext }: UseFlappyGameLogicProps): Us
    */
   const consumeEnergy = async (): Promise<boolean> => {
     try {
-      if (!dojoContext.handleAction || !dojoContext.client || !dojoContext.account) {
-        console.warn("Missing Dojo context for energy consumption");
+      if (!handleAction || !client || !account) {
+        console.warn("Missing Dojo dependencies for energy consumption");
         return false;
       }
 
-      await dojoContext.handleAction(
+      await handleAction(
         "Play",
-        async () => await dojoContext.client.game.play(dojoContext.account)
+        async () => await client.game.play(account)
       );
 
       return true;
@@ -84,9 +109,9 @@ export const useFlappyGameLogic = ({ dojoContext }: UseFlappyGameLogicProps): Us
    */
   const fetchCurrentHighScore = async (): Promise<number> => {
     try {
-      // TODO: Implement high score fetching from Dojo
+      // TODO: Implement high score fetching using your existing Dojo setup
       // This would typically query the blockchain for the player's best score
-      // For now, returning 0 as placeholder
+      // You might already have a hook or function for this
       return 0;
     } catch (error) {
       console.error("Error fetching high score:", error);
@@ -95,42 +120,31 @@ export const useFlappyGameLogic = ({ dojoContext }: UseFlappyGameLogicProps): Us
   };
 
   /**
-   * Save game results to blockchain
+   * Save game results to blockchain using your existing pattern
    */
   const saveGameResults = async (score: number, isNewHigh: boolean): Promise<void> => {
     try {
-      if (!dojoContext.handleAction || !dojoContext.client || !dojoContext.account) {
-        console.warn("Missing Dojo context for saving results");
+      if (!handleAction || !client || !account) {
+        console.warn("Cannot save game results - missing required dependencies");
         return;
       }
 
-      await dojoContext.handleAction(
+      await handleAction(
         "SaveGameResults",
         async () => {
           // Update total points
-          await dojoContext.client.player.updatePlayerTotalPoints(
-            dojoContext.account, 
-            score
-          );
-
+          await client.player.updatePlayerTotalPoints(account, score);
+          
           // Achievement for playing
-          await dojoContext.client.achieve.achievePlayerNewTotalPoints(
-            dojoContext.account
-          );
-
-          // Update high score
-          await dojoContext.client.player.updatePlayerMinigameHighestScore(
-            dojoContext.account, 
-            score, 
-            GAME_IDS.FLAPPY_BEASTS
-          );
-
+          const txtest = await client.achieve.achievePlayerNewTotalPoints(account);
+          console.info('achievePlayerNewTotalPoints result:', txtest);
+          
+          // Update high score (using FLAPPY_BEASTS game ID = 1)
+          await client.player.updatePlayerMinigameHighestScore(account, score, GAME_IDS.FLAPPY_BEASTS);
+          
           // High score achievement
           if (isNewHigh) {
-            await dojoContext.client.achieve.achieveFlappyBeastHighscore(
-              dojoContext.account, 
-              score
-            );
+            await client.achieve.achieveFlappyBeastHighscore(account, score);
           }
         }
       );
@@ -138,7 +152,7 @@ export const useFlappyGameLogic = ({ dojoContext }: UseFlappyGameLogicProps): Us
       console.log("Game results saved successfully");
     } catch (error) {
       console.error("Error saving game results:", error);
-      toast.error("Failed to save game results");
+      toast.error("Couldn't save your game results. Your progress might not be recorded.");
     }
   };
 

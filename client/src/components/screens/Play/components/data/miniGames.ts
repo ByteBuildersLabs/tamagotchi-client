@@ -2,9 +2,9 @@ import { MiniGame, GameId } from "../../../../types/play.types";
 import flappyGameIcon from "../../../../../assets/icons/games/flappy.png";
 import platformGameIcon from "../../../../../assets/icons/games/platform.png";
 
-// Import mini-game screen components (will be created in next step)
-// import { FlappyBeastsScreen } from "../../../Game/FlappyBeastsScreen";
-// import { PlatformJumpScreen } from "../../../Game/PlatformJumpScreen";
+// Import mini-game screen components
+import FlappyBeastsScreen from "../minigames/flappybeast/FlappyBeastsScreen";
+// import { PlatformJumpScreen } from "../../../Game/PlatformJumpScreen"; // Will implement later
 
 /**
  * Registry of all available mini-games
@@ -17,7 +17,7 @@ export const MINI_GAMES: MiniGame[] = [
     description: "Guide your beast through obstacles by tapping to fly!",
     icon: flappyGameIcon,
     isActive: true,
-    // component: FlappyBeastsScreen, // Will uncomment when component is ready
+    component: FlappyBeastsScreen, // ✅ ACTIVATED!
   },
   {
     id: GameId.PLATFORM_JUMP,
@@ -56,4 +56,12 @@ export const isGameAvailable = (gameId: GameId): boolean => {
  */
 export const getTotalAvailableGames = (): number => {
   return getAvailableGames().length;
+};
+
+/**
+ * Check if a game has a component ready for rendering
+ */
+export const hasGameComponent = (gameId: GameId): boolean => {
+  const game = getGameById(gameId);
+  return !!(game && game.component);
 };

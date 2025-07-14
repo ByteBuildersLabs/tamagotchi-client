@@ -7,11 +7,11 @@ import { useFlappyGameLogic } from '../flappybeast/useFlappyGameLogic';
 import { MiniGameScreenProps, GameResult } from '../../../../../types/play.types';
 
 // Assets
-import skyBackground from '../../../../assets/games/flappy/bg-sky.png';
-import landBackground from '../../../../assets/games/flappy/bg-land.png';
-import ceilingBackground from '../../../../assets/games/flappy/bg-ceiling.png';
-import pipeUpImage from '../../../../assets/games/flappy/img-pipe-up.png';
-import pipeDownImage from '../../../../assets/games/flappy/img-pipe-down.png';
+import skyBackground from '../../../../../../assets/icons/games/flappy-beasts-assets/bg-sky.png';
+import landBackground from '../../../../../../assets/icons/games/flappy-beasts-assets/bg-land.png';
+import ceilingBackground from '../../../../../../assets/icons/games/flappy-beasts-assets/bg-ceiling.png';
+import pipeUpImage from '../../../../../../assets/icons/games/flappy-beasts-assets/img-pipe-up.png';
+import pipeDownImage from '../../../../../../assets/icons/games/flappy-beasts-assets/img-pipe-up.png';
 
 // Game Constants
 const PIPE_GAP = 160;
@@ -68,7 +68,9 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
   onExitGame,
   beastImage,
   beastDisplayName,
-  dojoContext
+  handleAction,
+  client,
+  account
 }, ref) => {
   // Game state
   const [gameActive, setGameActive] = useState(false);
@@ -85,7 +87,7 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
     setShowEnergyToast,
     handleGameCompletion,
     isProcessingResults
-  } = useFlappyGameLogic({ dojoContext });
+  } = useFlappyGameLogic({ handleAction, client, account });
 
   // Refs
   const gameContainerRef = useRef<HTMLDivElement>(null);
@@ -291,20 +293,21 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
   };
 
   // Start game
-  const startGame = async () => {
+    const startGame = async () => {
     if (gameConfig.current.running) return;
 
-    // Check energy requirement
-    if (!checkEnergyRequirement()) {
-      setShowEnergyToast(true);
-      setTimeout(() => setShowEnergyToast(false), 3000);
-      return;
+    // Check energy requirement (now async)
+    const hasEnoughEnergy = await checkEnergyRequirement();
+    if (!hasEnoughEnergy) {
+        setShowEnergyToast(true);
+        setTimeout(() => setShowEnergyToast(false), 3000);
+        return;
     }
 
     // Consume energy via the hook
     const energyConsumed = await consumeEnergy();
     if (!energyConsumed) {
-      return; // Error already handled by the hook
+        return; // Error already handled by the hook
     }
 
     // Initialize game
@@ -314,7 +317,7 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
     game.velocity = 0;
 
     if (beastRef.current) {
-      beastRef.current.style.transform = `translateY(${game.birdY}px) rotate(0deg)`;
+        beastRef.current.style.transform = `translateY(${game.birdY}px) rotate(0deg)`;
     }
 
     setGameActive(true);
@@ -326,9 +329,9 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
 
     // Auto jump at start
     setTimeout(() => {
-      if (game.running) jump();
+        if (game.running) jump();
     }, 150);
-  };
+    };
 
   // End game
   const endGame = () => {
