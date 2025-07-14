@@ -1,19 +1,10 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { motion } from "framer-motion";
-import { toast } from 'react-hot-toast';
-
-// Types
-import { MiniGameScreenProps, GameResult } from '../../../../../types/play.types';
-import { GAME_IDS } from '../../../../../types/game.types';
-
-// Hooks
-import { useBeastDisplay } from '../../../../../../dojo/hooks/useBeastDisplay';
-
-// Services
-import CoinGemRewardService from '../../../../../utils/coinGemRewardService';
 
 // Components
 import { GameOverModal } from '../GameOverModal';
+import { useFlappyGameLogic } from '../flappybeast/useFlappyGameLogic';
+import { MiniGameScreenProps, GameResult } from '../../../../../types/play.types';
 
 // Assets
 import skyBackground from '../../../../assets/games/flappy/bg-sky.png';
@@ -30,7 +21,6 @@ const JUMP_FORCE = -6.5;
 const BIRD_WIDTH = 52;
 const BIRD_HEIGHT = 52;
 const PIPE_WIDTH = 52;
-const ENERGY_REQUIREMENT = 30;
 
 // Speed parameters
 const BASE_PIPE_SPEED = 180;
@@ -84,11 +74,18 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
   const [gameActive, setGameActive] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
-  const [setFinalScore] = useState(0);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
-  const [showEnergyToast, setShowEnergyToast] = useState(false);
-  const [setIsNewHighScore] = useState(false);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
+
+  // Game logic hook (handles all transactions and rewards)
+  const {
+    checkEnergyRequirement,
+    consumeEnergy,
+    showEnergyToast,
+    setShowEnergyToast,
+    handleGameCompletion,
+    isProcessingResults
+  } = useFlappyGameLogic({ dojoContext });
 
   // Refs
   const gameContainerRef = useRef<HTMLDivElement>(null);
@@ -114,9 +111,6 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
     pipeSpeedPPS: BASE_PIPE_SPEED,
   });
 
-  // Get beast data
-  const { liveBeastStatus } = useBeastDisplay();
-
   // Adjust pipe speed based on score
   useEffect(() => {
     const nextSpeed = BASE_PIPE_SPEED + score * SPEED_FACTOR;
@@ -130,12 +124,6 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
       resetGame();
     }
   }));
-
-  // Check energy before allowing play
-  const checkEnergyRequirement = (): boolean => {
-    const currentEnergy = liveBeastStatus?.energy || 0;
-    return currentEnergy >= ENERGY_REQUIREMENT;
-  };
 
   // Create a new pipe
   const createPipe = () => {
@@ -306,27 +294,20 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
   const startGame = async () => {
     if (gameConfig.current.running) return;
 
-    // Check energy
+    // Check energy requirement
     if (!checkEnergyRequirement()) {
       setShowEnergyToast(true);
       setTimeout(() => setShowEnergyToast(false), 3000);
       return;
     }
 
-    // Consume energy via Dojo
-    try {
-      if (dojoContext.handleAction && dojoContext.client && dojoContext.account) {
-        await dojoContext.handleAction(
-          "Play",
-          async () => await dojoContext.client.game.play(dojoContext.account)
-        );
-      }
-    } catch (error) {
-      console.error("Error consuming energy:", error);
-      toast.error("Failed to start game");
-      return;
+    // Consume energy via the hook
+    const energyConsumed = await consumeEnergy();
+    if (!energyConsumed) {
+      return; // Error already handled by the hook
     }
 
+    // Initialize game
     const game = gameConfig.current;
     game.running = true;
     game.birdY = game.gameHeight / 2 - BIRD_HEIGHT / 2;
@@ -364,55 +345,14 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
     handleGameEnd();
   };
 
-  // Handle game completion
+  // Handle game completion (simplified - logic moved to hook)
   const handleGameEnd = async () => {
     const finalScore = currentScoreRef.current;
-    setFinalScore(finalScore);
-
-    // Calculate rewards
-    const rewards = CoinGemRewardService.calculateCoinReward(GAME_IDS.FLAPPY_BEASTS, finalScore);
     
-    // Check for high score (you'll need to implement high score fetching)
-    const isNewHigh = false; // TODO: Check against stored high score
-    setIsNewHighScore(isNewHigh);
-
-    // Save results to Dojo
-    try {
-      if (dojoContext.handleAction && dojoContext.client && dojoContext.account) {
-        await dojoContext.handleAction(
-          "SaveGameResults",
-          async () => {
-            await dojoContext.client.player.updatePlayerTotalPoints(dojoContext.account, finalScore);
-            await dojoContext.client.achieve.achievePlayerNewTotalPoints(dojoContext.account);
-            await dojoContext.client.player.updatePlayerMinigameHighestScore(dojoContext.account, finalScore, GAME_IDS.FLAPPY_BEASTS);
-            
-            if (isNewHigh) {
-              await dojoContext.client.achieve.achieveFlappyBeastHighscore(dojoContext.account, finalScore);
-            }
-          }
-        );
-      }
-    } catch (error) {
-      console.error("Error saving game results:", error);
-    }
-
-    // Create game result
-    const gameResult: GameResult = {
-      score: finalScore,
-      rewards: {
-        coins: rewards.coins,
-        gems: rewards.gems,
-        range: rewards.range,
-        percentage: rewards.percentage
-      },
-      isNewHighScore: isNewHigh,
-      gameData: {
-        tier: rewards.range.label,
-        accuracy: finalScore > 0 ? Math.round((finalScore / (finalScore + 1)) * 100) : 0
-      }
-    };
-
-    setGameResult(gameResult);
+    // Use the hook to handle all the complex logic
+    const result = await handleGameCompletion(finalScore);
+    
+    setGameResult(result);
     setShowGameOverModal(true);
   };
 
@@ -555,7 +495,7 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
       >
         {/* Sky background */}
         <div
-          className="absolute inset-0 z-0 animate-pulse"
+          className="absolute inset-0 z-0"
           style={{
             backgroundImage: `url(${skyBackground})`,
             backgroundRepeat: 'repeat-x',
@@ -633,9 +573,10 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
               <p className="text-white/90 mb-6">Avoid obstacles</p>
               <button
                 onClick={startGame}
-                className="bg-white text-red-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-colors"
+                disabled={isProcessingResults}
+                className="bg-white text-red-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                START
+                {isProcessingResults ? "Processing..." : "START"}
               </button>
             </div>
           </motion.div>
@@ -658,7 +599,21 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
             className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-lg z-50 flex items-center gap-2"
           >
             <span className="text-lg">⚠️</span>
-            <span>Your beast needs at least {ENERGY_REQUIREMENT} energy to play!</span>
+            <span>Your beast needs at least 30 energy to play!</span>
+          </motion.div>
+        )}
+
+        {/* Processing Results Overlay */}
+        {isProcessingResults && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-black/50 z-60 flex items-center justify-center"
+          >
+            <div className="bg-white rounded-lg p-6 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-700">Saving results...</p>
+            </div>
           </motion.div>
         )}
       </div>
@@ -678,7 +633,7 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
       )}
 
       {/* CSS Animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes skyMove {
           0% { background-position: 0px 100%; }
           100% { background-position: -275px 100%; }
