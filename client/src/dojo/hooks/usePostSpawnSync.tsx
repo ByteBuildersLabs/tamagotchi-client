@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
-import { useRealTimeStatus } from './useRealTimeStatus';
+import { useAccount } from '@starknet-react/core';
 import { useLiveBeast } from './useLiveBeast';
 import useAppStore from '../../zustand/store';
+import fetchStatus from '../../utils/fetchStatus';
 
 interface PostSpawnSyncResult {
   success: boolean;
@@ -10,9 +11,12 @@ interface PostSpawnSyncResult {
 }
 
 export const usePostSpawnSync = () => {
-  const { fetchLatestStatus } = useRealTimeStatus();
+  const { account } = useAccount();
+  
+  // Use correct function name from useLiveBeast
   const { forceRefetch: refetchLiveBeast } = useLiveBeast();
   const clearRealTimeStatus = useAppStore(state => state.clearRealTimeStatus);
+  const setRealTimeStatus = useAppStore(state => state.setRealTimeStatus);
   
   const syncAfterSpawn = useCallback(async (
     txHash?: string, 
@@ -22,6 +26,14 @@ export const usePostSpawnSync = () => {
       txHash: txHash?.slice(0, 10) + '...', 
       expectedParams 
     });
+    
+    if (!account) {
+      return {
+        success: false,
+        finalBeastId: null,
+        error: 'No account available'
+      };
+    }
     
     try {
       // Clear previous state to force fresh fetch
@@ -39,21 +51,28 @@ export const usePostSpawnSync = () => {
       
       while (contractRetries > 0 && !contractBeastId) {
         try {
-          await fetchLatestStatus();
+          // Use direct fetchStatus
+          const contractStatus = await fetchStatus(account);
           
-          // Check if we have contract data
-          const currentState = useAppStore.getState();
-          if (currentState.realTimeStatus.length >= 10) {
-            contractBeastId = currentState.realTimeStatus[1];
-            const isAlive = Boolean(currentState.realTimeStatus[2]);
+          // Handle fetchStatus results properly
+          if (contractStatus && contractStatus.length >= 10) {
+            contractBeastId = contractStatus[1];
+            const isAlive = Boolean(contractStatus[2]);
             
             if (contractBeastId && isAlive) {
               console.log('✅ Contract status fetched successfully:', {
                 beast_id: contractBeastId,
                 is_alive: isAlive
               });
+              
+              // Update store with fresh contract data
+              setRealTimeStatus(contractStatus);
               break;
             }
+          } else if (contractStatus === undefined) {
+            console.log('⚠️ No beast found in contract yet...');
+          } else {
+            console.log('❌ Contract call failed');
           }
           
           contractRetries--;
@@ -140,7 +159,7 @@ export const usePostSpawnSync = () => {
       } else {
         // Partial success - contract OK but Torii lag
         if (contractBeastId && !toriiSuccess) {
-          console.log('⚠️ Partial success: Contract OK, Torii will sync eventually');
+          console.log('✅ Partial success: Contract OK, Torii will sync eventually');
           return {
             success: true, // Contract-first approach: this is enough
             finalBeastId: contractBeastId
@@ -160,7 +179,7 @@ export const usePostSpawnSync = () => {
         error: errorMessage
       };
     }
-  }, [fetchLatestStatus, refetchLiveBeast, clearRealTimeStatus]);
+  }, [account, refetchLiveBeast, clearRealTimeStatus, setRealTimeStatus]);
   
   return { syncAfterSpawn };
 };
