@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 
 // Layout and shared components
@@ -7,6 +7,9 @@ import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 
 // Universal hook for beast display
 import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
+
+// Music Context
+import { useMusic } from "../../../context/MusicContext";
 
 // Feed components
 import { Beast } from "./components/beasts";
@@ -25,6 +28,9 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
   const constraintsRef = useRef(null);
   const portalRoot = usePortal();
   
+  // Music context
+  const { setCurrentScreen } = useMusic();
+  
   // Get current beast data
   const {
     currentBeastDisplay,
@@ -32,6 +38,11 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
     hasLiveBeast,
     isLoading: beastLoading
   } = useBeastDisplay();
+  
+  // Set current screen for music control
+  useEffect(() => {
+    setCurrentScreen("feed");
+  }, [setCurrentScreen]);
   
   // Get complete feeding logic (includes food inventory + transactions)
   const {

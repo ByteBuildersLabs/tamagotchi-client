@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { TamagotchiTopBar } from "../../layout/TopBar";
 import { NavBar } from "../../layout/NavBar";
 import { PlayScreenProps } from "../../types/play.types";
@@ -8,6 +9,9 @@ import playBackground from "../../../assets/backgrounds/bg-play.png";
 // Universal hook for beast display
 import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 
+// Music Context
+import { useMusic } from "../../../context/MusicContext";
+
 // Data
 import { MINI_GAMES } from "./components/data/miniGames";
 
@@ -16,6 +20,9 @@ import { BeastPlayDisplay } from "./components/BeastDisplay";
 import { GameCarousel } from "./components/GameCarousel";
 
 export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
+  // Music context
+  const { setCurrentScreen } = useMusic();
+
   // Universal hook - gets the player's current beast
   const {
     currentBeastDisplay,
@@ -23,6 +30,11 @@ export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
     hasLiveBeast,
     isLoading
   } = useBeastDisplay();
+
+  // Set current screen for music control
+  useEffect(() => {
+    setCurrentScreen("play");
+  }, [setCurrentScreen]);
 
   const handleMiniGameSelect = (gameId: string) => {
     console.log(`Selected mini-game: ${gameId}`);
