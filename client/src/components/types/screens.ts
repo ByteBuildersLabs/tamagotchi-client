@@ -7,5 +7,6 @@ export type Screen =
   | "feed"
   | "clean"
   | "play"
+  | "game"    
   | "profile"
   | "market";

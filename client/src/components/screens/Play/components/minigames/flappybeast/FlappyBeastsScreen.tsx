@@ -1,0 +1,703 @@
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { motion } from "framer-motion";
+import { toast } from 'react-hot-toast';
+
+// Types
+import { MiniGameScreenProps, GameResult } from '../../../../../types/play.types';
+import { GAME_IDS } from '../../../../../types/game.types';
+
+// Hooks
+import { useBeastDisplay } from '../../../../../../dojo/hooks/useBeastDisplay';
+
+// Services
+import CoinGemRewardService from '../../../../../utils/coinGemRewardService';
+
+// Components
+import { GameOverModal } from '../GameOverModal';
+
+// Assets
+import skyBackground from '../../../../assets/games/flappy/bg-sky.png';
+import landBackground from '../../../../assets/games/flappy/bg-land.png';
+import ceilingBackground from '../../../../assets/games/flappy/bg-ceiling.png';
+import pipeUpImage from '../../../../assets/games/flappy/img-pipe-up.png';
+import pipeDownImage from '../../../../assets/games/flappy/img-pipe-down.png';
+
+// Game Constants
+const PIPE_GAP = 160;
+const PIPE_INTERVAL = 1700;
+const GRAVITY = 9.8;
+const JUMP_FORCE = -6.5;
+const BIRD_WIDTH = 52;
+const BIRD_HEIGHT = 52;
+const PIPE_WIDTH = 52;
+const ENERGY_REQUIREMENT = 30;
+
+// Speed parameters
+const BASE_PIPE_SPEED = 180;
+const SPEED_FACTOR = 2;
+const MAX_PIPE_SPEED = 600;
+
+// Collider settings
+const COLLIDER_MARGIN = 10;
+const BIRD_COLLIDER_WIDTH = 30;
+const BIRD_COLLIDER_HEIGHT = 30;
+const PIPE_COLLIDER_WIDTH = PIPE_WIDTH - (COLLIDER_MARGIN * 2);
+
+const BIRD_COLLIDER_OFFSET_X = (BIRD_WIDTH - BIRD_COLLIDER_WIDTH) / 2;
+const BIRD_COLLIDER_OFFSET_Y = (BIRD_HEIGHT - BIRD_COLLIDER_HEIGHT) / 2;
+
+interface FlappyBeastRef {
+  resetGame: () => void;
+}
+
+interface Pipe {
+  x: number;
+  topHeight: number;
+  bottomY: number;
+  scored: boolean;
+  element: HTMLDivElement;
+  topElement: HTMLDivElement;
+  bottomElement: HTMLDivElement;
+}
+
+interface GameConfig {
+  birdX: number;
+  birdY: number;
+  velocity: number;
+  pipes: Pipe[];
+  gravity: number;
+  jumpForce: number;
+  gameWidth: number;
+  gameHeight: number;
+  running: boolean;
+  lastTimestamp: number;
+  pipeSpeedPPS: number;
+}
+
+const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
+  onExitGame,
+  beastImage,
+  beastDisplayName,
+  dojoContext
+}, ref) => {
+  // Game state
+  const [gameActive, setGameActive] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [score, setScore] = useState(0);
+  const [setFinalScore] = useState(0);
+  const [showGameOverModal, setShowGameOverModal] = useState(false);
+  const [showEnergyToast, setShowEnergyToast] = useState(false);
+  const [setIsNewHighScore] = useState(false);
+  const [gameResult, setGameResult] = useState<GameResult | null>(null);
+
+  // Refs
+  const gameContainerRef = useRef<HTMLDivElement>(null);
+  const beastRef = useRef<HTMLDivElement>(null);
+  const pipesRef = useRef<HTMLDivElement>(null);
+  const scoreRef = useRef<HTMLDivElement>(null);
+  const animationFrameId = useRef<number>(0);
+  const lastPipeTime = useRef<number>(0);
+  const currentScoreRef = useRef<number>(0);
+
+  // Game configuration
+  const gameConfig = useRef<GameConfig>({
+    birdX: 60,
+    birdY: 0,
+    velocity: 0,
+    pipes: [],
+    gravity: GRAVITY,
+    jumpForce: JUMP_FORCE,
+    gameWidth: 360,
+    gameHeight: 576,
+    running: false,
+    lastTimestamp: 0,
+    pipeSpeedPPS: BASE_PIPE_SPEED,
+  });
+
+  // Get beast data
+  const { liveBeastStatus } = useBeastDisplay();
+
+  // Adjust pipe speed based on score
+  useEffect(() => {
+    const nextSpeed = BASE_PIPE_SPEED + score * SPEED_FACTOR;
+    const clamped = Math.min(nextSpeed, MAX_PIPE_SPEED);
+    gameConfig.current.pipeSpeedPPS = clamped;
+  }, [score]);
+
+  // Expose resetGame to parent
+  useImperativeHandle(ref, () => ({
+    resetGame: () => {
+      resetGame();
+    }
+  }));
+
+  // Check energy before allowing play
+  const checkEnergyRequirement = (): boolean => {
+    const currentEnergy = liveBeastStatus?.energy || 0;
+    return currentEnergy >= ENERGY_REQUIREMENT;
+  };
+
+  // Create a new pipe
+  const createPipe = () => {
+    if (!pipesRef.current || !gameContainerRef.current) return;
+
+    const game = gameConfig.current;
+    const gameHeight = game.gameHeight;
+
+    const minHeight = Math.floor(gameHeight * 0.1);
+    const maxHeight = Math.floor(gameHeight * 0.6);
+    const topHeight = Math.floor(Math.random() * (maxHeight - minHeight)) + minHeight;
+    const bottomY = topHeight + PIPE_GAP;
+
+    // Create pipe elements
+    const pipeContainer = document.createElement('div');
+    pipeContainer.className = 'absolute z-10';
+    pipeContainer.style.width = `${PIPE_WIDTH}px`;
+    pipeContainer.style.left = `${game.gameWidth}px`;
+    pipeContainer.style.height = '100%';
+
+    const topPipe = document.createElement('div');
+    topPipe.className = 'absolute top-0';
+    topPipe.style.height = `${topHeight}px`;
+    topPipe.style.width = `${PIPE_WIDTH}px`;
+    topPipe.style.backgroundImage = `url(${pipeUpImage})`;
+    topPipe.style.backgroundRepeat = 'repeat-y';
+    topPipe.style.backgroundPosition = 'center';
+
+    const bottomPipe = document.createElement('div');
+    bottomPipe.className = 'absolute bottom-0';
+    bottomPipe.style.height = `${gameHeight - bottomY}px`;
+    bottomPipe.style.width = `${PIPE_WIDTH}px`;
+    bottomPipe.style.top = `${bottomY}px`;
+    bottomPipe.style.backgroundImage = `url(${pipeDownImage})`;
+    bottomPipe.style.backgroundRepeat = 'repeat-y';
+    bottomPipe.style.backgroundPosition = 'center';
+
+    pipeContainer.appendChild(topPipe);
+    pipeContainer.appendChild(bottomPipe);
+    pipesRef.current.appendChild(pipeContainer);
+
+    // Add pipe to game state
+    game.pipes.push({
+      x: game.gameWidth,
+      topHeight,
+      bottomY,
+      scored: false,
+      element: pipeContainer,
+      topElement: topPipe,
+      bottomElement: bottomPipe
+    });
+  };
+
+  // Remove off-screen pipes
+  const removePipes = () => {
+    const game = gameConfig.current;
+    game.pipes = game.pipes.filter(pipe => {
+      if (pipe.x + PIPE_WIDTH < 0) {
+        if (pipe.element.parentNode) {
+          pipe.element.parentNode.removeChild(pipe.element);
+        }
+        return false;
+      }
+      return true;
+    });
+  };
+
+  // Update bird position
+  const updateBird = (dt: number) => {
+    const game = gameConfig.current;
+
+    // Apply gravity
+    game.velocity += game.gravity * dt;
+    const MAX_FALL_SPEED = 15;
+    if (game.velocity > MAX_FALL_SPEED) game.velocity = MAX_FALL_SPEED;
+
+    // Update position
+    game.birdY += game.velocity * dt * 60;
+
+    // Update visual position
+    if (beastRef.current) {
+      beastRef.current.style.transform = `translateY(${game.birdY}px) rotate(${Math.min(Math.max(game.velocity * 3, -30), 90)}deg)`;
+    }
+
+    // Check boundaries
+    if (game.birdY < 0) {
+      game.birdY = 0;
+      game.velocity = 0;
+    } else if (game.birdY > game.gameHeight - BIRD_HEIGHT) {
+      endGame();
+    }
+  };
+
+  // Update pipes
+  const updatePipes = (dt: number) => {
+    const game = gameConfig.current;
+    const pipeSpeed = game.pipeSpeedPPS * dt;
+
+    game.pipes.forEach(pipe => {
+      // Move pipe
+      pipe.x -= pipeSpeed;
+      pipe.element.style.left = `${pipe.x}px`;
+
+      // Check scoring
+      if (!pipe.scored && pipe.x + PIPE_WIDTH < game.birdX) {
+        pipe.scored = true;
+        currentScoreRef.current += 1;
+        setScore(currentScoreRef.current);
+        if (scoreRef.current) {
+          scoreRef.current.textContent = `${currentScoreRef.current}`;
+        }
+      }
+
+      // Check collision
+      const birdColliderLeft = game.birdX + BIRD_COLLIDER_OFFSET_X;
+      const birdColliderTop = game.birdY + BIRD_COLLIDER_OFFSET_Y;
+      const birdColliderRight = birdColliderLeft + BIRD_COLLIDER_WIDTH;
+      const birdColliderBottom = birdColliderTop + BIRD_COLLIDER_HEIGHT;
+
+      const pipeColliderLeft = pipe.x + (PIPE_WIDTH - PIPE_COLLIDER_WIDTH) / 2;
+      const pipeColliderRight = pipeColliderLeft + PIPE_COLLIDER_WIDTH;
+
+      const topPipeColliderBottom = pipe.topHeight - COLLIDER_MARGIN;
+      const bottomPipeColliderTop = pipe.bottomY + COLLIDER_MARGIN;
+
+      if (
+        birdColliderRight > pipeColliderLeft &&
+        birdColliderLeft < pipeColliderRight &&
+        (birdColliderTop < topPipeColliderBottom || birdColliderBottom > bottomPipeColliderTop)
+      ) {
+        endGame();
+      }
+    });
+  };
+
+  // Game update loop
+  const update = (timestamp: number) => {
+    const game = gameConfig.current;
+
+    if (!game.running) return;
+
+    if (!game.lastTimestamp) {
+      game.lastTimestamp = timestamp;
+      animationFrameId.current = requestAnimationFrame(update);
+      return;
+    }
+
+    let dt = (timestamp - game.lastTimestamp) / 1000;
+    const MAX_DT = 0.1;
+    if (dt > MAX_DT) dt = MAX_DT;
+
+    game.lastTimestamp = timestamp;
+
+    // Create new pipes
+    if (timestamp - lastPipeTime.current > PIPE_INTERVAL) {
+      createPipe();
+      lastPipeTime.current = timestamp;
+    }
+
+    updateBird(dt);
+    updatePipes(dt);
+    removePipes();
+
+    animationFrameId.current = requestAnimationFrame(update);
+  };
+
+  // Start game
+  const startGame = async () => {
+    if (gameConfig.current.running) return;
+
+    // Check energy
+    if (!checkEnergyRequirement()) {
+      setShowEnergyToast(true);
+      setTimeout(() => setShowEnergyToast(false), 3000);
+      return;
+    }
+
+    // Consume energy via Dojo
+    try {
+      if (dojoContext.handleAction && dojoContext.client && dojoContext.account) {
+        await dojoContext.handleAction(
+          "Play",
+          async () => await dojoContext.client.game.play(dojoContext.account)
+        );
+      }
+    } catch (error) {
+      console.error("Error consuming energy:", error);
+      toast.error("Failed to start game");
+      return;
+    }
+
+    const game = gameConfig.current;
+    game.running = true;
+    game.birdY = game.gameHeight / 2 - BIRD_HEIGHT / 2;
+    game.velocity = 0;
+
+    if (beastRef.current) {
+      beastRef.current.style.transform = `translateY(${game.birdY}px) rotate(0deg)`;
+    }
+
+    setGameActive(true);
+    setGameOver(false);
+
+    createPipe();
+    lastPipeTime.current = performance.now();
+    animationFrameId.current = requestAnimationFrame(update);
+
+    // Auto jump at start
+    setTimeout(() => {
+      if (game.running) jump();
+    }, 150);
+  };
+
+  // End game
+  const endGame = () => {
+    if (!gameConfig.current.running) return;
+
+    gameConfig.current.running = false;
+    setGameActive(false);
+    setGameOver(true);
+
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+    }
+
+    handleGameEnd();
+  };
+
+  // Handle game completion
+  const handleGameEnd = async () => {
+    const finalScore = currentScoreRef.current;
+    setFinalScore(finalScore);
+
+    // Calculate rewards
+    const rewards = CoinGemRewardService.calculateCoinReward(GAME_IDS.FLAPPY_BEASTS, finalScore);
+    
+    // Check for high score (you'll need to implement high score fetching)
+    const isNewHigh = false; // TODO: Check against stored high score
+    setIsNewHighScore(isNewHigh);
+
+    // Save results to Dojo
+    try {
+      if (dojoContext.handleAction && dojoContext.client && dojoContext.account) {
+        await dojoContext.handleAction(
+          "SaveGameResults",
+          async () => {
+            await dojoContext.client.player.updatePlayerTotalPoints(dojoContext.account, finalScore);
+            await dojoContext.client.achieve.achievePlayerNewTotalPoints(dojoContext.account);
+            await dojoContext.client.player.updatePlayerMinigameHighestScore(dojoContext.account, finalScore, GAME_IDS.FLAPPY_BEASTS);
+            
+            if (isNewHigh) {
+              await dojoContext.client.achieve.achieveFlappyBeastHighscore(dojoContext.account, finalScore);
+            }
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error saving game results:", error);
+    }
+
+    // Create game result
+    const gameResult: GameResult = {
+      score: finalScore,
+      rewards: {
+        coins: rewards.coins,
+        gems: rewards.gems,
+        range: rewards.range,
+        percentage: rewards.percentage
+      },
+      isNewHighScore: isNewHigh,
+      gameData: {
+        tier: rewards.range.label,
+        accuracy: finalScore > 0 ? Math.round((finalScore / (finalScore + 1)) * 100) : 0
+      }
+    };
+
+    setGameResult(gameResult);
+    setShowGameOverModal(true);
+  };
+
+  // Reset game
+  const resetGame = () => {
+    const game = gameConfig.current;
+
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+    }
+
+    // Reset game state
+    game.running = false;
+    game.birdY = game.gameHeight / 2 - BIRD_HEIGHT / 2;
+    game.velocity = 0;
+    game.lastTimestamp = 0;
+
+    // Clear pipes
+    if (pipesRef.current) {
+      while (pipesRef.current.firstChild) {
+        pipesRef.current.removeChild(pipesRef.current.firstChild);
+      }
+    }
+    game.pipes = [];
+
+    // Reset score
+    currentScoreRef.current = 0;
+    setScore(0);
+    if (scoreRef.current) {
+      scoreRef.current.textContent = "0";
+    }
+
+    // Reset UI
+    setGameOver(false);
+    setGameActive(false);
+    setShowGameOverModal(false);
+    setGameResult(null);
+
+    if (beastRef.current) {
+      beastRef.current.style.transform = `translateY(${game.birdY}px) rotate(0deg)`;
+    }
+  };
+
+  // Jump action
+  const jump = () => {
+    if (!gameActive && !gameOver) {
+      startGame();
+    } else if (gameActive) {
+      gameConfig.current.velocity = gameConfig.current.jumpForce;
+      gameConfig.current.birdY -= 5;
+
+      if (beastRef.current) {
+        beastRef.current.style.transform = `translateY(${gameConfig.current.birdY}px) rotate(-20deg)`;
+      }
+    }
+  };
+
+  // Handle input events
+  useEffect(() => {
+    const gameContainer = gameContainerRef.current;
+    if (!gameContainer) return;
+
+    const handleClick = (e: MouseEvent) => {
+      if (showGameOverModal) return;
+      e.preventDefault();
+      jump();
+    };
+
+    const handleTouch = (e: TouchEvent) => {
+      if (showGameOverModal) return;
+      e.preventDefault();
+      jump();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+        if (showGameOverModal) return;
+        e.preventDefault();
+        jump();
+      }
+    };
+
+    gameContainer.addEventListener('click', handleClick);
+    gameContainer.addEventListener('touchstart', handleTouch);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      gameContainer.removeEventListener('click', handleClick);
+      gameContainer.removeEventListener('touchstart', handleTouch);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [gameActive, gameOver, showGameOverModal]);
+
+  // Adjust game size
+  useEffect(() => {
+    const adjustGameSize = () => {
+      if (!gameContainerRef.current) return;
+
+      const container = gameContainerRef.current;
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+
+      gameConfig.current.gameWidth = containerWidth;
+      gameConfig.current.gameHeight = containerHeight;
+      gameConfig.current.birdY = containerHeight / 2 - BIRD_HEIGHT / 2;
+
+      if (beastRef.current) {
+        beastRef.current.style.transform = `translateY(${gameConfig.current.birdY}px) rotate(0deg)`;
+      }
+
+      // Clear pipes on resize
+      if (pipesRef.current) {
+        while (pipesRef.current.firstChild) {
+          pipesRef.current.removeChild(pipesRef.current.firstChild);
+        }
+      }
+      gameConfig.current.pipes = [];
+    };
+
+    adjustGameSize();
+    window.addEventListener('resize', adjustGameSize);
+    window.addEventListener('orientationchange', adjustGameSize);
+
+    return () => {
+      window.removeEventListener('resize', adjustGameSize);
+      window.removeEventListener('orientationchange', adjustGameSize);
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div className="relative w-full h-screen overflow-hidden bg-blue-400 select-none">
+      {/* Game Container */}
+      <div
+        ref={gameContainerRef}
+        className="relative w-full h-full overflow-hidden"
+        style={{ touchAction: 'manipulation' }}
+      >
+        {/* Sky background */}
+        <div
+          className="absolute inset-0 z-0 animate-pulse"
+          style={{
+            backgroundImage: `url(${skyBackground})`,
+            backgroundRepeat: 'repeat-x',
+            backgroundSize: 'cover',
+            animation: 'skyMove 7s linear infinite'
+          }}
+        />
+
+        {/* Ceiling */}
+        <div
+          className="absolute top-0 left-0 right-0 h-4 z-10"
+          style={{
+            backgroundImage: `url(${ceilingBackground})`,
+            backgroundRepeat: 'repeat-x',
+            backgroundSize: 'auto 100%',
+            animation: 'ceilingMove 481ms linear infinite'
+          }}
+        />
+
+        {/* Play Area */}
+        <div className="absolute top-4 bottom-16 left-0 right-0 z-20">
+          {/* Beast */}
+          <div
+            ref={beastRef}
+            className="absolute z-30 transition-transform duration-100"
+            style={{
+              width: `${BIRD_WIDTH}px`,
+              height: `${BIRD_HEIGHT}px`,
+              left: `${gameConfig.current.birdX}px`,
+              transform: `translateY(${gameConfig.current.birdY}px) rotate(0deg)`
+            }}
+          >
+            <img
+              src={beastImage}
+              alt={beastDisplayName}
+              className="w-full h-full object-contain"
+            />
+          </div>
+
+          {/* Pipes Container */}
+          <div ref={pipesRef} className="relative w-full h-full" />
+
+          {/* Score */}
+          <div className="absolute top-5 left-1/2 transform -translate-x-1/2 z-40">
+            <div
+              ref={scoreRef}
+              className="text-4xl font-bold text-white drop-shadow-lg"
+            >
+              0
+            </div>
+          </div>
+        </div>
+
+        {/* Land */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-16 z-10"
+          style={{
+            backgroundImage: `url(${landBackground})`,
+            backgroundRepeat: 'repeat-x',
+            backgroundSize: 'auto 100%',
+            animation: 'landMove 2516ms linear infinite'
+          }}
+        />
+
+        {/* Game Instructions */}
+        {!gameActive && !gameOver && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute inset-0 flex items-center justify-center z-50"
+          >
+            <div className="bg-black/70 backdrop-blur-sm rounded-lg p-6 text-center max-w-xs mx-4">
+              <h2 className="text-2xl font-bold text-white mb-4">FLAPPY BEASTS</h2>
+              <p className="text-white/90 mb-2">Tap or click to fly</p>
+              <p className="text-white/90 mb-6">Avoid obstacles</p>
+              <button
+                onClick={startGame}
+                className="bg-white text-red-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-colors"
+              >
+                START
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Exit Button */}
+        <button
+          onClick={onExitGame}
+          className="absolute top-4 left-4 bg-black/50 text-white rounded-full w-10 h-10 flex items-center justify-center z-50 hover:bg-black/70 transition-colors"
+        >
+          ✕
+        </button>
+
+        {/* Energy Toast */}
+        {showEnergyToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-lg z-50 flex items-center gap-2"
+          >
+            <span className="text-lg">⚠️</span>
+            <span>Your beast needs at least {ENERGY_REQUIREMENT} energy to play!</span>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Game Over Modal */}
+      {showGameOverModal && gameResult && (
+        <GameOverModal
+          isOpen={showGameOverModal}
+          gameResult={gameResult}
+          onPlayAgain={() => {
+            setShowGameOverModal(false);
+            resetGame();
+          }}
+          onExitGame={onExitGame}
+          gameName="Flappy Beasts"
+        />
+      )}
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes skyMove {
+          0% { background-position: 0px 100%; }
+          100% { background-position: -275px 100%; }
+        }
+        
+        @keyframes landMove {
+          0% { background-position: 0px 0px; }
+          100% { background-position: -335px 0px; }
+        }
+        
+        @keyframes ceilingMove {
+          0% { background-position: 0px 0px; }
+          100% { background-position: -63px 0px; }
+        }
+      `}</style>
+    </div>
+  );
+});
+
+FlappyBeastsScreen.displayName = 'FlappyBeastsScreen';
+
+export default FlappyBeastsScreen;
