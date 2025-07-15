@@ -199,8 +199,6 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
 
     // Apply gravity
     game.velocity += game.gravity * dt;
-    
-    // Limit the maximum fall speed
     const MAX_FALL_SPEED = 15;
     if (game.velocity > MAX_FALL_SPEED) game.velocity = MAX_FALL_SPEED;
 
@@ -212,7 +210,7 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
       beastRef.current.style.transform = `translateY(${game.birdY}px) rotate(${Math.min(Math.max(game.velocity * 3, -30), 90)}deg)`;
     }
 
-    // Check boundaries 
+    // Check boundaries
     if (game.birdY < 0) {
       game.birdY = 0;
       game.velocity = 0;
@@ -224,7 +222,7 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
   // Update pipes
   const updatePipes = (dt: number) => {
     const game = gameConfig.current;
-    
+    //const pipeSpeed = game.pipeSpeedPPS * dt;
     const pipeSpeed = gameConfig.current.pipeSpeedPPS * dt;
 
     game.pipes.forEach(pipe => {
@@ -232,7 +230,7 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
       pipe.x -= pipeSpeed;
       pipe.element.style.left = `${pipe.x}px`;
 
-      // Check scoring - EXACTO como el original
+      // Check scoring
       if (!pipe.scored && pipe.x + PIPE_WIDTH < game.birdX) {
         pipe.scored = true;
         currentScoreRef.current += 1;
@@ -242,7 +240,7 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
         }
       }
 
-      // Check collision - EXACTA implementación del original
+      // Check collision
       const birdColliderLeft = game.birdX + BIRD_COLLIDER_OFFSET_X;
       const birdColliderTop = game.birdY + BIRD_COLLIDER_OFFSET_Y;
       const birdColliderRight = birdColliderLeft + BIRD_COLLIDER_WIDTH;
@@ -255,10 +253,8 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
       const bottomPipeColliderTop = pipe.bottomY + COLLIDER_MARGIN;
 
       if (
-        // Bird collider está dentro de los límites horizontales del pipe collider
         birdColliderRight > pipeColliderLeft &&
         birdColliderLeft < pipeColliderRight &&
-        // Bird collider está dentro de los límites verticales de los pipe colliders ajustados
         (birdColliderTop < topPipeColliderBottom || birdColliderBottom > bottomPipeColliderTop)
       ) {
         endGame();
@@ -501,39 +497,30 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
         className="relative w-full h-full overflow-hidden"
         style={{ touchAction: 'manipulation' }}
       >
-        {/* Sky background */}
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: `url(${skyBackground})`,
-            backgroundRepeat: 'repeat-x',
-            backgroundSize: 'cover',
-            animation: 'skyMove 7s linear infinite'
-          }}
-        />
+        {/* OPTIMIZACIÓN: Contenedor para la animación del cielo */}
+        <div className="absolute inset-0 z-0 w-full h-full overflow-hidden">
+          <div className="anim-container-sky" style={{ backgroundImage: `url(${skyBackground})` }} />
+        </div>
 
-        {/* Ceiling */}
-        <div
-          className="absolute top-0 left-0 right-0 h-4 z-10"
-          style={{
-            backgroundImage: `url(${ceilingBackground})`,
-            backgroundRepeat: 'repeat-x',
-            backgroundSize: 'auto 100%',
-            animation: 'ceilingMove 481ms linear infinite'
-          }}
-        />
+        {/* OPTIMIZACIÓN: Contenedor para la animación del techo */}
+        <div className="absolute top-0 left-0 right-0 h-4 z-10 overflow-hidden">
+          <div className="anim-container-ceiling" style={{ backgroundImage: `url(${ceilingBackground})` }} />
+        </div>
+
 
         {/* Play Area */}
         <div className="absolute top-4 bottom-16 left-0 right-0 z-20">
           {/* Beast */}
           <div
             ref={beastRef}
-            className="absolute z-30 transition-transform duration-100"
+            className="absolute z-30"
+            // OPTIMIZACIÓN: Añadimos will-change para que el navegador optimice las transformaciones.
             style={{
               width: `${BIRD_WIDTH}px`,
               height: `${BIRD_HEIGHT}px`,
               left: `${gameConfig.current.birdX}px`,
-              transform: `translateY(${gameConfig.current.birdY}px) rotate(0deg)`
+              transform: `translateY(${gameConfig.current.birdY}px) rotate(0deg)`,
+              willChange: 'transform',
             }}
           >
             <img
@@ -557,18 +544,13 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
           </div>
         </div>
 
-        {/* Land */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-16 z-10"
-          style={{
-            backgroundImage: `url(${landBackground})`,
-            backgroundRepeat: 'repeat-x',
-            backgroundSize: 'auto 100%',
-            animation: 'landMove 2516ms linear infinite'
-          }}
-        />
+        {/* OPTIMIZACIÓN: Contenedor para la animación del suelo */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 z-10 overflow-hidden">
+          <div className="anim-container-land" style={{ backgroundImage: `url(${landBackground})` }} />
+        </div>
 
-        {/* Game Instructions */}
+        {/* OPTIMIZACIÓN: El renderizado condicional ya estaba bien hecho. 
+            Esto elimina el elemento del DOM cuando no es necesario, lo cual es óptimo. */}
         {!gameActive && !gameOver && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -642,19 +624,31 @@ const FlappyBeastsScreen = forwardRef<FlappyBeastRef, MiniGameScreenProps>(({
 
       {/* CSS Animations */}
       <style>{`
-        @keyframes skyMove {
-          0% { background-position: 0px 100%; }
-          100% { background-position: -275px 100%; }
+        /* OPTIMIZACIÓN: Se usa un contenedor que es el doble de ancho y se anima con 'transform'. 
+           Esto es acelerado por GPU y es mucho más fluido que animar 'background-position'. */
+
+        .anim-container-sky, .anim-container-land, .anim-container-ceiling {
+          width: 200%;
+          height: 100%;
+          background-repeat: repeat-x;
+          background-size: auto 100%;
+          will-change: transform; /* Le decimos al navegador que se prepare para animar esto */
         }
-        
-        @keyframes landMove {
-          0% { background-position: 0px 0px; }
-          100% { background-position: -335px 0px; }
+        .anim-container-sky {
+            background-size: cover;
         }
+
+        .anim-container-sky { animation: slide 7s linear infinite; }
+        .anim-container-land { animation: slide 2.516s linear infinite; }
+        .anim-container-ceiling { animation: slide 0.481s linear infinite; }
         
-        @keyframes ceilingMove {
-          0% { background-position: 0px 0px; }
-          100% { background-position: -63px 0px; }
+        @keyframes slide {
+          0% {
+            transform: translateX(0%);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
         }
       `}</style>
     </div>
