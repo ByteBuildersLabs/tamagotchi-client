@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
+  type: 'beast' | 'minigame';
   beastData?: {
     age: number; // in days
     energy: number;
@@ -11,33 +12,56 @@ interface ShareModalProps {
     happiness: number;
     cleanliness: number;
   };
+  minigameData?: {
+    name: string;
+    score: number;
+  };
+  account?: any;
+  client?: any;
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({
   isOpen,
   onClose,
+  type,
   beastData,
+  minigameData,
 }) => {
   const [tweetMsg, setTweetMsg] = useState("");
 
   useEffect(() => {
-    if (beastData) {
+    if (type === 'beast' && beastData) {
       setTweetMsg(
         `🎮 Playing ByteBeasts Tamagotchi, and here is my Beast's progress:\n\n` +
-        `🕰️ Age: ${beastData.age} days\n` +
+        `🕰️ Age: ${beastData.age} ${beastData.age === 1 ? 'day' : 'days'}\n` +
         `⚡ Energy: ${beastData.energy}\n` +
         `🍖 Hunger: ${beastData.hunger}\n` +
         `😊 Happiness: ${beastData.happiness}\n` +
         `🛁 Cleanliness: ${beastData.cleanliness}\n\n` +
+        `These are my current values! 🌟\n\n` +
         `Ready to raise your own Beast? 🚀\n` +
-        `👉 https://www.bytebeasts.games\n`
+        `👉 https://www.bytebeasts.games\n` +
+        `@0xByteBeasts`
+      );
+    } else if (type === 'minigame' && minigameData) {
+      setTweetMsg(
+        `🎮 I just played ${minigameData.name} mini-game in ByteBeasts Tamagotchi\n\n` +
+        `My score: ${minigameData.score} 🏆\n\n` +
+        `Think you can beat it? Bring it on! 🔥\n` +
+        `👉 https://www.bytebeasts.games\n` +
+        `@0xByteBeasts`
       );
     }
-  }, [beastData]);
+  }, [type, beastData, minigameData]);
 
   if (!isOpen) return null;
 
   const tweetText = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetMsg)}`;
+
+  const handleShareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Solo abre Twitter, sin lógica de blockchain
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -59,7 +83,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
-            x
+            ×
           </motion.button>
         </div>
 
@@ -68,7 +92,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           <div className="relative">
             <textarea
               value={tweetMsg}
-              readOnly
+              onChange={(e) => setTweetMsg(e.target.value)}
               rows={6}
               className="w-full bg-surface/20 rounded-xl p-4 text-gray-800 font-rubik resize-none focus:outline-none 
                 border-2 border-gold/30 shadow-inner backdrop-blur-sm
@@ -89,6 +113,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               transition-all duration-150"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={handleShareClick}
           >
             <span className="drop-shadow-[1px_1px_0px_rgba(255,255,255,0.3)]">SHARE ON X</span>
           </motion.a>
@@ -96,4 +121,4 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       </motion.div>
     </div>
   );
-}; 
+};
