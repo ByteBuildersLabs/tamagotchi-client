@@ -35,7 +35,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 16px; 
+    height: 64px; 
     background-image: url(../../../../../../assets/icons/games/flappy-beasts-assets/bg-ceiling.png);
     background-repeat: repeat-x;
     background-size: auto 100%;
@@ -48,7 +48,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 64px;
+    height: 128px;
     background-image: url(../../../../../../assets/icons/games/flappy-beasts-assets/bg-land.png);
     background-repeat: repeat-x;
     background-size: auto 100%;

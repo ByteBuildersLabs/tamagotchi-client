@@ -11,9 +11,9 @@ import { MiniGameScreenProps, GameResult } from '../../../../../types/play.types
 import skyBackground from '../../../../../../assets/icons/games/flappy-beasts-assets/bg-sky.png';
 import landBackground from '../../../../../../assets/icons/games/flappy-beasts-assets/bg-land.png';
 import ceilingBackground from '../../../../../../assets/icons/games/flappy-beasts-assets/bg-ceiling.png';
-import pipeImage from '../../../../../../assets/icons/games/flappy-beasts-assets/img-pipe-up.png';
-import pipeUpImage from '../../../../../../assets/icons/games/flappy-beasts-assets/img-pipe-up.png';
-import pipeDownImage from '../../../../../../assets/icons/games/flappy-beasts-assets/img-pipe-up.png';
+import pipeImage from '../../../../../../assets/icons/games/flappy-beasts-assets/img-full-pipe.png';
+import pipeUpImage from '../../../../../../assets/icons/games/flappy-beasts-assets/img-full-pipe.png';
+import pipeDownImage from '../../../../../../assets/icons/games/flappy-beasts-assets/img-full-pipe.png';
 
 // Styles
 import "./main.css";
