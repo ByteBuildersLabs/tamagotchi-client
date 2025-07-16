@@ -237,13 +237,8 @@ function AppContent() {
       {currentScreen === "game" && currentGameId && (
         <GameScreen
           gameId={currentGameId}
-          onExitGame={handleExitGame} dojoContext={{
-            client: undefined,
-            account: undefined,
-            handleAction: function (_actionName: string): Promise<any> {
-              throw new Error("Function not implemented.");
-            }
-          }}        />
+          onExitGame={handleExitGame}
+        />
       )}
 
       {/* NavBar - Hide on game screen for fullscreen experience */}
