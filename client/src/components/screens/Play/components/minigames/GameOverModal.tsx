@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { GameOverModalProps } from '../../../../types/play.types';
+import { useEffect } from 'react';
 
 export const GameOverModal = ({
   isOpen,
@@ -8,10 +9,48 @@ export const GameOverModal = ({
   onExitGame,
   gameName
 }: GameOverModalProps) => {
+  
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !gameResult) return null;
 
   const { score, rewards, isNewHighScore, gameData } = gameResult;
   const { coins, gems, range } = rewards;
+
+  // Handlers with touch support
+  const handlePlayAgainClick = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onPlayAgain();
+  };
+
+  const handleExitClick = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onExitGame();
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent | React.TouchEvent) => {
+    if (e.target === e.currentTarget) {
+      e.stopPropagation();
+      e.preventDefault();
+      onExitGame();
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -23,6 +62,14 @@ export const GameOverModal = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={handleBackdropClick}
+            onTouchStart={handleBackdropClick}
+            style={{ 
+              touchAction: 'none',
+              WebkitTouchCallout: 'none',
+              WebkitUserSelect: 'none',
+              userSelect: 'none'
+            }}
           >
             {/* Modal Content */}
             <motion.div
@@ -31,6 +78,9 @@ export const GameOverModal = ({
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 max-w-sm w-full mx-auto shadow-2xl border border-slate-700"
+              onClick={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              style={{ touchAction: 'auto' }}
             >
               {/* Header */}
               <div className="text-center mb-6">
@@ -128,14 +178,26 @@ export const GameOverModal = ({
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
-                  onClick={onPlayAgain}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 px-4 rounded-lg font-semibold transition-all transform hover:scale-105 active:scale-95"
+                  onClick={handlePlayAgainClick}
+                  onTouchStart={handlePlayAgainClick}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 px-4 rounded-lg font-semibold transition-all transform hover:scale-105 active:scale-95 touch-manipulation"
+                  style={{ 
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                    cursor: 'pointer'
+                  }}
                 >
                   Play Again
                 </button>
                 <button
-                  onClick={onExitGame}
-                  className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 px-4 rounded-lg font-semibold transition-all transform hover:scale-105 active:scale-95"
+                  onClick={handleExitClick}
+                  onTouchStart={handleExitClick}
+                  className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 px-4 rounded-lg font-semibold transition-all transform hover:scale-105 active:scale-95 touch-manipulation"
+                  style={{ 
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                    cursor: 'pointer'
+                  }}
                 >
                   Exit
                 </button>
@@ -143,8 +205,14 @@ export const GameOverModal = ({
 
               {/* Close Button */}
               <button
-                onClick={onExitGame}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+                onClick={handleExitClick}
+                onTouchStart={handleExitClick}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors touch-manipulation"
+                style={{ 
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent',
+                  cursor: 'pointer'
+                }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>

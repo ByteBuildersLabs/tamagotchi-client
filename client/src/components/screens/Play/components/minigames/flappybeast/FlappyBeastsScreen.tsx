@@ -354,22 +354,43 @@ const FlappyBirdMiniGame = forwardRef<any, MiniGameScreenProps>(({
   useEffect(() => {
     const ctr = gameContainerRef.current;
     if (!ctr) return;
-    const onClick = (e: MouseEvent) => { e.preventDefault(); jump(); };
-    const onTouch = (e: TouchEvent) => { e.preventDefault(); jump(); };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code.match(/Space|ArrowUp|KeyW/) && !isProcessingResults) {
-        e.preventDefault(); jump();
+    
+    const onClick = (e: MouseEvent) => { 
+      // Only prevent default if not a modal
+      if (!(e.target as Element).closest('.modal-overlay, .fixed')) {
+        e.preventDefault(); 
+        jump(); 
       }
     };
+    
+    const onTouch = (e: TouchEvent) => { 
+      // Only prevent default if not a modal
+      if (!(e.target as Element).closest('.modal-overlay, .fixed')) {
+        e.preventDefault(); 
+        jump(); 
+      }
+    };
+    
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code.match(/Space|ArrowUp|KeyW/) && !isProcessingResults) {
+        // Only prevent default if not a modal
+        if (!showShareModal && !showGameOverModal) {
+          e.preventDefault(); 
+          jump();
+        }
+      }
+    };
+    
     ctr.addEventListener('click', onClick);
-    ctr.addEventListener('touchstart', onTouch);
+    ctr.addEventListener('touchstart', onTouch, { passive: false });
     window.addEventListener('keydown', onKey);
+    
     return () => {
       ctr.removeEventListener('click', onClick);
       ctr.removeEventListener('touchstart', onTouch);
       window.removeEventListener('keydown', onKey);
     };
-  }, [gameActive, gameOver, isProcessingResults]);
+  }, [gameActive, gameOver, isProcessingResults, showShareModal, showGameOverModal]);
 
   // Responsiveness
   useEffect(() => {
