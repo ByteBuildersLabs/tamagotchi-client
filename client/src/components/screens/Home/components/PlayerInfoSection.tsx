@@ -14,7 +14,6 @@ export const PlayerInfoSection = ({
   age,
   onProfileClick,
   onNavigateLogin,
-  beastData
 }: PlayerInfoSectionProps) => {
   return (
     <div className="w-full px-4 md:px-6 lg:px-8 flex justify-between items-start mt-3 md:mt-4 z-10">
@@ -57,7 +56,6 @@ export const PlayerInfoSection = ({
         >
           <DropdownMenu 
             onNavigateLogin={onNavigateLogin}
-            selectedBeast={beastData}
           />
         </motion.div>
       </div>

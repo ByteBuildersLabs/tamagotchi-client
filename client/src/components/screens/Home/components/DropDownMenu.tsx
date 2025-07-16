@@ -1,11 +1,14 @@
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useAccount, useDisconnect } from "@starknet-react/core";
 
-// // Components
+// Components
 import { ShareModal } from "./ShareModal";
 
 // Context
 import { useMusic } from "../../../../context/MusicContext";
+
+// Simple hook to check if user has a beast
+import { useBeastDisplay } from "../../../../dojo/hooks/useBeastDisplay";
 
 // Assets
 import menuIcon from "../../../../assets/icons/menu/icon-menu.webp";
@@ -18,25 +21,18 @@ import soundOffIcon from "../../../../assets/icons/menu/svg/icon-sound-off.svg";
 
 type DropdownMenuProps = {
   onNavigateLogin: () => void;
-  selectedBeast?: {
-    age: number; // in days
-    energy: number;
-    hunger: number;
-    happiness: number;
-    cleanliness: number;
-  };  
 };
 
-export const DropdownMenu = ({ 
-  onNavigateLogin,
-  selectedBeast 
-}: DropdownMenuProps) => {
+export const DropdownMenu = ({ onNavigateLogin }: DropdownMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { connector } = useAccount();
   const { disconnect } = useDisconnect();
   const { isMuted, toggleMute } = useMusic();
+
+  // Only need to check if user has a beast (for disabling share button)
+  const { hasLiveBeast } = useBeastDisplay();
 
   const toggleMenu = useCallback(() => {
     setIsOpen(prev => !prev);
@@ -121,9 +117,12 @@ export const DropdownMenu = ({
             onClick={handleShareClick}
             className="flex items-center space-x-3 w-full hover:scale-105 transition-transform"
             role="menuitem"
+            disabled={!hasLiveBeast} // Disable if no beast exists
           >
             <img src={shareIcon} alt="" className="w-5 h-5" />
-            <span className="text-dark font-luckiest">Share on X</span>
+            <span className={`font-luckiest ${!hasLiveBeast ? 'text-gray-400' : 'text-dark'}`}>
+              Share on X
+            </span>
           </button>
 
           <button
@@ -146,11 +145,13 @@ export const DropdownMenu = ({
         </div>
       )}
 
-      {/* Share Modal */}
+      {/* 🆕 NEW: ShareModal now automatically gets real-time data */}
       <ShareModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
-        beastData={selectedBeast} type={"minigame"}      />
+        type="beast"
+        // No need to pass beastData - ShareModal gets it automatically!
+      />
     </div>
   );
 };
