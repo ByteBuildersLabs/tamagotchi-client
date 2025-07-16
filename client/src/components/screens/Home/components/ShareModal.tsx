@@ -176,31 +176,16 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             </div>
           )}
           
-          {type === 'beast' && isDataReady && shareMetadata && shareMetadata.hasValidData && (
-            <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg">
-              <p className="text-green-800 text-sm font-rubik">
-                ✅ Sharing real-time beast status! 
-                {(() => {
-                  const { avgHealth } = shareMetadata;
-                  if (avgHealth >= 80) return " Your beast is thriving! 🌟";
-                  if (avgHealth >= 60) return " Your beast is doing well! 😊";
-                  if (avgHealth >= 40) return " Your beast needs some attention. 🤔";
-                  return " Your beast needs care! 💙";
-                })()}
-              </p>
-            </div>
-          )}
-          
           <div className="relative">
             <textarea
               value={tweetMsg}
-              onChange={(e) => setTweetMsg(e.target.value)}
+              readOnly={true} // 🔒 READ-ONLY: Users cannot edit the message
               rows={8}
               className="w-full bg-surface/20 rounded-xl p-4 text-gray-800 font-rubik resize-none focus:outline-none 
                 border-2 border-gold/30 shadow-inner backdrop-blur-sm
-                placeholder:text-gray-500 text-sm"
+                placeholder:text-gray-500 text-sm cursor-default" 
               style={{ touchAction: 'manipulation' }}
-              placeholder="Customize your message..."
+              placeholder="Generated message will appear here..."
             />
             
             {/* Character counter */}
@@ -233,13 +218,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               {tweetMsg.length > 280 ? 'MESSAGE TOO LONG' : 'SHARE ON X'}
             </span>
           </motion.button>
-          
-          {/* Tweet length warning */}
-          {tweetMsg.length > 240 && tweetMsg.length <= 280 && (
-            <p className="text-center text-xs text-orange-600 mt-2 font-rubik">
-              Approaching character limit
-            </p>
-          )}
         </div>
       </motion.div>
     </div>
