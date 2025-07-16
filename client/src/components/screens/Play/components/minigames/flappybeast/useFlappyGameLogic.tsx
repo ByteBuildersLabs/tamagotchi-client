@@ -10,11 +10,13 @@ import CoinGemRewardService from '../../../../../utils/coinGemRewardService';
 import { AccountInterface } from 'starknet';
 import fetchStatus from '../../../../../../utils/fetchStatus';
 
+// high score hook
+import { useHighScore } from '../../../../../../dojo/hooks/useHighScore';
+
 // Constants
 const ENERGY_REQUIREMENT = 20;
 
 interface UseFlappyGameLogicProps {
-  // Using the same pattern as your existing code
   handleAction?: (actionName: string, actionFn: () => Promise<any>) => Promise<any>;
   client?: any;
   account?: AccountInterface;
@@ -22,7 +24,7 @@ interface UseFlappyGameLogicProps {
 
 interface UseFlappyGameLogicReturn {
   // Energy management
-  checkEnergyRequirement: () => Promise<boolean>; // Updated to async
+  checkEnergyRequirement: () => Promise<boolean>;
   consumeEnergy: () => Promise<boolean>;
   showEnergyToast: boolean;
   setShowEnergyToast: (show: boolean) => void;
@@ -32,16 +34,30 @@ interface UseFlappyGameLogicReturn {
   
   // High score management
   isNewHighScore: boolean;
+  currentHighScore: number;
   
   // Loading states
   isProcessingResults: boolean;
 }
 
-export const useFlappyGameLogic = ({ handleAction, client, account }: UseFlappyGameLogicProps): UseFlappyGameLogicReturn => {
+export const useFlappyGameLogic = ({ 
+  handleAction, 
+  client, 
+  account 
+}: UseFlappyGameLogicProps): UseFlappyGameLogicReturn => {
+  // simple high score hook
+  const {
+    flappyBirdScore,
+    refetch: refetchHighScores
+  } = useHighScore();
+
   // State
   const [showEnergyToast, setShowEnergyToast] = useState(false);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
   const [isProcessingResults, setIsProcessingResults] = useState(false);
+
+  // Get current high score for Flappy Bird
+  const currentHighScore = flappyBirdScore;
 
   /**
    * Check if beast has enough energy to play using real-time data
@@ -55,24 +71,21 @@ export const useFlappyGameLogic = ({ handleAction, client, account }: UseFlappyG
     try {
       const statusResponse = await fetchStatus(account);
       
-      // Handle the different response cases from your fetchStatus
       if (statusResponse === null) {
-        // Actual error occurred
         console.error("Error fetching beast status");
         return false;
       }
       
       if (statusResponse === undefined) {
-        // No beast exists - expected case
         console.info("No live beast found");
         return false;
       }
       
-      // Beast exists, check energy (index 4 per your implementation)
       const currentEnergy = statusResponse[5] || 0;
       console.info("Current energy level:", currentEnergy);
+      
+      // For development, bypass energy check
       const energyByPass = 100;
-      //return currentEnergy >= ENERGY_REQUIREMENT;
       return energyByPass >= ENERGY_REQUIREMENT;
       
     } catch (error) {
@@ -105,22 +118,7 @@ export const useFlappyGameLogic = ({ handleAction, client, account }: UseFlappyG
   };
 
   /**
-   * Fetch current high score for comparison
-   */
-  const fetchCurrentHighScore = async (): Promise<number> => {
-    try {
-      // TODO: Implement high score fetching using your existing Dojo setup
-      // This would typically query the blockchain for the player's best score
-      // You might already have a hook or function for this
-      return 0;
-    } catch (error) {
-      console.error("Error fetching high score:", error);
-      return 0;
-    }
-  };
-
-  /**
-   * Save game results to blockchain using your existing pattern
+   * Save game results to blockchain
    */
   const saveGameResults = async (score: number, isNewHigh: boolean): Promise<void> => {
     try {
@@ -136,11 +134,14 @@ export const useFlappyGameLogic = ({ handleAction, client, account }: UseFlappyG
           await client.player.updatePlayerTotalPoints(account, score);
           
           // Achievement for playing
-          const txtest = await client.achieve.achievePlayerNewTotalPoints(account);
-          console.info('achievePlayerNewTotalPoints result:', txtest);
+          await client.achieve.achievePlayerNewTotalPoints(account);
           
-          // Update high score (using FLAPPY_BEASTS game ID = 1)
-          await client.player.updatePlayerMinigameHighestScore(account, score, GAME_IDS.FLAPPY_BEASTS);
+          // Update high score
+          await client.player.updatePlayerMinigameHighestScore(
+            account, 
+            score, 
+            GAME_IDS.FLAPPY_BEASTS
+          );
           
           // High score achievement
           if (isNewHigh) {
@@ -148,6 +149,9 @@ export const useFlappyGameLogic = ({ handleAction, client, account }: UseFlappyG
           }
         }
       );
+
+      // Refresh high scores after saving
+      await refetchHighScores();
 
       console.log("Game results saved successfully");
     } catch (error) {
@@ -176,7 +180,6 @@ export const useFlappyGameLogic = ({ handleAction, client, account }: UseFlappyG
 
   /**
    * Main function to handle game completion
-   * Coordinates all post-game logic
    */
   const handleGameCompletion = async (finalScore: number): Promise<GameResult> => {
     setIsProcessingResults(true);
@@ -186,9 +189,14 @@ export const useFlappyGameLogic = ({ handleAction, client, account }: UseFlappyG
       const rewards = calculateRewards(finalScore);
       
       // Check if this is a new high score
-      const currentHighScore = await fetchCurrentHighScore();
       const isNewHigh = finalScore > currentHighScore;
       setIsNewHighScore(isNewHigh);
+
+      console.info('Game completion:', {
+        finalScore,
+        currentHighScore,
+        isNewHigh
+      });
 
       // Save results to blockchain (async, don't block UI)
       saveGameResults(finalScore, isNewHigh).catch(error => {
@@ -257,6 +265,7 @@ export const useFlappyGameLogic = ({ handleAction, client, account }: UseFlappyG
     
     // High score management
     isNewHighScore,
+    currentHighScore,
     
     // Loading states
     isProcessingResults,
