@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { TamagotchiTopBar } from "../../layout/TopBar";
 import { NavBar } from "../../layout/NavBar";
-import { PlayScreenProps } from "../../types/play.types";
+import { GameId, PlayScreenProps } from "../../types/play.types";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import playBackground from "../../../assets/backgrounds/bg-play.png";
 
@@ -13,7 +13,7 @@ import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 import { useMusic } from "../../../context/MusicContext";
 
 // Data
-import { MINI_GAMES } from "./components/data/miniGames";
+import { isGameAvailable, MINI_GAMES } from "./components/data/miniGames";
 
 // Components
 import { BeastPlayDisplay } from "./components/BeastDisplay";
@@ -36,10 +36,17 @@ export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
     setCurrentScreen("play");
   }, [setCurrentScreen]);
 
-  const handleMiniGameSelect = (gameId: string) => {
+  const handleMiniGameSelect = (gameId: GameId) => {
     console.log(`Selected mini-game: ${gameId}`);
-    // For now, just log - you can implement mini-game navigation later
-    // navigate(MINI_GAMES.find(game => game.id === gameId)?.route || "/play");
+    
+    // Check if game is available
+    if (!isGameAvailable(gameId)) {
+      console.warn(`Game ${gameId} is not available`);
+      return;
+    }
+
+    // Navigate to game screen with the selected game
+    onNavigation("game", gameId);
   };
 
   // Loading state

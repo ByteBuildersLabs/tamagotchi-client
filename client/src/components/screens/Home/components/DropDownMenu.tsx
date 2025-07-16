@@ -150,8 +150,7 @@ export const DropdownMenu = ({
       <ShareModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
-        beastData={selectedBeast}
-      />
+        beastData={selectedBeast} type={"minigame"}      />
     </div>
   );
 };
