@@ -187,11 +187,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               style={{ touchAction: 'manipulation' }}
               placeholder="Generated message will appear here..."
             />
-            
-            {/* Character counter */}
-            <div className="absolute bottom-2 right-2 text-xs text-gray-500">
-              {tweetMsg.length}/280
-            </div>
           </div>
         </div>
 
