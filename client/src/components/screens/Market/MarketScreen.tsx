@@ -34,13 +34,6 @@ interface MarketScreenProps {
   onNavigation: (screen: Screen) => void;
 }
 
-// Helper function to truncate hash
-const truncateHash = (hash: string, startLength = 6, endLength = 4) => {
-  if (!hash) return '';
-  if (hash.length <= startLength + endLength) return hash;
-  return `${hash.slice(0, startLength)}...${hash.slice(-endLength)}`;
-};
-
 export function MarketScreen({onNavigation}: MarketScreenProps) {
   // Hardcoded balance for development
   const HARDCODED_BALANCE = 1000;
@@ -53,8 +46,6 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
   
   // Transaction state (simulated)
   const [isProcessing, setIsProcessing] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [txStatus, setTxStatus] = useState<'PENDING' | 'SUCCESS' | 'REJECTED' | null>(null);
 
   // Responsive design
   useEffect(() => {
@@ -109,14 +100,9 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
     // Simulate purchase process
     try {
       setIsProcessing(true);
-      setTxStatus('PENDING');
       
       // Simulate transaction delay
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate success
-      setTxHash("0x" + Math.random().toString(16).substr(2, 8));
-      setTxStatus('SUCCESS');
       
       // Show success animation
       setSelectedFood(food);
@@ -127,7 +113,6 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
       
     } catch (error) {
       console.error("Purchase error:", error);
-      setTxStatus('REJECTED');
       toast.error("Purchase failed", { position });
     } finally {
       setIsProcessing(false);
@@ -139,43 +124,6 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
     setShowInsufficientBalance(false);
     setSelectedFood(null);
   };
-
-  // Transaction toast effects
-  useEffect(() => {
-    if (txHash) {
-      toast(
-        <span className="text-dark font-luckiest">
-          Tx {txStatus}: {truncateHash(txHash)}
-          <br />
-          <a
-            href={`https://sepolia.starkscan.co/tx/${txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            View on StarkScan
-          </a>
-        </span>,
-        { id: 'tx-toast', position }
-      );
-
-      if (txStatus === 'SUCCESS') {
-        toast.success('Purchase successful!', {
-          id: 'success-toast',
-          position,
-          duration: 2000,
-        });
-      }
-
-      if (txStatus === 'REJECTED') {
-        toast.error('Transaction failed', {
-          id: 'tx-error-toast',
-          position,
-          duration: 3000,
-        });
-      }
-    }
-  }, [txHash, txStatus, position]);
 
   return (
     <div className="relative h-screen w-full bg-screen overflow-hidden font-rubik">
