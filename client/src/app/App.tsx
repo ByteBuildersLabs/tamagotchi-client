@@ -8,6 +8,7 @@ import { FeedScreen } from "../components/screens/Feed/FeedScreen";
 import { CleanScreen } from "../components/screens/Clean/CleanScreen";
 import { PlayScreen } from "../components/screens/Play/PlayScreen";
 import { GameScreen } from "../components/screens/Play/components/GameScreen";
+import { MarketScreen } from "../components/screens/Market/MarketScreen";
 import { LoginScreen } from "../components/screens/Login/LoginScreen";
 import { NavBar } from "../components/layout/NavBar";
 import type { Screen } from "../components/types/screens";
@@ -241,11 +242,18 @@ function AppContent() {
         />
       )}
 
+      {currentScreen === "market" && (
+        <MarketScreen
+          onNavigation={handleNavigation}
+        />
+      )}
+
       {/* NavBar - Hide on game screen for fullscreen experience */}
       {currentScreen !== "cover" && 
        currentScreen !== "login" && 
        currentScreen !== "hatch" && 
-       currentScreen !== "game" && (
+       currentScreen !== "game" && 
+       currentScreen !== "market" && (
         <NavBar
           activeTab={currentScreen as "home" | "sleep" | "feed" | "clean" | "play"}
           onNavigation={handleNavigation}
