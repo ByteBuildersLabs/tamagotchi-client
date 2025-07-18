@@ -62,7 +62,7 @@ export function FoodCategorySection({ category, foods, onPurchase }: FoodCategor
 
       {/* Foods Grid */}
       <motion.div variants={container}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {foods.map((food) => (
             <FoodCard
               key={food.id}
