@@ -1,5 +1,3 @@
-// components/screens/Market/components/FoodPurchaseAnimation.tsx
-
 import { useEffect, useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import Particles, { initParticlesEngine } from "@tsparticles/react"
@@ -150,14 +148,24 @@ export function FoodPurchaseAnimation({ food, onClose }: FoodPurchaseAnimationPr
   if (!engineLoaded) return null
 
   const categoryConfig = FOOD_CATEGORIES_CONFIG[food.category];
+  
   const healthinessColors: Record<number, string> = {
-    1: "bg-red-500",
-    2: "bg-orange-500",
-    3: "bg-yellow-500",
-    4: "bg-green-500",
-    5: "bg-emerald-500",
+    1: "bg-red-600",        // Unhealthy
+    2: "bg-orange-500",     // Poor  
+    3: "bg-yellow-500",     // Okay
+    4: "bg-emerald",        // Good - using your emerald variable
+    5: "bg-emerald",        // Excellent - using your emerald variable
   }
   const healthinessColor = healthinessColors[food.healthiness] || "bg-gray-500";
+
+  const healthinessText: Record<number, string> = {
+    1: "Unhealthy",
+    2: "Poor",
+    3: "Okay", 
+    4: "Good",
+    5: "Excellent",
+  }
+  const healthinessLabel = healthinessText[food.healthiness] || "Unknown";
 
   return (
     <motion.div
@@ -176,7 +184,7 @@ export function FoodPurchaseAnimation({ food, onClose }: FoodPurchaseAnimationPr
 
       {/* Confirmation card */}
       <motion.div
-        className="bg-cream p-6 rounded-xl shadow-lg z-10 flex flex-col items-center max-w-xs w-full mx-4"
+        className="bg-cream p-8 rounded-xl shadow-lg z-10 flex flex-col items-center max-w-xs w-full mx-4"
         initial={{ scale: 0.8, y: 20 }}
         animate={{ 
           scale: 1, 
@@ -189,7 +197,7 @@ export function FoodPurchaseAnimation({ food, onClose }: FoodPurchaseAnimationPr
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Food image with glow and bounce effect */}
+        {/* Food image with glow and bounce effect - ✅ Fixed centering */}
         <motion.div
           initial={{ rotate: -10, scale: 0.9 }}
           animate={{
@@ -197,12 +205,12 @@ export function FoodPurchaseAnimation({ food, onClose }: FoodPurchaseAnimationPr
             scale: [1, 1.05, 1, 1.05, 1],
             transition: { duration: 1.5, repeat: Infinity, repeatType: "reverse" },
           }}
-          className="relative w-32 h-32 mb-4"
+          className="relative w-32 h-32 mb-4 flex items-center justify-center"
         >
           <img
             src={food.image || "/placeholder.svg"}
             alt={food.name}
-            className="w-12 h-12 object-contain"
+            className="w-16 h-16 object-contain"
             onError={(e) => {
               const img = e.currentTarget as HTMLImageElement
               img.src = "/placeholder.svg?height=128&width=128"
@@ -229,14 +237,10 @@ export function FoodPurchaseAnimation({ food, onClose }: FoodPurchaseAnimationPr
 
         {/* Category and healthiness badges */}
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-2xl">{categoryConfig.emoji}</span>
           <span
-            className={`inline-block ${healthinessColor} text-white font-bold rounded-full px-3 py-1 text-sm`}
+            className={`inline-block ${healthinessColor} text-cream font-bold tracking-wide rounded-full px-3 py-1 text-sm`}
           >
-            {food.healthiness === 5 ? 'Excellent' : 
-             food.healthiness === 4 ? 'Good' :
-             food.healthiness === 3 ? 'Okay' :
-             food.healthiness === 2 ? 'Poor' : 'Unhealthy'}
+            {healthinessLabel}
           </span>
         </div>
 
@@ -244,11 +248,6 @@ export function FoodPurchaseAnimation({ food, onClose }: FoodPurchaseAnimationPr
         <p className="text-text-primary font-luckiest text-center mb-3 text-sm">
           {food.description}
         </p>
-
-        {/* Hunger restore info */}
-        <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold mb-4">
-          +{food.hungerRestore} Hunger Restore
-        </div>
 
         {/* Success message */}
         <motion.p

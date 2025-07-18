@@ -272,7 +272,7 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
       {/* Loading indicator for transaction */}
       {isProcessing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="bg-surface p-6 rounded-xl shadow-lg">
+          <div className="bg-cream p-6 rounded-xl shadow-lg">
             <div className="flex flex-col items-center">
               <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mb-4"></div>
               <p className="font-luckiest text-text-primary">Processing Purchase...</p>
