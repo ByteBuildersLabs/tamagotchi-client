@@ -5,6 +5,9 @@ import toast, { Toaster } from "react-hot-toast";
 // Layout components
 import { TamagotchiTopBar } from "../../layout/TopBar";
 
+// Shared components
+import BackButton from "../../shared/BackButton";
+
 // Background components
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 
@@ -30,7 +33,6 @@ import sellertIcon from "../../../assets/icons/market/GolemSellerV2.webp";
 
 // Screen props
 import type { Screen } from "../../types/screens";
-
 interface MarketScreenProps {
   onNavigation: (screen: Screen) => void;
 }
@@ -42,7 +44,7 @@ const truncateHash = (hash: string, startLength = 6, endLength = 4) => {
   return `${hash.slice(0, startLength)}...${hash.slice(-endLength)}`;
 };
 
-export function MarketScreen({}: MarketScreenProps) {
+export function MarketScreen({ onNavigation }: MarketScreenProps) {
   // Get player data and food inventory
   const player = useAppStore(state => state.player);
   const { foods: playerFoods, isLoading: isFoodsLoading } = useFoodInventory();
@@ -189,7 +191,12 @@ export function MarketScreen({}: MarketScreenProps) {
   return (
     <div className="relative h-screen w-full bg-screen overflow-hidden font-rubik">
       <MagicalSparkleParticles />
-      
+
+      {/* Back Button */}
+      <BackButton onClick={() => onNavigation("home")} 
+        className="top-12 right-4 left-auto"
+      />
+
       {/* Top Bar */}
       <TamagotchiTopBar 
               coins={player?.total_points || 0}
@@ -226,7 +233,7 @@ export function MarketScreen({}: MarketScreenProps) {
             <h2 className="font-luckiest text-cream text-xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] tracking-wide">
               🍽️ Food Market
             </h2>
-            <p className="font-luckiest text-cream text-sm opacity-90 mt-1 sm:mt-0">
+            <p className="font-luckiest text-cream text-sm opacity-90 mt-1 sm:mt-1">
               Feed your Tamagotchi with delicious treats!
             </p>
           </div>
