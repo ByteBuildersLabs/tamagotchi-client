@@ -211,7 +211,7 @@ export function MarketScreen({}: MarketScreenProps) {
         >
           <img 
             src={sellertIcon}
-            alt="Seller"
+            alt="Chef"
             className="object-contain"
             onError={(e) => {
               const img = e.currentTarget as HTMLImageElement
@@ -221,12 +221,12 @@ export function MarketScreen({}: MarketScreenProps) {
         </motion.div>
 
         {/* Banner */}
-        <div className="bg-gradient-to-r from-orange-500 to-red-500 py-3 px-4 pl-40 relative rounded-[10px] mx-4 shadow-md">
+        <div className="bg-gold-gradient py-3 px-4 pl-40 relative rounded-[10px] mx-4 shadow-md">
           <div className="flex flex-col sm:flex-row items-center justify-between">
-            <h2 className="font-luckiest text-white text-xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] tracking-wide">
+            <h2 className="font-luckiest text-cream text-xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] tracking-wide">
               🍽️ Food Market
             </h2>
-            <p className="font-luckiest text-orange-100 text-sm opacity-90 mt-1 sm:mt-0">
+            <p className="font-luckiest text-cream text-sm opacity-90 mt-1 sm:mt-0">
               Feed your Tamagotchi with delicious treats!
             </p>
           </div>
@@ -238,7 +238,7 @@ export function MarketScreen({}: MarketScreenProps) {
         <div className="px-4 py-2">
           {isFoodsLoading ? (
             <div className="text-center py-12">
-              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="font-luckiest text-cream text-lg">Loading delicious foods...</p>
             </div>
           ) : (
@@ -285,8 +285,8 @@ export function MarketScreen({}: MarketScreenProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
           <div className="bg-surface p-6 rounded-xl shadow-lg">
             <div className="flex flex-col items-center">
-              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="font-luckiest text-primary">Processing Purchase...</p>
+              <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="font-luckiest text-text-primary">Processing Purchase...</p>
             </div>
           </div>
         </div>

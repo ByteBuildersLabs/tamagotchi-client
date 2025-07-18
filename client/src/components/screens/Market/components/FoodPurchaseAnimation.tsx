@@ -176,7 +176,7 @@ export function FoodPurchaseAnimation({ food, onClose }: FoodPurchaseAnimationPr
 
       {/* Confirmation card */}
       <motion.div
-        className="bg-surface p-6 rounded-xl shadow-lg z-10 flex flex-col items-center max-w-xs w-full mx-4"
+        className="bg-cream p-6 rounded-xl shadow-lg z-10 flex flex-col items-center max-w-xs w-full mx-4"
         initial={{ scale: 0.8, y: 20 }}
         animate={{ 
           scale: 1, 
@@ -202,7 +202,7 @@ export function FoodPurchaseAnimation({ food, onClose }: FoodPurchaseAnimationPr
           <img
             src={food.image || "/placeholder.svg"}
             alt={food.name}
-            className="w-full h-full object-contain"
+            className="w-12 h-12 object-contain"
             onError={(e) => {
               const img = e.currentTarget as HTMLImageElement
               img.src = "/placeholder.svg?height=128&width=128"

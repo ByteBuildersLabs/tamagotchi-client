@@ -208,31 +208,31 @@ export const FOOD_CATEGORIES_CONFIG = {
     name: 'Fruits',
     emoji: '🍎',
     description: 'Fresh and healthy, packed with vitamins',
-    color: '#10B981', // Green
+    color: 'rgb(16, 185, 129)', 
   },
   vegetables: {
     name: 'Vegetables',
     emoji: '🥬',
     description: 'Nutritious and wholesome',
-    color: '#059669', // Dark green
+    color: 'rgb(6, 182, 212)', 
   },
   meats: {
     name: 'Proteins',
     emoji: '🥩',
     description: 'High protein, builds strength',
-    color: '#DC2626', // Red
+    color: 'rgb(217, 70, 239)', 
   },
   sweets: {
     name: 'Sweets',
     emoji: '🍰',
     description: 'Indulgent treats for special occasions',
-    color: '#EC4899', // Pink
+    color: 'rgb(251, 191, 36)', 
   },
   fast_food: {
     name: 'Fast Food',
     emoji: '🍟',
     description: 'Quick and convenient, but not so healthy',
-    color: '#F59E0B', // Orange
+    color: 'rgb(141, 141, 141)', 
   },
 } as const;
 
