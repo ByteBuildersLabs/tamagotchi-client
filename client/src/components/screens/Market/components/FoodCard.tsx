@@ -79,35 +79,18 @@ export function FoodCard({ food, onPurchase }: FoodCardProps) {
         {food.description}
       </p>
 
-      {/* Owned indicator or purchase button */}
-      {food.owned && (food.ownedAmount || 0) > 0 ? (
-        <div className="w-full">
-          {/* Still allow purchasing more */}
-          <motion.button
-            onClick={onPurchase}
-            className="btn-cr-yellow w-full flex items-center justify-center gap-2"
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-          >
-            <span>Buy More</span>
-            <img src={coinIcon} alt="Coin" className="h-5 w-5" />
-            <span>{food.price}</span>
-          </motion.button>
-        </div>
-      ) : (
-        <motion.button
-          onClick={onPurchase}
-          className="btn-cr-yellow w-full flex items-center justify-center gap-2"
-          whileTap={{ scale: 0.95 }}
-          whileHover={{ scale: 1.02 }}
-          transition={{ type: "spring", stiffness: 300, damping: 15 }}
-        >
-          <span>Buy</span>
-          <img src={coinIcon} alt="Coin" className="h-5 w-5" />
-          <span>{food.price}</span>
-        </motion.button>
-      )}
-    </motion.div>
-  )
-}
+      {/* Purchase button - Always "Buy" */}
+      <motion.button
+        onClick={onPurchase}
+        className="btn-cr-yellow w-full flex items-center justify-center gap-2"
+        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 300, damping: 15 }}
+      >
+        <span>Buy</span>
+        <img src={coinIcon} alt="Coin" className="h-5 w-5" />
+        <span>{food.price}</span>
+      </motion.button>
+      </motion.div>
+    )
+  }

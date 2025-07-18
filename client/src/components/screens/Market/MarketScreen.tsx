@@ -24,15 +24,12 @@ import {
   FoodCategory,
 } from "../../../constants/foodMarket.constants";
 
-// Store and hooks
-import useAppStore from "../../../zustand/store";
-import { useFoodInventory } from "../../../dojo/hooks/useFoodInventory";
-
 // Assets
 import sellertIcon from "../../../assets/icons/market/GolemSellerV2.webp"; 
 
 // Screen props
 import type { Screen } from "../../types/screens";
+
 interface MarketScreenProps {
   onNavigation: (screen: Screen) => void;
 }
@@ -44,10 +41,9 @@ const truncateHash = (hash: string, startLength = 6, endLength = 4) => {
   return `${hash.slice(0, startLength)}...${hash.slice(-endLength)}`;
 };
 
-export function MarketScreen({ onNavigation }: MarketScreenProps) {
-  // Get player data and food inventory
-  const player = useAppStore(state => state.player);
-  const { foods: playerFoods, isLoading: isFoodsLoading } = useFoodInventory();
+export function MarketScreen({onNavigation}: MarketScreenProps) {
+  // Hardcoded balance for development
+  const HARDCODED_BALANCE = 1000;
   
   // Market state
   const [selectedFood, setSelectedFood] = useState<MarketFoodItem | null>(null);
@@ -55,7 +51,7 @@ export function MarketScreen({ onNavigation }: MarketScreenProps) {
   const [showInsufficientBalance, setShowInsufficientBalance] = useState(false);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
   
-  // Transaction state (you'll need to implement this hook)
+  // Transaction state (simulated)
   const [isProcessing, setIsProcessing] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txStatus, setTxStatus] = useState<'PENDING' | 'SUCCESS' | 'REJECTED' | null>(null);
@@ -70,20 +66,14 @@ export function MarketScreen({ onNavigation }: MarketScreenProps) {
   // Toast position based on screen size
   const position = isMobile ? 'bottom-center' : 'top-right';
 
-  // Transform food market data to include player inventory info
+  // Static food data - no inventory integration
   const marketFoods: MarketFoodItem[] = useMemo(() => {
-    return Object.values(FOOD_MARKET_DATA).map(foodData => {
-      // Find player's current amount of this food
-      const playerFood = playerFoods.find(f => f.id === foodData.id);
-      const ownedAmount = playerFood?.count || 0;
-      
-      return {
-        ...foodData,
-        owned: ownedAmount > 0,
-        ownedAmount
-      };
-    });
-  }, [playerFoods]);
+    return Object.values(FOOD_MARKET_DATA).map(foodData => ({
+      ...foodData,
+      owned: false, // Always false since we're not checking inventory
+      ownedAmount: 0 // Always 0
+    }));
+  }, []);
 
   // Group foods by category
   const foodsByCategory = useMemo(() => {
@@ -107,17 +97,16 @@ export function MarketScreen({ onNavigation }: MarketScreenProps) {
     return grouped;
   }, [marketFoods]);
 
-  // Handle food purchase
+  // Handle food purchase - simplified
   const handlePurchase = async (food: MarketFoodItem) => {
-    // Check if player has enough coins
-    if (!player || player.total_points < food.price) {
+    // Check hardcoded balance
+    if (HARDCODED_BALANCE < food.price) {
       setSelectedFood(food);
       setShowInsufficientBalance(true);
       return;
     }
 
-    // TODO: Implement actual purchase logic with Dojo
-    // For now, simulate the process
+    // Simulate purchase process
     try {
       setIsProcessing(true);
       setTxStatus('PENDING');
@@ -196,10 +185,10 @@ export function MarketScreen({ onNavigation }: MarketScreenProps) {
       <BackButton onClick={() => onNavigation("home")} 
         className="top-12 right-4 left-auto"
       />
-
+      
       {/* Top Bar */}
       <TamagotchiTopBar 
-              coins={player?.total_points || 0}
+              coins={HARDCODED_BALANCE}
               onCoinsShopClick={() => console.log("Coins shop clicked")} gems={0}      />
 
       {/* Animated banner */}
@@ -233,7 +222,7 @@ export function MarketScreen({ onNavigation }: MarketScreenProps) {
             <h2 className="font-luckiest text-cream text-xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] tracking-wide">
               🍽️ Food Market
             </h2>
-            <p className="font-luckiest text-cream text-sm opacity-90 mt-1 sm:mt-1">
+            <p className="font-luckiest text-cream text-sm opacity-90 mt-1 sm:mt-0">
               Feed your Tamagotchi with delicious treats!
             </p>
           </div>
@@ -243,28 +232,21 @@ export function MarketScreen({ onNavigation }: MarketScreenProps) {
       {/* Main Content */}
       <div className="relative z-10 h-[calc(100%-16rem)] overflow-y-auto pb-16">
         <div className="px-4 py-2">
-          {isFoodsLoading ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="font-luckiest text-cream text-lg">Loading delicious foods...</p>
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {CATEGORY_DISPLAY_ORDER.map(category => {
-                const categoryFoods = foodsByCategory[category];
-                if (categoryFoods.length === 0) return null;
+          <div className="space-y-8">
+            {CATEGORY_DISPLAY_ORDER.map(category => {
+              const categoryFoods = foodsByCategory[category];
+              if (categoryFoods.length === 0) return null;
 
-                return (
-                  <FoodCategorySection
-                    key={category}
-                    category={category}
-                    foods={categoryFoods}
-                    onPurchase={handlePurchase}
-                  />
-                );
-              })}
-            </div>
-          )}
+              return (
+                <FoodCategorySection
+                  key={category}
+                  category={category}
+                  foods={categoryFoods}
+                  onPurchase={handlePurchase}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -280,7 +262,7 @@ export function MarketScreen({ onNavigation }: MarketScreenProps) {
           {showInsufficientBalance && (
             <FoodInsufficientBalanceAnimation
               food={selectedFood}
-              currentBalance={player?.total_points || 0}
+              currentBalance={HARDCODED_BALANCE}
               onClose={handleCloseAnimation}
             />
           )}
