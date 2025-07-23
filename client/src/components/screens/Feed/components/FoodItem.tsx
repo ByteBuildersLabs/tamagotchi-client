@@ -75,7 +75,7 @@ export const FoodItem = ({
 
           {/* Count Badge */}
           <div
-            className="mt-1 h-5 w-5 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-md"
+            className="mt-1 h-5 w-5 rounded-full flex items-center justify-center text-xs font-bold text-cream shadow-md"
             style={{ backgroundColor: food.color }}
           >
             {food.count}
@@ -84,7 +84,7 @@ export const FoodItem = ({
 
         {/* Food Name */}
         <div className="mt-1 text-center pointer-events-none">
-          <p className="text-xs font-rubik font-semibold text-cream drop-shadow-sm">
+          <p className="text-xs font-rubik font-semibold text-gray-800 drop-shadow-sm">
             {food.name}
           </p>
         </div>

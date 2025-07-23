@@ -25,7 +25,7 @@ import {
 } from "../../../constants/foodMarket.constants";
 
 // Assets
-import sellertIcon from "../../../assets/icons/market/GolemSellerV2.webp"; 
+import sellertIcon from "../../../assets/icons/market/DragonSeller.png"; 
 
 // Screen props
 import type { Screen } from "../../types/screens";
@@ -148,7 +148,10 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
       >
         {/* Animated Chef Icon */}
         <motion.div
-          className="absolute -top-11 left-3 z-10 w-40 h-40"
+          className={`
+            absolute -top-11 z-10 w-40 h-40
+            ${isMobile ? 'left-3' : 'left-6 lg:left-8'}
+          `}
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
@@ -165,7 +168,13 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
         </motion.div>
 
         {/* Banner */}
-        <div className="bg-gold-gradient py-3 px-4 pl-40 relative rounded-[10px] mx-4 shadow-md">
+        <div className={`
+          bg-gold-gradient py-3 px-4 relative rounded-[10px] shadow-md
+          ${isMobile 
+            ? 'pl-40 mx-4' 
+            : 'pl-48 lg:pl-52 mx-4 md:mx-6 lg:mx-8 xl:mx-12'
+          }
+        `}>
           <div className="flex flex-col sm:flex-row items-center justify-between">
             <h2 className="font-luckiest text-cream text-xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] tracking-wide">
               🍽️ Food Market

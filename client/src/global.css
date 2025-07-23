@@ -49,6 +49,12 @@ a:focus {
            shadow-hard-cr bg-gold-gradient;
   }
 
+  .btn-cr-store {
+    @apply relative inline-flex items-center justify-center
+           px-6 py-2 rounded-[6px] font-luckiest text-gray-800 tracking-wide
+           shadow-hard-cr bg-gold-gradient;
+  }
+
   /* Gray disabled-style button */
   .btn-cr-gray {
     @apply relative inline-flex items-center justify-center
