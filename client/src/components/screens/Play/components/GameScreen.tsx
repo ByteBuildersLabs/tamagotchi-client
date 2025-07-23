@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GameId } from '../.../../../../types/play.types';
 import { getGameById } from '../components/data/miniGames';
 import { useBeastDisplay } from '../../../../dojo/hooks/useBeastDisplay';
@@ -16,6 +16,11 @@ interface GameScreenProps {
 export const GameScreen = ({ gameId, onExitGame }: GameScreenProps) => {
   const { account } = useAccount();
   const { currentBeastDisplay, hasLiveBeast, isLoading } = useBeastDisplay();
+  
+  // Track if the game has been successfully initialized to prevent interruption
+  const [gameInitialized, setGameInitialized] = useState(false);
+  // Store initial beast data to prevent loss during game
+  const [initialBeastData, setInitialBeastData] = useState<typeof currentBeastDisplay | null>(null);
   
   // Get Dojo client using your existing pattern
   const { client } = useDojoSDK();
@@ -37,8 +42,21 @@ export const GameScreen = ({ gameId, onExitGame }: GameScreenProps) => {
   console.log('🔍 GameScreen Debug:', {
     account: account?.address,
     hasClient: !!client,
-    gameId
+    gameId,
+    hasLiveBeast,
+    currentBeastDisplay: !!currentBeastDisplay,
+    gameInitialized,
+    isLoading
   });
+
+  // Initialize the game if we have valid beast data
+  useEffect(() => {
+    if (hasLiveBeast && currentBeastDisplay && !gameInitialized) {
+      console.log('🎮 Initializing game with beast data:', currentBeastDisplay.displayName);
+      setGameInitialized(true);
+      setInitialBeastData(currentBeastDisplay);
+    }
+  }, [hasLiveBeast, currentBeastDisplay, gameInitialized]);
 
   // Prevent body scroll when game is active
   useEffect(() => {
@@ -79,8 +97,9 @@ export const GameScreen = ({ gameId, onExitGame }: GameScreenProps) => {
     );
   }
 
-  // No beast validation
-  if (!hasLiveBeast || !currentBeastDisplay) {
+  // No beast validation - show error only if we don't have beast data AND game hasn't been initialized
+  if (!hasLiveBeast && !currentBeastDisplay && !gameInitialized) {
+    console.log('❌ Blocking game - no beast data and not initialized');
     return (
       <div className="w-full h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -120,15 +139,29 @@ export const GameScreen = ({ gameId, onExitGame }: GameScreenProps) => {
 
   // Render the appropriate game based on gameId
   const renderGame = () => {
+    // Use initialBeastData to prevent null reference during game
+    const beastData = initialBeastData || currentBeastDisplay;
+    
+    console.log('🎯 renderGame called:', {
+      gameInitialized,
+      beastData: !!beastData,
+      gameId
+    });
+    
+    if (!beastData) {
+      console.log('❌ No beast data available for game rendering');
+      return null; // This shouldn't happen if gameInitialized is true
+    }
+    
     switch (gameId) {
       case GameId.FLAPPY_BEASTS:
         return (
           <FlappyBeastsScreen
             onExitGame={onExitGame}
             gameId={gameId}
-            beastId={currentBeastDisplay.beast_id}
-            beastImage={currentBeastDisplay.asset}
-            beastDisplayName={currentBeastDisplay.displayName}
+            beastId={beastData.beast_id}
+            beastImage={beastData.asset}
+            beastDisplayName={beastData.displayName}
             playerAddress={account.address}
             // Real Dojo props using your existing pattern:
             handleAction={handleAction}
