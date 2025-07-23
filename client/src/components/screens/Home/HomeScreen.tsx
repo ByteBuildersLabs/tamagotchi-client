@@ -4,6 +4,8 @@ import { HomeScreenProps, BeastData, PlayerData } from "../../types/home.types";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 import { PlayerInfoModal } from "./components/PlayerInfoModal";
 import forestBackground from "../../../assets/backgrounds/bg-home.png";
+import { lookupAddresses } from '@cartridge/controller';
+import { useAccount } from "@starknet-react/core";
 
 // Universal hook to encapsulate beast display logic
 import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
@@ -23,7 +25,10 @@ import { BeastHomeDisplay } from "./components/BeastDisplay";
 
 export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
   const [age] = useState(1);
-  const playerName = "0xluis";
+  const [playerName, setPlayerName] = useState("Player");
+  
+  // Account from Starknet
+  const { account } = useAccount();
 
   // Music context
   const { setCurrentScreen } = useMusic();
@@ -40,6 +45,43 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
   useEffect(() => {
     setCurrentScreen("home");
   }, [setCurrentScreen]);
+
+  // Username lookup effect
+  useEffect(() => {
+    const fetchPlayerName = async () => {
+      if (!account?.address) {
+        setPlayerName('Player');
+        return;
+      }
+
+      try {
+        console.log("🔍 Looking up username for address:", account.address);
+        
+        // Use lookupAddresses with the current account address
+        const addressMap = await lookupAddresses([account.address]);
+        
+        // Get the username from the map
+        const username = addressMap.get(account.address);
+        
+        console.log("📋 Username lookup result:", username);
+        
+        if (username) {
+          setPlayerName(username);
+        } else {
+          // Fallback to truncated address if no username found
+          const truncated = account.address.slice(0, 6) + '...' + account.address.slice(-4);
+          setPlayerName(truncated);
+        }
+      } catch (error) {
+        console.error("❌ Error looking up username:", error);
+        // Fallback to truncated address on error
+        const truncated = account.address.slice(0, 6) + '...' + account.address.slice(-4);
+        setPlayerName(truncated);
+      }
+    };
+
+    fetchPlayerName();
+  }, [account?.address]);
 
   // Store data
   const storePlayer = useAppStore(state => state.player);
