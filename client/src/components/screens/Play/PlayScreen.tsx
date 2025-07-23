@@ -139,7 +139,7 @@ export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
         className="mt-4 z-10"
       >
         <h1 className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg">
-          Play With Your {currentBeastDisplay.displayName}
+          Play With Your Beast
         </h1>
       </motion.div>
 

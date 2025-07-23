@@ -231,9 +231,9 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
       >
         <h1 className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg text-center">
           {isBeastSleeping ? (
-            <>Your {currentBeastDisplay.displayName} is Sleeping 😴</>
+            <>Your Beast is Sleeping 😴</>
           ) : (
-            <>Sleep Your {currentBeastDisplay.displayName}</>
+            <>Sleep Your Beast</>
           )}
         </h1>
       </motion.div>
