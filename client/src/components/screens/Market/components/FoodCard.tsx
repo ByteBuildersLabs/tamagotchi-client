@@ -62,7 +62,7 @@ export function FoodCard({ food, onPurchase }: FoodCardProps) {
       </div>
 
       {/* Name */}
-      <h3 className="font-luckiest text-lg text-text-primary mb-1 text-center">
+      <h3 className="font-luckiest text-lg text-gray-800 mb-1 text-center">
         {food.name}
       </h3>
 
@@ -75,14 +75,14 @@ export function FoodCard({ food, onPurchase }: FoodCardProps) {
       </span>
 
       {/* Description */}
-      <p className="font-luckiest text-sm text-text-secondary mb-3 text-center h-12 overflow-hidden leading-tight">
+      <p className="font-luckiest text-sm text-gray-800 mb-3 text-center h-12 overflow-hidden leading-tight">
         {food.description}
       </p>
 
       {/* Purchase button - Always "Buy" */}
       <motion.button
         onClick={onPurchase}
-        className="btn-cr-yellow w-full flex items-center justify-center gap-2"
+        className="btn-cr-store w-full flex items-center justify-center gap-2"
         whileTap={{ scale: 0.95 }}
         whileHover={{ scale: 1.02 }}
         transition={{ type: "spring", stiffness: 300, damping: 15 }}

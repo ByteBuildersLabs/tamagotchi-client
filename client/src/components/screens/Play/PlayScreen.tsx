@@ -13,7 +13,7 @@ import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 import { useMusic } from "../../../context/MusicContext";
 
 // Data
-import { isGameAvailable, MINI_GAMES } from "./components/data/miniGames";
+import { isGameAvailable, getAvailableGames } from "./components/data/miniGames";
 
 // Components
 import { BeastPlayDisplay } from "./components/BeastDisplay";
@@ -139,7 +139,7 @@ export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
         className="mt-4 z-10"
       >
         <h1 className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg">
-          Play With Your {currentBeastDisplay.displayName}
+          Play With Your Beast
         </h1>
       </motion.div>
 
@@ -151,7 +151,7 @@ export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
 
       {/* Mini-Games Carousel */}
       <GameCarousel 
-        games={MINI_GAMES}
+        games={getAvailableGames()}
         onGameSelect={handleMiniGameSelect}
       />
 

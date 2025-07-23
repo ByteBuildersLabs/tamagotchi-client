@@ -25,7 +25,7 @@ import {
 } from "../../../constants/foodMarket.constants";
 
 // Assets
-import sellertIcon from "../../../assets/icons/market/GolemSellerV2.webp"; 
+import sellertIcon from "../../../assets/icons/market/DragonSeller.png"; 
 
 // Screen props
 import type { Screen } from "../../types/screens";
@@ -131,7 +131,7 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
 
       {/* Back Button */}
       <BackButton onClick={() => onNavigation("home")} 
-        className="top-12 right-4 left-auto"
+        className="top-12 left-4 left-auto"
       />
       
       {/* Top Bar */}
@@ -148,7 +148,7 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
       >
         {/* Animated Chef Icon */}
         <motion.div
-          className="absolute -top-11 left-3 z-10 w-40 h-40"
+          className="absolute -top-11 right-3 z-10 w-40 h-40"
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
@@ -165,15 +165,10 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
         </motion.div>
 
         {/* Banner */}
-        <div className="bg-gold-gradient py-3 px-4 pl-40 relative rounded-[10px] mx-4 shadow-md">
-          <div className="flex flex-col sm:flex-row items-center justify-between">
-            <h2 className="font-luckiest text-cream text-xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] tracking-wide">
-              🍽️ Food Market
-            </h2>
-            <p className="font-luckiest text-cream text-sm opacity-90 mt-1 sm:mt-0">
-              Feed your Tamagotchi with delicious treats!
-            </p>
-          </div>
+        <div className="bg-gold-gradient py-4 px-4 mx-4 relative rounded-[10px] shadow-md">
+          <h2 className="font-luckiest text-cream text-xl sm:text-2xl lg:text-3xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)] tracking-wide text-left">
+            🍽️ Food Market
+          </h2>
         </div>
       </motion.div>
 

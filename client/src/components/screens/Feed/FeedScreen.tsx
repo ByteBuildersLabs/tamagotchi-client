@@ -198,7 +198,7 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
         className="mt-4 z-10"
       >
         <h1 className="text-2xl md:text-3xl font-luckiest text-cream drop-shadow-lg">
-          Feed Your {currentBeastDisplay.displayName}
+          Feed Your Beast
         </h1>
       </motion.div>
 
