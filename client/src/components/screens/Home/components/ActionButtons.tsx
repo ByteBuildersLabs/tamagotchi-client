@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ActionButtonsProps } from "../../../types/home.types";
-import dailyQuestIcon from "../../../../assets/icons/daily-quests/icon-daily-quests.png";
+//import dailyQuestIcon from "../../../../assets/icons/daily-quests/icon-daily-quests.png";
 import shopIcon from "../../../../assets/icons/shop/icon-general-shop.webp";
 
 const buttonInteractionProps = {
@@ -8,7 +8,9 @@ const buttonInteractionProps = {
   whileTap: { scale: 0.95, transition: { type: "spring", stiffness: 400, damping: 20 } },
 };
 
-export const ActionButtons = ({ onShopClick, onDailyQuestsClick }: ActionButtonsProps) => {
+export const ActionButtons = ({ onShopClick }: ActionButtonsProps) => {
+//export const ActionButtons = ({ onShopClick, onDailyQuestsClick }: ActionButtonsProps) => {
+ 
   return (
     <>
       {/* Shop Button (enters from left) */}
@@ -24,7 +26,7 @@ export const ActionButtons = ({ onShopClick, onDailyQuestsClick }: ActionButtons
       </motion.button>
 
       {/* Daily Quests Button (enters from right) */}
-      <motion.button
+      {/* <motion.button
         onClick={onDailyQuestsClick}
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0, transition: { delay: 0.45, duration: 0.5, ease: "easeOut" } }}
@@ -33,7 +35,7 @@ export const ActionButtons = ({ onShopClick, onDailyQuestsClick }: ActionButtons
         aria-label="Open Daily Quests"
       >
         <img src={dailyQuestIcon} alt="Daily Quests" className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16" />
-      </motion.button>
+      </motion.button> */}
     </>
   );
 };
