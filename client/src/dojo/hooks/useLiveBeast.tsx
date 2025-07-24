@@ -145,7 +145,8 @@ const fetchLiveBeastData = async (playerAddress: string): Promise<{
           age: hexToNumber(rawBeast.age),
           birth_date: hexToNumber(rawBeast.birth_date),
           specie: hexToNumber(rawBeast.specie),
-          beast_type: hexToNumber(rawBeast.beast_type)
+          beast_type: hexToNumber(rawBeast.beast_type),
+          name: rawBeast.name || "Beast" // Default name if not set
         };
         
         return { beast, status: beastStatus };
@@ -162,7 +163,8 @@ const fetchLiveBeastData = async (playerAddress: string): Promise<{
       age: hexToNumber(rawBeast.age),
       birth_date: hexToNumber(rawBeast.birth_date),
       specie: hexToNumber(rawBeast.specie),
-      beast_type: hexToNumber(rawBeast.beast_type)
+      beast_type: hexToNumber(rawBeast.beast_type),
+      name: rawBeast.name || "Beast" // Default name if not set
     };
     
     return { beast, status: beastStatus };

@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x7746f30d2b8494780387ed469797ecb5c62c7b6f49f4939a5e60e0f7ae5f99e",
-    "address": "0x313e3b2149e3feb6748ea6e5458ec2cc40f160bc016d8cccdd9aa991f85ae83",
-    "seed": "tamagotchi23",
+    "address": "0x1e87c289aacc73a6b5ac33688097cc13de58b7b5da2168573bd610e859fd9a9",
+    "seed": "tamagotchi30",
     "name": "ByteBeasts Tamagotchi",
     "entrypoints": [
       "uuid",
@@ -1328,8 +1328,8 @@
   },
   "contracts": [
     {
-      "address": "0x6e6e2651a6c0e3d5829f4833b664dbbfd9fbac1f93bbe352801f9532a6e84e0",
-      "class_hash": "0x218ad529a7e8101edb4b7102af43f8e098780ed3c11c3d531083ca5003e7722",
+      "address": "0x6846e1d528421a1569e36a3f80613f77e0d9f927e50967ada831347513f4c85",
+      "class_hash": "0x2b33cdb03fd3e24282a9df186e6b1ea482723e90d490ab1d98da6464228af42",
       "abi": [
         {
           "type": "impl",
@@ -1630,8 +1630,8 @@
       ]
     },
     {
-      "address": "0x5ca90d27bd019b06be5375af35d3075d4c8ee847e0221aae83565525eeb95fd",
-      "class_hash": "0xecaf8831557b9b56e21e7ff3f101d42c1ff5e96dd71d41995d7b0d93a6acba",
+      "address": "0x8efc9411c660ef584995d8f582a13cac41aeddb6b9245b4715aa1e9e6a201e",
+      "class_hash": "0x649e9fe41d6d64e292d1dd94bccc4a5c63193ba33edf7bf8cf6619853dd995e",
       "abi": [
         {
           "type": "impl",
@@ -1812,6 +1812,10 @@
                 {
                   "name": "beast_type",
                   "type": "core::integer::u8"
+                },
+                {
+                  "name": "name",
+                  "type": "core::felt252"
                 }
               ],
               "outputs": [],
@@ -1832,6 +1836,10 @@
                 {
                   "name": "beast_status",
                   "type": "tamagotchi::types::beast_status_custom::BeastStatusCustom"
+                },
+                {
+                  "name": "name",
+                  "type": "core::felt252"
                 }
               ],
               "outputs": [],
@@ -1896,6 +1904,22 @@
               "name": "revive",
               "inputs": [],
               "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "set_beast_name",
+              "inputs": [
+                {
+                  "name": "name",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
               "state_mutability": "external"
             },
             {
@@ -2077,6 +2101,7 @@
         "pet",
         "clean",
         "revive",
+        "set_beast_name",
         "get_timestamp_based_status",
         "get_timestamp_based_status_with_address",
         "get_beast_age",
@@ -2085,8 +2110,8 @@
       ]
     },
     {
-      "address": "0x5492cc68a3a2aeee0bf83f2bfe47e45815a31e8537e6c6ccc6400261e8fac60",
-      "class_hash": "0xcc99d5d8361d9f6a89f30cf9657889e600a10d35f01b5cbc8f955d587c8e5b",
+      "address": "0x5e79b9650cb00d19d21601c9c712654cb13daa3007fd78cce0e90051e46ec8a",
+      "class_hash": "0x404bb0ac5ffde9fe1545413535aa9b1261c6cdea8974cfc9d755dced86fa963",
       "abi": [
         {
           "type": "impl",
@@ -2182,6 +2207,30 @@
             },
             {
               "type": "function",
+              "name": "update_player_total_coins",
+              "inputs": [
+                {
+                  "name": "coins",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "update_player_total_gems",
+              "inputs": [
+                {
+                  "name": "gems",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
               "name": "update_player_minigame_highest_score",
               "inputs": [
                 {
@@ -2207,6 +2256,10 @@
                 {
                   "name": "amount",
                   "type": "core::integer::u8"
+                },
+                {
+                  "name": "price",
+                  "type": "core::integer::u32"
                 }
               ],
               "outputs": [],
@@ -2342,6 +2395,8 @@
         "spawn_player",
         "update_player_daily_streak",
         "update_player_total_points",
+        "update_player_total_coins",
+        "update_player_total_gems",
         "update_player_minigame_highest_score",
         "add_or_update_food_amount",
         "emit_player_push_token",
@@ -2353,7 +2408,7 @@
   "models": [
     {
       "members": [],
-      "class_hash": "0x366954b998cccd230efa9d1814c3232cafc8178c0db8ca90f45a7916001028f",
+      "class_hash": "0x472c18d3cc3234983161d521f4a307beeb751d8f6324f6d801cced168323f3d",
       "tag": "tamagotchi-Beast",
       "selector": "0x797d07b8fd13e637ef738a275f2e895655f27905cdd62f75d82d68f239479f8"
     },
@@ -2377,7 +2432,7 @@
     },
     {
       "members": [],
-      "class_hash": "0x41666057b0c9cbac4b42f63c12038cffba3be5212896e9b8166b41863407450",
+      "class_hash": "0x19149b867436b81aa90df7400262126aa1a430dd3560869d3f954fbf758a272",
       "tag": "tamagotchi-Player",
       "selector": "0x3c2b9e38bb17747db3008b613c6b1ef5f9a6bcd4c1f40f329e7ff691aafa1e2"
     }
