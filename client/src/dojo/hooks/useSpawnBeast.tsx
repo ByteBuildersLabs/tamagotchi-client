@@ -138,7 +138,8 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
       const tx = await client.game.spawnBeast(
         account as Account,
         params.specie,
-        params.beast_type
+        params.beast_type,
+        params.name
       );
       
       setSpawnState(prev => ({
@@ -164,21 +165,26 @@ export const useSpawnBeast = (): UseSpawnBeastReturn => {
         const syncResult = await syncAfterSpawn(tx.transaction_hash, params);
         
         if (syncResult.success) {
-          console.log('✅ Post-spawn sync completed successfully');
+          const isFullyComplete = syncResult.syncType === 'complete';
+          const logMessage = isFullyComplete 
+            ? '✅ Post-spawn sync completed successfully (fully synced)'
+            : '✅ Post-spawn transaction successful (partial sync - Torii catching up)';
+          
+          console.log(logMessage);
           
           setSpawnState(prev => ({
             ...prev,
             completed: true,
             step: 'success',
             isSpawning: false,
-            syncSuccess: true
+            syncSuccess: isFullyComplete
           }));
 
           return {
             success: true,
             transactionHash: tx.transaction_hash,
             beastParams: params,
-            syncSuccess: true,
+            syncSuccess: isFullyComplete,
             finalBeastId: syncResult.finalBeastId
           };
         } else {

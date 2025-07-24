@@ -6,6 +6,7 @@ import fetchStatus from '../../utils/fetchStatus';
 
 interface PostSpawnSyncResult {
   success: boolean;
+  syncType: 'complete' | 'partial' | 'failed';
   finalBeastId: number | null;
   error?: string;
 }
@@ -30,6 +31,7 @@ export const usePostSpawnSync = () => {
     if (!account) {
       return {
         success: false,
+        syncType: 'failed',
         finalBeastId: null,
         error: 'No account available'
       };
@@ -154,6 +156,7 @@ export const usePostSpawnSync = () => {
         console.log('✅ Post-spawn sync completed successfully');
         return {
           success: true,
+          syncType: 'complete',
           finalBeastId: finalBeastId
         };
       } else {
@@ -162,6 +165,7 @@ export const usePostSpawnSync = () => {
           console.log('✅ Partial success: Contract OK, Torii will sync eventually');
           return {
             success: true, // Contract-first approach: this is enough
+            syncType: 'partial',
             finalBeastId: contractBeastId
           };
         }
@@ -175,6 +179,7 @@ export const usePostSpawnSync = () => {
       
       return {
         success: false,
+        syncType: 'failed',
         finalBeastId: null,
         error: errorMessage
       };

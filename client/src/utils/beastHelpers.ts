@@ -25,13 +25,14 @@ export type BeastType = typeof BEAST_TYPES[keyof typeof BEAST_TYPES];
 export interface BeastSpawnParams {
   specie: BeastSpecies;
   beast_type: BeastType;
+  name: string; // short string that will be converted to felt252
 }
 
 /**
  * Generates random beast spawn parameters
- * Returns specie and beast_type values (1-3) required by the spawn_beast contract function
+ * Returns specie, beast_type values (1-3) and default name required by the spawn_beast contract function
  * 
- * @returns BeastSpawnParams object with random specie and beast_type
+ * @returns BeastSpawnParams object with random specie, beast_type and default name
  */
 export const generateRandomBeastParams = (): BeastSpawnParams => {
   // Generate random number between 1 and 3 (inclusive)
@@ -41,25 +42,30 @@ export const generateRandomBeastParams = (): BeastSpawnParams => {
   const specie = randomValue as BeastSpecies;
   const beast_type = randomValue as BeastType;
   
+  // Default name as short string (will be converted to felt252)
+  const name = "Beast";
+  
   return {
     specie,
-    beast_type
+    beast_type,
+    name
   };
 };
 
 /**
  * Validates beast spawn parameters
- * Ensures specie and beast_type are within valid range (1-3)
+ * Ensures specie and beast_type are within valid range (1-3) and name is a valid number
  * 
  * @param params - Beast spawn parameters to validate
  * @returns boolean indicating if parameters are valid
  */
 export const validateBeastParams = (params: BeastSpawnParams): boolean => {
-  const { specie, beast_type } = params;
+  const { specie, beast_type, name } = params;
   
   // Check if values are within valid range (1-3)
   const isSpecieValid = specie >= 1 && specie <= 3;
   const isBeastTypeValid = beast_type >= 1 && beast_type <= 3;
+  const isNameValid = typeof name === 'string' && name.length > 0 && name.length <= 31;
   
   if (!isSpecieValid) {
     console.error(`Invalid specie: ${specie}. Must be between 1-3`);
@@ -68,6 +74,11 @@ export const validateBeastParams = (params: BeastSpawnParams): boolean => {
   
   if (!isBeastTypeValid) {
     console.error(`Invalid beast_type: ${beast_type}. Must be between 1-3`);
+    return false;
+  }
+  
+  if (!isNameValid) {
+    console.error(`Invalid name: ${name}. Must be a string with 1-31 characters`);
     return false;
   }
   
@@ -136,14 +147,16 @@ export const getBeastDisplayInfo = (specie: BeastSpecies, beastType: BeastType) 
  * Creates a deterministic beast based on a seed (useful for testing)
  * 
  * @param seed - Number to use as seed for deterministic generation
+ * @param name - Optional name for the beast (defaults to "Beast")
  * @returns BeastSpawnParams with deterministic values
  */
-export const generateDeterministicBeastParams = (seed: number): BeastSpawnParams => {
+export const generateDeterministicBeastParams = (seed: number, name: string = "Beast"): BeastSpawnParams => {
   // Use modulo to ensure we stay within 1-3 range
   const value = (seed % 3) + 1;
   
   return {
     specie: value as BeastSpecies,
-    beast_type: value as BeastType
+    beast_type: value as BeastType,
+    name
   };
 };

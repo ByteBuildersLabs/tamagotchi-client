@@ -188,8 +188,10 @@ export const HatchEggScreen = ({ onLoadingComplete, beastParams }: HatchEggScree
   const canContinueCalc = useMemo(() => {
     const eggRevealed = eggState === 'revealing' && showBeast;
     const hasLive = useAppStore.getState().hasLiveBeast();
-    return eggRevealed && ((spawnCompleted && syncSuccess) || hasLive);
-  }, [eggState, showBeast, spawnCompleted, syncSuccess]);
+    // Allow continue if spawn completed successfully (transaction confirmed)
+    // OR if beast is already detected in store (full sync completed)
+    return eggRevealed && (spawnCompleted || hasLive);
+  }, [eggState, showBeast, spawnCompleted]);
 
   const showSpawnProgress = isSpawning || (txHash && txStatus === 'PENDING');
   const showSyncProgress = spawnCompleted && !syncSuccess && currentStep === 'syncing';
