@@ -113,6 +113,9 @@ importers:
       three:
         specifier: ^0.178.0
         version: 0.178.0
+      three-stdlib:
+        specifier: ^2.36.0
+        version: 2.36.0(three@0.178.0)
       use-sound:
         specifier: ^5.0.0
         version: 5.0.0(react@19.1.0)
