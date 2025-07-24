@@ -48,7 +48,7 @@ export const useFeedBeast = (): UseFeedBeastReturn => {
   const feedTransaction = useAppStore(state => state.feedTransaction);
   const setFeedTransaction = useAppStore(state => state.setFeedTransaction);
   const resetFeedTransaction = useAppStore(state => state.resetFeedTransaction);
-  const updateFoodAmount = useAppStore(state => state.updateFoodAmount);
+  // Note: No longer using optimistic updates - updateFoodAmount not needed
   const hasLiveBeast = useAppStore(state => state.hasLiveBeast);
   const player = useAppStore(state => state.player);
 
@@ -98,10 +98,7 @@ export const useFeedBeast = (): UseFeedBeastReturn => {
         error: null,
       });
 
-      // Optimistic update: decrease food amount by 1
-      updateFoodAmount(player.address, foodId, -1); // -1 means decrease by 1
-
-      // Execute transaction 
+      // Execute transaction (no optimistic updates needed)
       const tx = await client.game.feed(account as Account, foodId);
       
       // Check transaction result
@@ -127,10 +124,7 @@ export const useFeedBeast = (): UseFeedBeastReturn => {
     } catch (error: any) {
       console.error('Feed transaction failed:', error);
 
-      // Revert optimistic update on error
-      updateFoodAmount(player.address, foodId, 1); // +1 to revert the -1
-
-      // Update transaction state with error
+      // Update transaction state with error (no optimistic update to revert)
       const errorMessage = error?.message || error?.toString() || 'Transaction failed';
       setFeedTransaction({
         isFeeding: false,
@@ -166,7 +160,6 @@ export const useFeedBeast = (): UseFeedBeastReturn => {
     hasLiveBeast,
     feedTransaction.isFeeding,
     setFeedTransaction,
-    updateFoodAmount,
     client.game
   ]);
 

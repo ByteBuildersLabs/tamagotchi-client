@@ -19,6 +19,7 @@ interface UseFoodInventoryReturn {
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
+  silentRefetch: () => Promise<void>;
   availableFoods: FoodItem[];
   totalFoodCount: number;
   hasFoodAvailable: boolean;
@@ -152,6 +153,28 @@ export const useFoodInventory = (): UseFoodInventoryReturn => {
     await fetchAndMapFoodInventory();
   }, [fetchAndMapFoodInventory]);
 
+  // Silent refetch function - updates data without loading states
+  const silentRefetch = useCallback(async () => {
+    if (!userAddress) return;
+
+    try {
+      // Fetch without setting loading states
+      const contractFoods = await fetchFoodInventory(userAddress);
+      
+      const storeFoods: Food[] = contractFoods.map(contractFood => ({
+        player: contractFood.player,
+        id: contractFood.id,
+        amount: contractFood.amount,
+      }));
+
+      setStoreFoods(storeFoods);
+      console.log('🔄 Food inventory silently updated');
+    } catch (error) {
+      console.warn('⚠️ Silent food refresh failed:', error);
+      // Don't set error state to avoid disrupting UI
+    }
+  }, [userAddress, setStoreFoods]);
+
   // Convert store Food[] to FoodItem[] for UI compatibility
   // Now only includes foods that actually exist (no count: 0 items)
   const foods = useMemo((): FoodItem[] => {
@@ -186,6 +209,7 @@ export const useFoodInventory = (): UseFoodInventoryReturn => {
     isLoading,
     error,
     refetch,
+    silentRefetch,
     availableFoods,               
     totalFoodCount,
     hasFoodAvailable,

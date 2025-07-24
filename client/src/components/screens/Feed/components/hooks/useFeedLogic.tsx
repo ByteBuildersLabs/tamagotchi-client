@@ -38,8 +38,8 @@ export const useFeedLogic = (): UseFeedLogicReturn => {
   const {
     foods,
     isLoading,
-    refetch: refetchFood,
-    hasFoodAvailable
+    hasFoodAvailable,
+    silentRefetch
   } = useFoodInventory();
   
   // Get feed transaction capabilities
@@ -158,24 +158,29 @@ export const useFeedLogic = (): UseFeedLogicReturn => {
             if (updateSuccess) {
               console.log('✅ Beast updated successfully');
               
-              // Step 2: Fetch latest status SILENTLY (no loading states to avoid re-renders)
-              console.log('🔄 Fetching updated status...');
-              await fetchLatestStatus();
+              // Step 2: Fetch latest status SILENTLY with skipSync to avoid re-mounting
+              console.log('🔄 Fetching updated status (skipSync=true)...');
+              await fetchLatestStatus(true); // Skip auto-sync to prevent re-mounting
               console.log('✅ Status fetched and updated in background');
             } else {
-              console.warn('⚠️ Beast update failed, fetching status anyway');
-              await fetchLatestStatus();
+              console.warn('⚠️ Beast update failed, fetching status anyway (skipSync=true)');
+              await fetchLatestStatus(true); // Skip auto-sync to prevent re-mounting
             }
             
-            // Step 3: Refetch food inventory SILENTLY
-            console.log('🔄 Refreshing food inventory...');
-            await refetchFood();
-            console.log('✅ Food inventory refreshed');
+            // Step 3: Silent food refetch - update data without loading states
+            console.log('🔄 Silently refreshing food inventory...');
+            await silentRefetch();
+            console.log('✅ Food inventory silently updated');
             
           } catch (error) {
             console.error('❌ Error in post-feeding updates:', error);
-            // Still try to refetch food even if status update fails
-            await refetchFood();
+            // Try silent food refetch as fallback
+            try {
+              await silentRefetch();
+              console.log('✅ Food inventory fallback update completed');
+            } catch (fallbackError) {
+              console.warn('⚠️ Fallback food refetch also failed:', fallbackError);
+            }
           }
         }, 1500); // Reduced delay for faster feedback
         
