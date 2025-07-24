@@ -30,13 +30,16 @@ import sellertIcon from "../../../assets/icons/market/DragonSeller.png";
 // Screen props
 import type { Screen } from "../../types/screens";
 
+// Store
+import useAppStore from "../../../zustand/store";
+
 interface MarketScreenProps {
   onNavigation: (screen: Screen) => void;
 }
 
 export function MarketScreen({onNavigation}: MarketScreenProps) {
-  // Hardcoded balance for development
-  const HARDCODED_BALANCE = 1000;
+  // Store player data
+  const storePlayer = useAppStore(state => state.player);
   
   // Market state
   const [selectedFood, setSelectedFood] = useState<MarketFoodItem | null>(null);
@@ -90,8 +93,9 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
 
   // Handle food purchase - simplified
   const handlePurchase = async (food: MarketFoodItem) => {
-    // Check hardcoded balance
-    if (HARDCODED_BALANCE < food.price) {
+    // Check player balance
+    const playerBalance = storePlayer?.total_coins || 0;
+    if (playerBalance < food.price) {
       setSelectedFood(food);
       setShowInsufficientBalance(true);
       return;
@@ -136,8 +140,10 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
       
       {/* Top Bar */}
       <TamagotchiTopBar 
-              coins={HARDCODED_BALANCE}
-              onCoinsShopClick={() => console.log("Coins shop clicked")} gems={0}      />
+        coins={storePlayer?.total_coins || 0}
+        gems={storePlayer?.total_gems || 0}
+        onCoinsShopClick={() => console.log("Coins shop clicked")}
+      />
 
       {/* Animated banner */}
       <motion.div
@@ -205,7 +211,7 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
           {showInsufficientBalance && (
             <FoodInsufficientBalanceAnimation
               food={selectedFood}
-              currentBalance={HARDCODED_BALANCE}
+              currentBalance={storePlayer?.total_coins || 0}
               onClose={handleCloseAnimation}
             />
           )}
