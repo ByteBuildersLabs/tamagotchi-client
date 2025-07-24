@@ -33,7 +33,8 @@ export interface ActionButtonsProps {
   onDailyQuestsClick: () => void;
 }
 
-export interface BeastHomeDisplayProps {
-  beastImage: string;
-  altText: string;
-}
+// No longer needed - BeastHomeDisplay now uses 3D model without props
+// export interface BeastHomeDisplayProps {
+//   beastImage: string;
+//   altText: string;
+// }
