@@ -13,6 +13,9 @@ import fetchStatus from '../../../../../../utils/fetchStatus';
 // high score hook
 import { useHighScore } from '../../../../../../dojo/hooks/useHighScore';
 
+// player hook for refreshing player data
+import { usePlayer } from '../../../../../../dojo/hooks/usePlayer';
+
 // Constants
 const ENERGY_REQUIREMENT = 20;
 
@@ -50,6 +53,9 @@ export const useFlappyGameLogic = ({
     flappyBirdScore,
     refetch: refetchHighScores
   } = useHighScore();
+  
+  // player hook for refreshing player data after rewards
+  const { refetch: refetchPlayer } = usePlayer();
 
   // State
   const [showEnergyToast, setShowEnergyToast] = useState(false);
@@ -127,11 +133,20 @@ export const useFlappyGameLogic = ({
         return;
       }
 
+      // Calculate rewards for the blockchain transactions
+      const rewards = calculateRewards(score);
+      
       await handleAction(
         "SaveGameResults",
         async () => {
           // Update total points
           await client.player.updatePlayerTotalPoints(account, score);
+          
+          // Update total coins
+          await client.player.updatePlayerTotalCoins(account, rewards.coins);
+          
+          // Update total gems
+          await client.player.updatePlayerTotalGems(account, rewards.gems);
           
           // Achievement for playing
           await client.achieve.achievePlayerNewTotalPoints(account);
@@ -152,8 +167,9 @@ export const useFlappyGameLogic = ({
 
       // Refresh high scores after saving
       await refetchHighScores();
-
-      console.log("Game results saved successfully");
+      
+      // Refresh player data to update coins/gems in UI
+      await refetchPlayer();
     } catch (error) {
       console.error("Error saving game results:", error);
       toast.error("Couldn't save your game results. Your progress might not be recorded.");
@@ -191,12 +207,6 @@ export const useFlappyGameLogic = ({
       // Check if this is a new high score
       const isNewHigh = finalScore > currentHighScore;
       setIsNewHighScore(isNewHigh);
-
-      console.info('Game completion:', {
-        finalScore,
-        currentHighScore,
-        isNewHigh
-      });
 
       // Save results to blockchain (async, don't block UI)
       saveGameResults(finalScore, isNewHigh).catch(error => {
