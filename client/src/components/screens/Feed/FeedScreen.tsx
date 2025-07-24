@@ -15,7 +15,6 @@ import { useMusic } from "../../../context/MusicContext";
 import { Beast } from "./components/beasts";
 import { FoodCarousel } from "./components/FoodCarousel";
 import { DragPortal } from "./components/DragPortal";
-import { ToastContainer } from "./components/ToastContainer";
 
 // Main feed logic hook (includes all food inventory + transaction logic)
 import { useFeedLogic, usePortal } from "./components/hooks/useFeedLogic";
@@ -172,8 +171,6 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Toast notifications for feeding feedback */}
-      <ToastContainer />
 
       {/* Background particle effects */}
       <MagicalSparkleParticles />

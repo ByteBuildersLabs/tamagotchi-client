@@ -19,7 +19,7 @@ interface UseRealTimeStatusReturn {
   } | null;
   
   // Actions
-  fetchLatestStatus: () => Promise<void>;
+  fetchLatestStatus: (skipSync?: boolean) => Promise<void>;
   updateOptimistic: (statusUpdate: Partial<{
     energy: number;
     hunger: number;
@@ -57,7 +57,7 @@ export const useRealTimeStatus = (): UseRealTimeStatusReturn => {
   /**
    * Fetch latest status from contract
    */
-  const fetchLatestStatus = useCallback(async () => {
+  const fetchLatestStatus = useCallback(async (skipSync = false) => {
     if (!account || !hasLiveBeast) {
       console.log('⏸️ Skipping status fetch - no account or live beast');
       return;
@@ -74,7 +74,7 @@ export const useRealTimeStatus = (): UseRealTimeStatusReturn => {
       if (newStatus && newStatus.length >= 10) {
         // Validate that status belongs to current beast
         if (validateStatusForCurrentBeast(newStatus)) {
-          setRealTimeStatus(newStatus);
+          setRealTimeStatus(newStatus, skipSync);
           console.log('✅ Real-time status updated:', {
             beast_id: newStatus[1],
             is_alive: Boolean(newStatus[2]),

@@ -62,7 +62,7 @@ interface AppStore {
   clearLiveBeast: () => void;
   
   // Real-time status actions
-  setRealTimeStatus: (status: number[]) => void;
+  setRealTimeStatus: (status: number[], skipSync?: boolean) => void;
   updateStatusOptimistic: (statusUpdate: Partial<{
     energy: number;
     hunger: number;
@@ -247,10 +247,12 @@ const useAppStore = create<AppStore>()(
       },
       
       // Real-time status actions with auto-sync
-      setRealTimeStatus: (status) => {
-        // AUTO-SYNC before setting status
-        const state = get();
-        state.syncWithContractData(status);
+      setRealTimeStatus: (status, skipSync = false) => {
+        // AUTO-SYNC before setting status (unless skipped)
+        if (!skipSync) {
+          const state = get();
+          state.syncWithContractData(status);
+        }
         
         set({ 
           realTimeStatus: status,
