@@ -7,6 +7,9 @@ import { useFlappyGameLogic } from '../flappybeast/useFlappyGameLogic';
 import { ShareModal } from '../../../../Home/components/ShareModal.tsx';
 import { MiniGameScreenProps, GameResult } from '../../../../../types/play.types';
 
+// Dragon component - use the same 3D dragon from other screens
+import { DragonDisplay } from '../../../../../shared/DragonDisplay';
+
 // Assets
 import skyBackground from '../../../../../../assets/icons/games/flappy-beasts-assets/bg-sky.png';
 import landBackground from '../../../../../../assets/icons/games/flappy-beasts-assets/bg-land.png';
@@ -51,7 +54,7 @@ const GAME_NAME = "Flappy Beasts";
 
 const FlappyBirdMiniGame = forwardRef<any, MiniGameScreenProps>(({
   onExitGame,
-  beastImage,
+  beastImage, // Still receive this for compatibility but won't use it
   handleAction,
   client,
   account,
@@ -180,8 +183,11 @@ const FlappyBirdMiniGame = forwardRef<any, MiniGameScreenProps>(({
     g.velocity = Math.min(g.velocity + g.gravity * dt, 15);
     g.birdY += g.velocity * dt * 60;
 
+    // Update dragon container position and rotation
     if (beastRef.current) {
-      beastRef.current.style.transform = `translateY(${g.birdY}px) rotate(${Math.min(Math.max(g.velocity * 3, -30), 90)}deg)`;
+      const rotation = Math.min(Math.max(g.velocity * 3, -30), 90);
+      beastRef.current.style.top = `${g.birdY}px`;
+      beastRef.current.style.transform = `rotate(${rotation}deg)`;
     }
 
     if (g.birdY < 0) {
@@ -256,8 +262,10 @@ const FlappyBirdMiniGame = forwardRef<any, MiniGameScreenProps>(({
     } else if (gameActive) {
       game.velocity = game.jumpForce;
       game.birdY -= 5;
+      // Apply jump rotation to dragon container
       if (beastRef.current) {
-        beastRef.current.style.transform = `translateY(${game.birdY}px) rotate(-20deg)`;
+        beastRef.current.style.top = `${game.birdY}px`;
+        beastRef.current.style.transform = `rotate(-20deg)`;
       }
     }
   };
@@ -281,7 +289,11 @@ const FlappyBirdMiniGame = forwardRef<any, MiniGameScreenProps>(({
     g.running = true;
     g.birdY = g.gameHeight/2 - BIRD_HEIGHT/2;
     g.velocity = 0;
-    if (beastRef.current) beastRef.current.style.transform = `translateY(${g.birdY}px) rotate(0deg)`;
+    // Initialize dragon container position
+    if (beastRef.current) {
+      beastRef.current.style.top = `${g.birdY}px`;
+      beastRef.current.style.transform = `rotate(0deg)`;
+    }
 
     setGameActive(true);
     setGameOver(false);
@@ -347,7 +359,11 @@ const FlappyBirdMiniGame = forwardRef<any, MiniGameScreenProps>(({
     setScore(0);
     setGameOver(false);
     setGameActive(false);
-    if (beastRef.current) beastRef.current.style.transform = `translateY(${g.birdY}px) rotate(0deg)`;
+    // Reset dragon container position
+    if (beastRef.current) {
+      beastRef.current.style.top = `${g.birdY}px`;
+      beastRef.current.style.transform = `rotate(0deg)`;
+    }
   };
 
   // Input handlers
@@ -404,7 +420,11 @@ const FlappyBirdMiniGame = forwardRef<any, MiniGameScreenProps>(({
       g.birdY = h/2 - BIRD_HEIGHT/2;
       while (pipesRef.current?.firstChild) pipesRef.current.removeChild(pipesRef.current.firstChild);
       g.pipes = [];
-      if (beastRef.current) beastRef.current.style.transform = `translateY(${g.birdY}px) rotate(0deg)`;
+      // Reset dragon container position on resize
+      if (beastRef.current) {
+        beastRef.current.style.top = `${g.birdY}px`;
+        beastRef.current.style.transform = `rotate(0deg)`;
+      }
     };
     resize();
     window.addEventListener('resize', resize);
@@ -424,11 +444,33 @@ const FlappyBirdMiniGame = forwardRef<any, MiniGameScreenProps>(({
       <div className="ceiling animated" style={{ backgroundImage:`url(${gameAssets.ceiling})` }} />
       {/* Play area */}
       <div className="fly-area">
-        <div ref={beastRef} className="bird" style={{
-          width:`${BIRD_WIDTH}px`, height:`${BIRD_HEIGHT}px`,
-          backgroundImage:`url(${beastImage})`, backgroundSize:'contain', backgroundRepeat:'no-repeat',
-          position:'absolute', left:`${gameConfig.current.birdX}px`, transform:`translateY(${gameConfig.current.birdY}px) rotate(0deg)`, transition:'transform 0.1s', zIndex:100
-        }} />
+        <div 
+          ref={beastRef} 
+          className="bird" 
+          style={{
+            position: 'absolute', 
+            left: `${gameConfig.current.birdX}px`, 
+            top: `${gameConfig.current.birdY}px`,
+            width: `${BIRD_WIDTH}px`, 
+            height: `${BIRD_HEIGHT}px`,
+            transform: `rotate(${Math.min(Math.max(gameConfig.current.velocity * 3, -30), 90)}deg)`,
+            transition: 'transform 0.1s', 
+            zIndex: 100
+          }}
+        >
+          <DragonDisplay 
+            className="w-full h-full"
+            scale={0.8}
+            position={[0, 0, 0]}
+            rotation={[0, Math.PI / 2, 0]} // 90 degrees in radians for profile view
+            animationSpeed={1.5}
+            autoRotateSpeed={0}
+            lighting="bright"
+            style={{
+              filter: 'brightness(1.3) saturate(1.1)' // Keep extra illumination
+            }}
+          />
+        </div>
         <div ref={pipesRef} className="pipes-container" style={{ position:'relative' }} />
         <div className="score-card"><div ref={scoreRef} className="score-text">0</div></div>
       </div>

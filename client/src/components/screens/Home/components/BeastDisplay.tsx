@@ -11,6 +11,10 @@ export const BeastHomeDisplay = () => {
         animationSpeed={1}
         autoRotateSpeed={0.5}
         lighting="bright"
+        style={{
+          filter: 'brightness(1.2) saturate(1.05)',
+          overflow: 'visible'
+        }}
       />
     </div>
   );
