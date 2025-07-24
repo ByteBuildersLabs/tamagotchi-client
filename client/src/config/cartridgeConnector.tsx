@@ -5,9 +5,9 @@ import { constants } from "starknet";
 
 const { VITE_PUBLIC_DEPLOY_TYPE } = import.meta.env;
 
-const CONTRACT_ADDRESS_ACHIEVEMENTS = '0x6e6e2651a6c0e3d5829f4833b664dbbfd9fbac1f93bbe352801f9532a6e84e0'
-const CONTRACT_ADDRESS_TAMAGOTCHI_SYSTEM = '0x5ca90d27bd019b06be5375af35d3075d4c8ee847e0221aae83565525eeb95fd'
-const CONTRACT_ADDRESS_PLAYER_SYSTEM = '0x5492cc68a3a2aeee0bf83f2bfe47e45815a31e8537e6c6ccc6400261e8fac60'
+const CONTRACT_ADDRESS_ACHIEVEMENTS = '0x6846e1d528421a1569e36a3f80613f77e0d9f927e50967ada831347513f4c85'
+const CONTRACT_ADDRESS_TAMAGOTCHI_SYSTEM = '0x8efc9411c660ef584995d8f582a13cac41aeddb6b9245b4715aa1e9e6a201e'
+const CONTRACT_ADDRESS_PLAYER_SYSTEM = '0x5e79b9650cb00d19d21601c9c712654cb13daa3007fd78cce0e90051e46ec8a'
 
 const policies: SessionPolicies = {
   contracts: {
@@ -23,23 +23,24 @@ const policies: SessionPolicies = {
         { name: "pet", entrypoint: "pet" },
         { name: "play", entrypoint: "play" },
         { name: "revive", entrypoint: "revive" },
+        { name: "set_beast_name", entrypoint: "set_beast_name" },
         { name: "sleep", entrypoint: "sleep" },
         { name: "spawn_beast", entrypoint: "spawn_beast" },
+        { name: "spawn_beast_custom_status", entrypoint: "spawn_beast_custom_status" },
         { name: "update_beast", entrypoint: "update_beast" },
-        { name: "update_food_amount", entrypoint: "update_food_amount" },
       ],
     },
 
     [CONTRACT_ADDRESS_PLAYER_SYSTEM]: {
       methods: [
-        { name: "add_initial_food", entrypoint: "add_initial_food" },
-        { name: "set_current_beast", entrypoint: "set_current_beast" },
+        { name: "add_or_update_food_amount", entrypoint: "add_or_update_food_amount" },
+        { name: "emit_player_push_token", entrypoint: "emit_player_push_token" },
         { name: "spawn_player", entrypoint: "spawn_player" },
         { name: "update_player_daily_streak", entrypoint: "update_player_daily_streak" },
-        { name: "update_player_total_points", entrypoint: "update_player_total_points" },
-        { name: "add_or_update_food_amount", entrypoint: "add_or_update_food_amount" },
         { name: "update_player_minigame_highest_score", entrypoint: "update_player_minigame_highest_score" },
-        { name: "emit_player_push_token", entrypoint: "emit_player_push_token" },
+        { name: "update_player_total_coins", entrypoint: "update_player_total_coins" },
+        { name: "update_player_total_gems", entrypoint: "update_player_total_gems" },
+        { name: "update_player_total_points", entrypoint: "update_player_total_points" },
       ],
     },
 
