@@ -87,22 +87,22 @@ export const FOOD_UI_CONFIG = {
   
   // Toast colors for different foods (can be expanded later)
   FOOD_COLORS: {
-    1: "#10B981",  // Apple - Green
-    2: "#FDE047",  // Banana - Yellow
-    3: "#EC4899",  // Cherry - Pink
-    4: "#92400E",  // Burger - Brown
+    1: "#7C2D12",  // Apple - Green
+    2: "#7C2D12",  // Banana - Yellow
+    3: "#7C2D12",  // Cherry - Pink
+    4: "#7C2D12",  // Burger - Brown
     5: "#7C2D12",  // Chocolate Cake - Dark brown
-    6: "#EC4899",  // Strawberry Cake - Pink
-    7: "#FED7AA",  // Cheese - Light orange
-    8: "#F97316",  // Chicken - Orange
-    9: "#FEF3C7",  // Eggs - Light yellow
-    10: "#06B6D4", // Fish - Cyan
-    11: "#FBBF24", // French Fries - Gold
-    12: "#3B82F6", // Blueberry - Blue
-    13: "#DC2626", // Beef - Red
-    14: "#DC2626", // Pizza - Red
-    15: "#FCD34D", // Corn - Yellow-orange
-    16: "#A78BFA", // Potato - Purple
+    6: "#7C2D12",  // Strawberry Cake - Pink
+    7: "#7C2D12",  // Cheese - Light orange
+    8: "#7C2D12",  // Chicken - Orange
+    9: "#7C2D12",  // Eggs - Light yellow
+    10: "#7C2D12", // Fish - Cyan
+    11: "#7C2D12", // French Fries - Gold
+    12: "#7C2D12", // Blueberry - Blue
+    13: "#7C2D12", // Beef - Red
+    14: "#7C2D12", // Pizza - Red
+    15: "#7C2D12", // Corn - Yellow-orange
+    16: "#7C2D12", // Potato - Purple
   } as Record<number, string>,
 } as const;
 
