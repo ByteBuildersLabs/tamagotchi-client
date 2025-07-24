@@ -30,6 +30,8 @@ const PLAYER_QUERY = `
           current_beast_id
           daily_streak
           total_points
+          total_coins
+          total_gems
           last_active_day
           creation_day
         }
