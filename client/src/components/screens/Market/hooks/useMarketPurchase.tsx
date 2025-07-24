@@ -66,6 +66,24 @@ export const useMarketPurchase = ({
     try {
       setIsPurchasing(true);
       
+      // Optimistic update: immediately reduce coins in the store
+      const currentPlayer = useAppStore.getState().player;
+      if (currentPlayer) {
+        const optimisticPlayer = {
+          ...currentPlayer,
+          total_coins: Math.max(0, currentPlayer.total_coins - food.price)
+        };
+        
+        console.log("🔮 [MarketPurchase] Optimistic update:", {
+          before: currentPlayer.total_coins,
+          after: optimisticPlayer.total_coins,
+          spent: food.price
+        });
+        
+        // Update store immediately (optimistic)
+        useAppStore.getState().setPlayer(optimisticPlayer);
+      }
+      
       // Execute blockchain transaction
       const result = await client.player.addOrUpdateFoodAmount(
         account, 
@@ -76,8 +94,12 @@ export const useMarketPurchase = ({
 
       console.log("🛒 [MarketPurchase] Transaction result:", result);
       
-      // Refresh player data to update coins balance
-      await refetchPlayer();
+      // Schedule a background refresh to sync with blockchain
+      // This will correct any discrepancies after Torii updates
+      setTimeout(async () => {
+        console.log("🔄 [MarketPurchase] Background sync with blockchain...");
+        await refetchPlayer();
+      }, 3000); // Wait 3 seconds for Torii to process
       
       // Success notification
       toast.success(`${food.name} purchased successfully!`, { 
@@ -89,6 +111,24 @@ export const useMarketPurchase = ({
       
     } catch (error) {
       console.error("🛒 [MarketPurchase] Error:", error);
+      
+      // Revert optimistic update on error
+      const currentPlayer = useAppStore.getState().player;
+      if (currentPlayer) {
+        const revertedPlayer = {
+          ...currentPlayer,
+          total_coins: currentPlayer.total_coins + food.price // Add back the coins
+        };
+        
+        console.log("↩️ [MarketPurchase] Reverting optimistic update:", {
+          before: currentPlayer.total_coins,
+          after: revertedPlayer.total_coins,
+          refunded: food.price
+        });
+        
+        useAppStore.getState().setPlayer(revertedPlayer);
+      }
+      
       toast.error("Purchase failed. Please try again.", { 
         position: toastPosition,
         duration: 4000
