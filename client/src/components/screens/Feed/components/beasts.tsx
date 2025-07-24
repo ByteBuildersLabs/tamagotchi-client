@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
 import { FOOD_UI_CONFIG } from '../../../../constants/feed.constants';
-
-// Fallback image for when beast image is not available
-import babyWolfBeast from "../../../../assets/beasts/baby-wolf.png";
+import { DragonDisplay } from '../../../shared/DragonDisplay';
 
 // Props interface for Beast component
 interface BeastAnimationProps {
@@ -13,8 +11,8 @@ interface BeastAnimationProps {
 }
 
 /**
- * Beast component that displays the player's beast and acts as a drop zone for food items
- * Receives beast data as props to avoid multiple hook consumptions
+ * Beast component that displays the player's dragon and acts as a drop zone for food items
+ * Now using the reusable DragonDisplay component with feeding animations
  * Supports feeding animations and visual feedback
  */
 export const Beast = ({ 
@@ -24,8 +22,8 @@ export const Beast = ({
   beastName 
 }: BeastAnimationProps) => {
   
-  // Enhanced animation configuration for the beast
-  const beastAnimation = {
+  // Enhanced animation configuration for the dragon container
+  const dragonContainerAnimation = {
     initial: { scale: 0.8, opacity: 0 },
     animate: {
       scale: isDragging ? 1.1 : isFeeding ? 1.05 : 1, // Different scales for different states
@@ -47,28 +45,32 @@ export const Beast = ({
     },
   };
 
-  // Use provided beast image or fallback to default
-  const finalBeastImage = beastImage || babyWolfBeast;
-  const finalBeastAltText = beastName || "Tamagotchi Beast";
-
   return (
     <div className="flex-grow flex items-center justify-center w-full relative" style={{ zIndex: 5 }}>
       <motion.div
         id={FOOD_UI_CONFIG.BEAST_DROP_ZONE_ID} // ID used for drop detection in feeding logic
         className="relative"
+        initial={dragonContainerAnimation.initial}
+        animate={dragonContainerAnimation.animate}
+        whileHover={dragonContainerAnimation.whileHover}
       >
-        {/* Beast Image */}
-        <motion.img
-          src={finalBeastImage}
-          alt={finalBeastAltText}
-          className={`h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] relative transition-all duration-300 ${
-            isFeeding ? 'brightness-110 saturate-110' : '' // Brighten when feeding
-          }`}
-          style={{ zIndex: 7 }}
-          initial={beastAnimation.initial}
-          animate={beastAnimation.animate}
-          whileHover={beastAnimation.whileHover}
-        />
+        {/* Dragon Display with feeding effects */}
+        <div className={`relative transition-all duration-300 ${
+          isFeeding ? 'brightness-110 saturate-110' : '' // Brighten when feeding
+        }`} style={{ zIndex: 7 }}>
+          <DragonDisplay 
+            className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px]"
+            scale={0.5}
+            position={[0, 0, 0]}
+            animationSpeed={isFeeding ? 1.5 : 1} // Faster animation when feeding
+            autoRotateSpeed={isFeeding ? 1.0 : 0.5} // Faster rotation when feeding
+            lighting="bright" // Bright lighting for feed screen
+            style={{
+              filter: isFeeding ? 'brightness(1.1) saturate(1.1)' : 'none',
+              transition: 'filter 0.3s ease'
+            }}
+          />
+        </div>
 
         {/* Drag Target Indicator */}
         {isDragging && !isFeeding && (
@@ -85,6 +87,44 @@ export const Beast = ({
             >
               🎯
             </motion.div>
+          </motion.div>
+        )}
+
+        {/* Feeding Effect Particles */}
+        {isFeeding && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 pointer-events-none z-6"
+          >
+            {/* Happy feeding particles */}
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute text-2xl"
+                initial={{ 
+                  x: "50%", 
+                  y: "50%", 
+                  scale: 0,
+                  opacity: 0 
+                }}
+                animate={{ 
+                  x: `${50 + (Math.random() - 0.5) * 100}%`, 
+                  y: `${30 + (Math.random() - 0.5) * 60}%`,
+                  scale: [0, 1, 0],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{ 
+                  duration: 2,
+                  delay: i * 0.3,
+                  repeat: Infinity,
+                  repeatDelay: 1
+                }}
+              >
+                {['💖', '✨', '🍯', '😋', '💫', '🌟'][i]}
+              </motion.div>
+            ))}
           </motion.div>
         )}
       </motion.div>

@@ -246,11 +246,8 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
 
       {/* Center: Beast and Campfire together */}
       <div className="flex-grow flex items-center justify-center w-full pointer-events-none select-none z-0 relative">
-        {/* Beast Display - Using the actual image of the player's beast */}
-        <BeastSleepDisplay 
-          beastImage={currentBeastDisplay.asset}
-          altText={`${isBeastSleeping ? 'Sleeping' : 'Awake'} ${currentBeastDisplay.displayName}`}
-        />
+        {/* Beast Display - Now using 3D Dragon instead of static image */}
+        <BeastSleepDisplay />
 
         {/* Campfire Controller */}
         <CampfireController
