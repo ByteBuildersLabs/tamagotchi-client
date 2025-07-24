@@ -86,6 +86,8 @@ const fetchPlayerData = async (playerAddress: string): Promise<Player | null> =>
       current_beast_id: hexToNumber(rawPlayerData.current_beast_id),
       daily_streak: hexToNumber(rawPlayerData.daily_streak),
       total_points: hexToNumber(rawPlayerData.total_points),
+      total_coins: hexToNumber(rawPlayerData.total_coins) || 0, // Default to 0 if not available
+      total_gems: hexToNumber(rawPlayerData.total_gems) || 0, // Default to 0 if not available
       last_active_day: hexToNumber(rawPlayerData.last_active_day),
       creation_day: hexToNumber(rawPlayerData.creation_day)
     };
