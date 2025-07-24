@@ -8,6 +8,9 @@ import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
 // Universal hook for beast display
 import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 
+// Store
+import useAppStore from "../../../zustand/store";
+
 // Music Context
 import { useMusic } from "../../../context/MusicContext";
 
@@ -29,6 +32,9 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
   
   // Music context
   const { setCurrentScreen } = useMusic();
+  
+  // Store player data
+  const storePlayer = useAppStore(state => state.player);
   
   // Get current beast data
   const {
@@ -177,8 +183,8 @@ export const FeedScreen = ({ onNavigation }: FeedScreenProps) => {
 
       {/* Top status bar with coins, gems, and beast stats */}
       <TamagotchiTopBar
-        coins={1250} // TODO: Make dynamic when coin system is implemented
-        gems={45}    // TODO: Make dynamic when gem system is implemented
+        coins={storePlayer?.total_coins || 0}
+        gems={storePlayer?.total_gems || 0}
         status={{
           energy: liveBeastStatus?.energy || 0,
           hunger: liveBeastStatus?.hunger || 0,

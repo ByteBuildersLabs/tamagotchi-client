@@ -12,6 +12,9 @@ import { useBeastDisplay } from "../../../dojo/hooks/useBeastDisplay";
 // Music Context
 import { useMusic } from "../../../context/MusicContext";
 
+// Store
+import useAppStore from "../../../zustand/store";
+
 // Clean logic integration hook
 import { useCleanLogic } from "./components/hooks/useCleanLogic";
 
@@ -28,6 +31,9 @@ export const CleanScreen = ({
 }: CleanScreenProps) => {
   // Music context
   const { setCurrentScreen } = useMusic();
+
+  // Store player data
+  const storePlayer = useAppStore(state => state.player);
 
   // Universal hook - gets the player's current beast
   const {
@@ -87,8 +93,8 @@ export const CleanScreen = ({
         <MagicalSparkleParticles />
         
         <TamagotchiTopBar
-          coins={12345}
-          gems={678}
+          coins={storePlayer?.total_coins || 0}
+          gems={storePlayer?.total_gems || 0}
           status={{ energy: 0, hunger: 0, happiness: 0, hygiene: 0 }}
         />
 
@@ -133,8 +139,8 @@ export const CleanScreen = ({
 
       {/* Top Bar */}
       <TamagotchiTopBar
-        coins={12345}
-        gems={678}
+        coins={storePlayer?.total_coins || 0}
+        gems={storePlayer?.total_gems || 0}
         status={{
           energy: liveBeastStatus?.energy || 0,
           hunger: liveBeastStatus?.hunger || 0,

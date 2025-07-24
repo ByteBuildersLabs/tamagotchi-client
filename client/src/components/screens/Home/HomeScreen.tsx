@@ -184,8 +184,8 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
       <MagicalSparkleParticles />
        
       <TamagotchiTopBar
-        coins={12345}
-        gems={678}
+        coins={storePlayer?.total_coins || 0}
+        gems={storePlayer?.total_gems || 0}
         status={{
           energy: liveBeastStatus?.energy || 0,
           hunger: liveBeastStatus?.hunger || 0,
