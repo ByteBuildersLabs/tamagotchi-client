@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BeastDisplayProps } from "../../../types/clean.types";
+import { DragonDisplay } from "../../../shared/DragonDisplay";
 
 const beastAnimation = {
   initial: { scale: 0.3, opacity: 0, rotate: -15 },
@@ -19,15 +19,22 @@ const beastAnimation = {
   whileHover: { scale: 1.03, rotate: 2 },
 };
 
-export const BeastDisplay = ({ beastImage, altText }: BeastDisplayProps) => {
+export const BeastDisplay = () => {
   return (
-    <motion.img
-      src={beastImage}
-      alt={altText}
-      className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto"
+    <motion.div
+      className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] pointer-events-auto"
       initial={beastAnimation.initial}
       animate={beastAnimation.animate}
       whileHover={beastAnimation.whileHover}
-    />
+    >
+      <DragonDisplay 
+        className="w-full h-full"
+        scale={0.5}
+        position={[0, 0, 0]}
+        animationSpeed={1}
+        autoRotateSpeed={0.3} // Slower rotation for calm cleaning environment
+        lighting="dim" // Softer lighting for clean screen atmosphere
+      />
+    </motion.div>
   );
 };

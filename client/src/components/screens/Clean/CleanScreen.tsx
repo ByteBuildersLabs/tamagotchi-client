@@ -171,11 +171,8 @@ export const CleanScreen = ({
           disabled={isInteractionDisabled}
         />
         
-        {/* Beast Display */}
-        <BeastDisplay 
-          beastImage={currentBeastDisplay.asset}
-          altText={`${currentBeastDisplay.displayName} ready for cleaning`}
-        />
+        {/* Beast Display - Now using 3D Dragon instead of static image */}
+        <BeastDisplay />
 
         {/* Status indicator */}
         {!canClean && (

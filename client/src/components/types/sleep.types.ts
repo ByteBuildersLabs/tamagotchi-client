@@ -16,6 +16,5 @@ export interface CampfireControllerProps {
 }
 
 export interface BeastSleepDisplayProps {
-  beastImage: string;
-  altText: string;
+  // No props needed for 3D dragon component
 }

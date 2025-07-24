@@ -89,8 +89,7 @@ export interface GameCarouselProps {
 }
 
 export interface BeastPlayDisplayProps {
-  beastImage: string;
-  altText: string;
+  // No props needed for 3D dragon component
 }
 
 // Game Over Modal Props (simple modal for returning to play screen)

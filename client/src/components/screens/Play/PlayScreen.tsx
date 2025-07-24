@@ -149,11 +149,8 @@ export const PlayScreen = ({ onNavigation }: PlayScreenProps) => {
         </h1>
       </motion.div>
 
-      {/* Center: Beast Display - Using the player's real beast image */}
-      <BeastPlayDisplay 
-        beastImage={currentBeastDisplay.asset}
-        altText={`${currentBeastDisplay.displayName} ready to play`}
-      />
+      {/* Center: Beast Display - Now using 3D Dragon instead of static image */}
+      <BeastPlayDisplay />
 
       {/* Mini-Games Carousel */}
       <GameCarousel 
