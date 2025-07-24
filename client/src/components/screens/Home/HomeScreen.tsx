@@ -164,10 +164,7 @@ export const HomeScreen = ({ onNavigation }: HomeScreenProps) => {
 
     // Live beast display
     return (
-      <BeastHomeDisplay 
-        beastImage={currentBeastDisplay.asset}
-        altText={currentBeastDisplay.displayName}
-      />
+      <BeastHomeDisplay />
     );
   };
 
