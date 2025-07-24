@@ -1,47 +1,70 @@
 import React, { useRef, Suspense, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations, OrbitControls } from "@react-three/drei";
+import { SkeletonUtils } from "three-stdlib";
 import * as THREE from "three";
 
 // Simple dragon component - clean and straightforward
 const SimpleDragonModel = () => {
-  const group = useRef();
+  const group = useRef<THREE.Group>(null);
   
   try {
     const { scene, animations } = useGLTF("./models/dragon.glb");
     
-    // Add animations to the dragon
+    // Log available animations for debugging
+    console.info("🐉 Dragon GLB Animations:", animations?.map(anim => ({
+      name: anim.name,
+      duration: anim.duration,
+      tracks: anim.tracks.length
+    })) || 'No animations found');
+    
+    // Clone scene for independent instance
+    const clonedScene = useMemo(() => {
+      if (!scene) return null;
+      return SkeletonUtils.clone(scene);
+    }, [scene]);
+    
     const { actions, names } = useAnimations(animations || [], group);
     
     useEffect(() => {
       if (actions && names && names.length > 0) {
+        console.info("🎭 Available animation names:", names);
+        
+        // Just play the first available animation
         const firstAnimation = names[0];
+        console.info("🎭 Using animation:", firstAnimation);
         
         if (actions[firstAnimation]) {
           actions[firstAnimation].reset().play();
           actions[firstAnimation].setLoop(THREE.LoopRepeat, Infinity);
+          console.info("✅ Animation started successfully:", firstAnimation);
         }
       }
     }, [actions, names]);
     
+    if (!clonedScene) {
+      return <DragonPlaceholder />;
+    }
+    
     return (
       <group ref={group}>
-        <primitive object={scene} scale={0.5} position={[0, 0, 0]} />
+        <primitive object={clonedScene} scale={0.5} position={[0, 0, 0]} />
       </group>
     );
   } catch (error) {
+    console.error("🐉 Dragon model loading failed:", error);
     return <DragonPlaceholder />;
   }
 };
 
-// Enhanced dragon placeholder with animation (following fightclub animation patterns)
+// Enhanced dragon placeholder with animation
 const DragonPlaceholder = () => {
   const groupRef = useRef<THREE.Group>(null);
   const wingLeftRef = useRef<THREE.Mesh>(null);
   const wingRightRef = useRef<THREE.Mesh>(null);
   const tailRef = useRef<THREE.Mesh>(null);
   
-  // Animate dragon placeholder (similar to fightclub character animations)
+  // Animate dragon placeholder
   useFrame((state) => {
     const time = state.clock.elapsedTime;
     
@@ -158,7 +181,7 @@ const DragonPlaceholder = () => {
   );
 };
 
-// Loading fallback component (fightclub style)
+// Loading fallback component
 const ModelFallback = () => (
   <mesh>
     <boxGeometry args={[1, 1, 1]} />
@@ -229,21 +252,6 @@ export const BeastHomeDisplay = () => {
             distance={6}
           />
           
-          {/* Atmospheric accent lights */}
-          <pointLight
-            position={[1, -1, 2]}
-            intensity={0.3}
-            color="#4a90e2"
-            distance={5}
-          />
-          
-          <pointLight
-            position={[-1, 3, -1]}
-            intensity={0.25}
-            color="#ff6b6b"
-            distance={4}
-          />
-          
           {/* Simple Dragon model with suspense for loading */}
           <Suspense fallback={<ModelFallback />}>
             <SimpleDragonModel />
@@ -264,12 +272,14 @@ export const BeastHomeDisplay = () => {
   );
 };
 
-// Preload dragon model following fightclub pattern
+// Preload dragon model
 const preloadDragonModel = () => {
   try {
+    console.log('🚀 Preloading dragon model...');
     useGLTF.preload("./models/dragon.glb");
+    console.log('✅ Dragon model preloaded successfully');
   } catch (error) {
-    // Silent fail - will use placeholder
+    console.warn('⚠️ Dragon model preload failed, will load on demand:', error);
   }
 };
 
