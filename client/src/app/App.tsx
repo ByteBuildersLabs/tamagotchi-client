@@ -25,6 +25,9 @@ import { useSleepLogic } from "../components/screens/Sleep/components/hooks/useS
 import { useAccount } from "@starknet-react/core";
 import useAppStore from "../zustand/store";
 
+// World App integration
+import { useWorldApp } from "../hooks/useWorldApp";
+
 function AppContent() {
   const [currentScreen, setCurrentScreenState] = useState<Screen>("login");
   const [playerAddress] = useState("0x123"); // Temporary address
@@ -39,6 +42,9 @@ function AppContent() {
   // Wallet and cache management
   const { account } = useAccount();
   const resetStore = useAppStore(state => state.resetStore);
+
+  // World App integration
+  const { isInWorldApp, username } = useWorldApp();
 
   // Clear cache on wallet change
   useEffect(() => {
@@ -72,6 +78,16 @@ function AppContent() {
   useEffect(() => {
     console.log('🚀 App started, performing initial cache cleanup...');
     
+    // Log World App status
+    if (isInWorldApp) {
+      console.log('🌍 ByteBeasts running inside World App!');
+      if (username) {
+        console.log(`👋 World App user: ${username}`);
+      }
+    } else {
+      console.log('🌐 ByteBeasts running in regular browser');
+    }
+    
     // Clear all tamagotchi cache on app start
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -91,7 +107,7 @@ function AppContent() {
     if (keysToRemove.length > 0) {
       console.log('✅ Initial cache cleanup completed');
     }
-  }, []); // Only run once on mount
+  }, [isInWorldApp, username]); // Re-run if World App status changes
 
   // Updated navigation handler to support games
   const handleNavigation = (screen: Screen, gameId?: GameId) => {
