@@ -21,20 +21,27 @@ const beastAnimation = {
 
 export const BeastDisplay = () => {
   return (
-    <motion.div
-      className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] pointer-events-auto"
-      initial={beastAnimation.initial}
-      animate={beastAnimation.animate}
-      whileHover={beastAnimation.whileHover}
-    >
-      <DragonDisplay 
-        className="w-full h-full"
-        scale={0.5}
-        position={[0, 0, 0]}
-        animationSpeed={1}
-        autoRotateSpeed={0.3} // Slower rotation for calm cleaning environment
-        lighting="dim" // Softer lighting for clean screen atmosphere
-      />
-    </motion.div>
+    <div className="flex items-center justify-center w-full relative">
+      <motion.div
+        className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] pointer-events-auto relative"
+        initial={beastAnimation.initial}
+        animate={beastAnimation.animate}
+        whileHover={beastAnimation.whileHover}
+        style={{ overflow: 'visible' }}
+      >
+        <DragonDisplay 
+          className="w-full h-full"
+          scale={0.5}
+          position={[0, 0, 0]}
+          animationSpeed={1}
+          autoRotateSpeed={0.5}
+          lighting="bright"
+          style={{
+            filter: 'brightness(1.2) saturate(1.05)',
+            overflow: 'visible'
+          }}
+        />
+      </motion.div>
+    </div>
   );
 };

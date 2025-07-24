@@ -64,10 +64,11 @@ export const Beast = ({
             position={[0, 0, 0]}
             animationSpeed={isFeeding ? 1.5 : 1} // Faster animation when feeding
             autoRotateSpeed={isFeeding ? 1.0 : 0.5} // Faster rotation when feeding
-            lighting="bright" // Bright lighting for feed screen
+            lighting="bright"
             style={{
-              filter: isFeeding ? 'brightness(1.1) saturate(1.1)' : 'none',
-              transition: 'filter 0.3s ease'
+              filter: isFeeding ? 'brightness(1.3) saturate(1.1)' : 'brightness(1.2) saturate(1.05)',
+              transition: 'filter 0.3s ease',
+              overflow: 'visible'
             }}
           />
         </div>

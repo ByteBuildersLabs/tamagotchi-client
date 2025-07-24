@@ -12,17 +12,20 @@ interface DragonDisplayProps {
   autoRotateSpeed?: number;
   lighting?: 'bright' | 'dim' | 'sleep';
   style?: React.CSSProperties;
+  rotation?: [number, number, number]; // Add rotation prop
 }
 
 // Simple dragon component - reusable across screens
 const SimpleDragonModel = ({ 
   scale = 0.5, 
   position = [0, 0, 0], 
-  animationSpeed = 1 
+  animationSpeed = 1,
+  rotation = [0, 0, 0]
 }: {
   scale?: number;
   position?: [number, number, number];
   animationSpeed?: number;
+  rotation?: [number, number, number];
 }) => {
   const group = useRef<THREE.Group>(null);
   
@@ -66,7 +69,7 @@ const SimpleDragonModel = ({
     }
     
     return (
-      <group ref={group}>
+      <group ref={group} rotation={rotation}>
         <primitive object={clonedScene} scale={scale} position={position} />
       </group>
     );
@@ -315,7 +318,8 @@ export const DragonDisplay: React.FC<DragonDisplayProps> = ({
   animationSpeed = 1,
   autoRotateSpeed = 0.5,
   lighting = 'bright',
-  style = {}
+  style = {},
+  rotation = [0, 0, 0] // Add rotation prop
 }) => {
   return (
     <div className={className} style={style}>
@@ -333,6 +337,7 @@ export const DragonDisplay: React.FC<DragonDisplayProps> = ({
             scale={scale}
             position={position}
             animationSpeed={animationSpeed}
+            rotation={rotation}
           />
         </Suspense>
         

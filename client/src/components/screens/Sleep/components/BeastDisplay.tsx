@@ -26,14 +26,19 @@ export const BeastSleepDisplay = () => {
       initial={beastAnimation.initial}
       animate={beastAnimation.animate}
       whileHover={beastAnimation.whileHover}
+      style={{ overflow: 'visible' }}
     >
       <DragonDisplay 
         className="w-full h-full"
-        scale={0.4}
-        position={[0, -0.2, 0]}
-        animationSpeed={0.5}
-        autoRotateSpeed={0.2}
-        lighting="sleep"
+        scale={0.5}
+        position={[0, 0, 0]}
+        animationSpeed={1}
+        autoRotateSpeed={0.5}
+        lighting="bright"
+        style={{
+          filter: 'brightness(1.2) saturate(1.05)',
+          overflow: 'visible'
+        }}
       />
     </motion.div>
   );
