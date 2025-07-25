@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useBeastDisplay } from '../../dojo/hooks/useBeastDisplay';
+import { ChatService, type ChatAgent } from '../../services/chatService';
+import { useAccount } from '@starknet-react/core';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -29,6 +31,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { currentBeastDisplay } = useBeastDisplay();
+  const { account } = useAccount();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,7 +62,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
     };
   }, [isOpen]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
     const userMessage: Message = {
@@ -73,27 +76,33 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
     setInputMessage('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const botResponses = [
-        "¡Interesante! 🤔 ¿Te gustaría saber más sobre cuidar a tu ByteBeast?",
-        "¡Genial! 🎮 ¿Necesitas ayuda con algún mini-juego?",
-        "¡Perfecto! 💫 Tu ByteBeast está creciendo muy bien.",
-        "¡Excelente pregunta! 🌟 Déjame ayudarte con eso.",
-        "¡Me alegra que preguntes! 🚀 ¿Qué más te gustaría saber?"
-      ];
-      
-      const randomResponse = botResponses[Math.floor(Math.random() * botResponses.length)];
+    try {
+      const userId = account?.address || 'anonymous';
+      const agent = ChatService.getAgentForBeastType(currentBeastDisplay?.beastTypeString);
+      const botResponse = await ChatService.sendMessage(inputMessage, userId, agent);
       
       const botMessage: Message = {
         id: Date.now() + 1,
-        text: randomResponse,
+        text: botResponse,
         sender: 'bot',
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Error sending message to chat API:', error);
+      
+      const errorMessage: Message = {
+        id: Date.now() + 1,
+        text: "Lo siento, hubo un problema al procesar tu mensaje. ¿Puedes intentar de nuevo? 😅",
+        sender: 'bot',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -119,6 +128,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  const currentAgent = ChatService.getAgentForBeastType(currentBeastDisplay?.beastTypeString);
+
   return (
     <div 
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
@@ -141,9 +152,14 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
         style={{ touchAction: 'auto' }}
       >
         <div className="bg-gold/20 p-4 border-b-4 border-gold/40 flex justify-between items-center flex-shrink-0">
-          <h2 className="text-gray-800 font-luckiest text-2xl tracking-wide drop-shadow-[2px_2px_0px_rgba(0,0,0,0.1)]">
-            💬 CHAT ASISTENTE
-          </h2>
+          <div className="flex flex-col">
+            <h2 className="text-gray-800 font-luckiest text-2xl tracking-wide drop-shadow-[2px_2px_0px_rgba(0,0,0,0.1)]">
+              💬 CHAT ASISTENTE
+            </h2>
+            <span className="text-gray-600 font-rubik text-sm">
+              Hablando con: {currentAgent}
+            </span>
+          </div>
           <motion.button 
             onClick={handleCloseClick}
             onTouchStart={handleCloseClick}
@@ -240,6 +256,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
                 border-2 border-gold/30 shadow-inner backdrop-blur-sm
                 placeholder:text-gray-500 text-sm"
               style={{ touchAction: 'manipulation' }}
+              disabled={isTyping}
             />
             <motion.button
               onClick={handleSendMessage}
@@ -258,7 +275,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
               }}
             >
               <span className="drop-shadow-[1px_1px_0px_rgba(255,255,255,0.3)]">
-                ENVIAR
+                {isTyping ? 'ENVIANDO...' : 'ENVIAR'}
               </span>
             </motion.button>
           </div>
