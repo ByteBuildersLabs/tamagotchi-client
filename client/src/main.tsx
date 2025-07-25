@@ -5,6 +5,7 @@ import { PostHogProvider } from 'posthog-js/react';
 import { MusicProvider } from "./context/MusicContext";
 import { MiniKitProvider } from "./context/MiniKitProvider";
 import { ChipiProvider } from "./context/ChipiProvider";
+import { ClerkProvider } from "@clerk/clerk-react";
 
 // 🧪 Eruda for World App console debugging (recommended by Worldcoin docs)
 if (import.meta.env.VITE_ENABLE_ERUDA === 'true') {
@@ -67,6 +68,12 @@ async function main() {
 
   createRoot(rootElement).render(
     <StrictMode>
+      <ClerkProvider 
+        publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || ""}
+        signInFallbackRedirectUrl="/hatch"
+        signUpFallbackRedirectUrl="/login"
+        afterSignOutUrl="/"
+      >
         <DojoSdkProvider sdk={sdk} dojoConfig={dojoConfig} clientFn={setupWorld}>
           {/* PASO 1: EmptyStarknetProvider para prevenir crashes */}
           <EmptyStarknetProvider>
@@ -85,6 +92,7 @@ async function main() {
             </MiniKitProvider>
           </EmptyStarknetProvider>
         </DojoSdkProvider>
+      </ClerkProvider>
     </StrictMode>
   );
 }
