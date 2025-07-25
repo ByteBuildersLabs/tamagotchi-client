@@ -1,5 +1,5 @@
 import { TamagotchiTopBar } from "../../layout/TopBar";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import cleanBackground from "../../../assets/backgrounds/bg-clean.png";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
@@ -43,6 +43,9 @@ export const CleanScreen = ({
     isLoading
   } = useBeastDisplay();
 
+  // State for triggered actions
+  const [triggerAction, setTriggerAction] = useState<'cleaning' | 'feeding' | 'sleeping' | null>(null);
+
   // Set current screen for music control
   useEffect(() => {
     setCurrentScreen("clean");
@@ -52,9 +55,24 @@ export const CleanScreen = ({
   const {
     isRainActive,
     canClean,
-    handleCloudClick,
+    handleCloudClick: originalHandleCloudClick,
     isInteractionDisabled
   } = useCleanLogic(rainDuration);
+
+  // Enhanced cloud click handler to trigger cleaning action
+  const handleCloudClick = useCallback(() => {
+    // Trigger the cleaning action
+    setTriggerAction('cleaning');
+    console.info("🧽 Triggering cleaning action");
+    
+    // Clear the trigger after a short delay to allow re-triggering
+    setTimeout(() => {
+      setTriggerAction(null);
+    }, 100);
+    
+    // Call the original cloud click handler
+    originalHandleCloudClick();
+  }, [originalHandleCloudClick]);
 
   // Cloud frames for animation
   const cloudFrames = [cloudOff];
@@ -172,7 +190,7 @@ export const CleanScreen = ({
         />
         
         {/* Beast Display - Now using 3D Dragon instead of static image */}
-        <BeastDisplay />
+        <BeastDisplay triggerAction={triggerAction} />
 
         {/* Status indicator */}
         {!canClean && (

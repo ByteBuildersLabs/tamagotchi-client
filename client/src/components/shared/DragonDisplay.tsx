@@ -12,7 +12,8 @@ interface DragonDisplayProps {
   autoRotateSpeed?: number;
   lighting?: 'bright' | 'dim' | 'sleep';
   style?: React.CSSProperties;
-  rotation?: [number, number, number]; // Add rotation prop
+  rotation?: [number, number, number];
+  triggerAction?: 'cleaning' | 'feeding' | 'sleeping' | null; // Changed to action-based triggers
 }
 
 // Simple dragon component - reusable across screens
@@ -20,12 +21,14 @@ const SimpleDragonModel = ({
   scale = 0.5, 
   position = [0, 0, 0], 
   animationSpeed = 1,
-  rotation = [0, 0, 0]
+  rotation = [0, 0, 0],
+  triggerAnimation = null
 }: {
   scale?: number;
   position?: [number, number, number];
   animationSpeed?: number;
   rotation?: [number, number, number];
+  triggerAnimation?: 'cleaning' | 'feeding' | 'sleeping' | null;
 }) => {
   const group = useRef<THREE.Group>(null);
   
@@ -40,21 +43,178 @@ const SimpleDragonModel = ({
     
     const { actions, names } = useAnimations(animations || [], group);
     
+    // Tamagotchi animation state management
     useEffect(() => {
       if (actions && names && names.length > 0) {
-        // Only show animation names list
-        console.info("🎭 Red Beast Animations:", names);
+        console.info("🎭 Tamagotchi Animations:", names);
         
-        // Play first available animation
-        const firstAnimation = names[0];
+        // Define tamagotchi animation mappings
+        const animationMap = {
+          // Idle state animations (random rotation)
+          idle: [
+            'Excited Waggle',
+            'Moving Around', 
+            'Smiling',
+            'Standing_Idle',
+            'Walk in circles'
+          ],
+          // Action animations (triggered by user interactions)
+          cleaning: ['Cleaning'],
+          feeding: ['Eating'], 
+          sleeping: ['Sleeping', 'Laying Down'],
+          // Mood animations
+          happy: ['Excited Waggle', 'Smiling', 'Jumping'],
+          sad: ['Sad', 'Tired'],
+          dirty: ['Dirty.001']
+        };
         
-        if (actions[firstAnimation]) {
-          actions[firstAnimation].reset().play();
-          actions[firstAnimation].setLoop(THREE.LoopRepeat, Infinity);
-          actions[firstAnimation].timeScale = animationSpeed;
+        // Filter available animations for each state
+        const availableAnimations = {
+          idle: animationMap.idle.filter(name => names.includes(name)),
+          cleaning: animationMap.cleaning.filter(name => names.includes(name)),
+          feeding: animationMap.feeding.filter(name => names.includes(name)),
+          sleeping: animationMap.sleeping.filter(name => names.includes(name)),
+          happy: animationMap.happy.filter(name => names.includes(name)),
+          sad: animationMap.sad.filter(name => names.includes(name)),
+          dirty: animationMap.dirty.filter(name => names.includes(name))
+        };
+        
+        console.info("🎮 Available tamagotchi animations:", availableAnimations);
+        
+        let currentAction: THREE.AnimationAction | null = null;
+        let idleInterval: NodeJS.Timeout | null = null;
+        let currentState: 'idle' | 'action' = 'idle';
+        
+        // Function to stop current animation smoothly
+        const stopCurrentAnimation = (fadeTime = 0.5) => {
+          if (currentAction && currentAction.isRunning()) {
+            currentAction.fadeOut(fadeTime);
+          }
+        };
+        
+        // Function to play animation by name
+        const playAnimation = (animationName: string, loop = true, fadeInTime = 0.5) => {
+          if (!names.includes(animationName)) {
+            console.warn(`⚠️ Animation "${animationName}" not found`);
+            return null;
+          }
+          
+          const action = actions[animationName];
+          if (action) {
+            action.reset();
+            action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
+            action.timeScale = animationSpeed;
+            action.play();
+            action.fadeIn(fadeInTime);
+            console.info(`✅ Playing: ${animationName} (loop: ${loop})`);
+            return action;
+          }
+          return null;
+        };
+        
+        // Function to play random idle animation
+        const playRandomIdleAnimation = () => {
+          if (currentState !== 'idle' || availableAnimations.idle.length === 0) return;
+          
+          stopCurrentAnimation(0.8);
+          
+          setTimeout(() => {
+            const randomIndex = Math.floor(Math.random() * availableAnimations.idle.length);
+            const selectedAnimation = availableAnimations.idle[randomIndex];
+            currentAction = playAnimation(selectedAnimation, true, 0.8);
+          }, 800);
+        };
+        
+        // Function to play action animation
+        const playActionAnimation = (actionType: 'cleaning' | 'feeding' | 'sleeping') => {
+          const actionAnimations = availableAnimations[actionType];
+          if (actionAnimations.length === 0) {
+            console.warn(`⚠️ No animations available for action: ${actionType}`);
+            return;
+          }
+          
+          console.info(`🎯 Triggering ${actionType} action`);
+          currentState = 'action';
+          
+          // Stop idle interval
+          if (idleInterval) {
+            clearInterval(idleInterval);
+            idleInterval = null;
+          }
+          
+          // Stop current animation
+          stopCurrentAnimation(0.5);
+          
+          setTimeout(() => {
+            // Pick random animation for this action (some actions might have multiple animations)
+            const randomIndex = Math.floor(Math.random() * actionAnimations.length);
+            const selectedAnimation = actionAnimations[randomIndex];
+            
+            // Play action animation once
+            currentAction = playAnimation(selectedAnimation, false, 0.5);
+            
+            if (currentAction) {
+              // Calculate duration and return to idle after completion
+              const animationDuration = animations?.find(anim => anim.name === selectedAnimation)?.duration || 3;
+              
+              setTimeout(() => {
+                console.info(`✅ ${actionType} action completed, returning to idle`);
+                currentState = 'idle';
+                
+                // Return to idle after action completes
+                setTimeout(() => {
+                  playRandomIdleAnimation();
+                  startIdleRotation();
+                }, 500);
+              }, animationDuration * 1000);
+            }
+          }, 500);
+        };
+        
+        // Function to start idle animation rotation
+        const startIdleRotation = () => {
+          if (idleInterval) clearInterval(idleInterval);
+          
+          idleInterval = setInterval(() => {
+            playRandomIdleAnimation();
+          }, Math.random() * 3000 + 4000); // 4-7 seconds
+        };
+        
+        // Initialize with idle state
+        currentState = 'idle';
+        playRandomIdleAnimation();
+        startIdleRotation();
+        
+        // Store functions for cleanup and external access
+        const tamagotchiState = {
+          playActionAnimation,
+          stopCurrentAnimation,
+          currentState,
+          availableAnimations
+        };
+        
+        // Store in ref for external access
+        if (group.current) {
+          (group.current as any).tamagotchiState = tamagotchiState;
         }
+        
+        // Cleanup function
+        return () => {
+          if (idleInterval) {
+            clearInterval(idleInterval);
+          }
+          stopCurrentAnimation(0.3);
+        };
       }
-    }, [actions, names, animationSpeed]);
+    }, [actions, names, animationSpeed, animations]);
+    
+    // Effect to handle triggered actions
+    useEffect(() => {
+      if (triggerAnimation && group.current && (group.current as any).tamagotchiState) {
+        const { playActionAnimation } = (group.current as any).tamagotchiState;
+        playActionAnimation(triggerAnimation);
+      }
+    }, [triggerAnimation]);
     
     if (!clonedScene) {
       return <DragonPlaceholder scale={scale} position={position} />;
@@ -310,7 +470,8 @@ export const DragonDisplay: React.FC<DragonDisplayProps> = ({
   autoRotateSpeed = 0.5,
   lighting = 'bright',
   style = {},
-  rotation = [0, 0, 0] // Add rotation prop
+  rotation = [0, 0, 0], // Add rotation prop
+  triggerAction = null // Add trigger animation prop
 }) => {
   return (
     <div className={className} style={style}>
@@ -329,6 +490,7 @@ export const DragonDisplay: React.FC<DragonDisplayProps> = ({
             position={position}
             animationSpeed={animationSpeed}
             rotation={rotation}
+            triggerAnimation={triggerAction}
           />
         </Suspense>
         
@@ -336,7 +498,7 @@ export const DragonDisplay: React.FC<DragonDisplayProps> = ({
         <OrbitControls
           enableZoom={false}
           enablePan={false}
-          autoRotate
+          autoRotate={false}
           autoRotateSpeed={autoRotateSpeed}
           minPolarAngle={Math.PI / 2.5}
           maxPolarAngle={Math.PI / 2.5}
