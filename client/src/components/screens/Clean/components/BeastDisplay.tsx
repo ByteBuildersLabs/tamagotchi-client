@@ -69,7 +69,7 @@ export const BeastDisplay = ({ triggerAction }: BeastDisplayProps) => {
         <DragonDisplay 
           className="w-full h-full dragon-display"
           scale={0.5}
-          position={[0, -0.25, 0]}
+          position={[0, 0, 0]}
           animationSpeed={1}
           autoRotateSpeed={0.5}
           lighting="bright"

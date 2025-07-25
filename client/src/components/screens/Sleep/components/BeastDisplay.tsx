@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useState } from "react";
 import { DragonDisplay } from "../../../shared/DragonDisplay";
 
 interface BeastSleepDisplayProps {
@@ -25,6 +25,8 @@ const beastAnimation = {
 };
 
 export const BeastSleepDisplay = ({ triggerAction }: BeastSleepDisplayProps) => {
+  const [clickTrigger, setClickTrigger] = useState<'jumping' | null>(null);
+
   React.useEffect(() => {
     // Force canvas to be 100% width and height
     const style = document.createElement('style');
@@ -41,13 +43,27 @@ export const BeastSleepDisplay = ({ triggerAction }: BeastSleepDisplayProps) => 
     };
   }, []);
 
+  const handleDragonClick = () => {
+    console.info("🦘 Dragon clicked! Triggering jumping animation");
+    setClickTrigger('jumping');
+    
+    // Clear the trigger after a short delay to allow re-triggering
+    setTimeout(() => {
+      setClickTrigger(null);
+    }, 100);
+  };
+
+  // Combine external trigger with click trigger - external trigger takes priority
+  const finalTrigger = triggerAction || clickTrigger;
+
   return (
     <motion.div
-      className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] pointer-events-auto"
+      className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] pointer-events-auto cursor-pointer"
       initial={beastAnimation.initial}
       animate={beastAnimation.animate}
       whileHover={beastAnimation.whileHover}
       style={{ overflow: 'visible' }}
+      onClick={handleDragonClick}
     >
       <DragonDisplay 
         className="w-full h-full dragon-display"
@@ -56,12 +72,11 @@ export const BeastSleepDisplay = ({ triggerAction }: BeastSleepDisplayProps) => 
         animationSpeed={1}
         autoRotateSpeed={0.5}
         lighting="bright"
-        triggerAction={triggerAction}
+        triggerAction={finalTrigger}
         style={{
           filter: 'brightness(1.2) saturate(1.05)',
           overflow: 'visible',
-          position: 'relative',
-          top: '100px'
+          position: 'relative'
         }}
       />
     </motion.div>
