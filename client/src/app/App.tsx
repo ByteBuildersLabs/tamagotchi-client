@@ -21,8 +21,8 @@ import type { BeastSpawnParams } from "../utils/beastHelpers";
 // Sleep logic for navigation blocking
 import { useSleepLogic } from "../components/screens/Sleep/components/hooks/useSleepLogic";
 
-// Wallet and cache management
-import { useAccount } from "@starknet-react/core";
+// Wallet and cache management - PASO 1: Desconectando Cartridge
+// import { useAccount } from "@starknet-react/core";
 import useAppStore from "../zustand/store";
 
 // World App integration
@@ -39,14 +39,15 @@ function AppContent() {
   // Get sleep logic for navigation blocking
   const { shouldBlockNavigation } = useSleepLogic();
 
-  // Wallet and cache management
-  const { account } = useAccount();
+  // Wallet and cache management - PASO 1: Desconectando Cartridge
+  // const { account } = useAccount();
   const resetStore = useAppStore(state => state.resetStore);
 
   // World App integration
   const { isInWorldApp, username } = useWorldApp();
 
-  // Clear cache on wallet change
+  // Clear cache on wallet change - PASO 1: Desconectando Cartridge
+  /*
   useEffect(() => {
     if (account?.address) {
       console.log('🔄 Wallet connected/changed, cleaning cache for:', account.address);
@@ -73,6 +74,7 @@ function AppContent() {
       }
     }
   }, [account?.address, resetStore]);
+  */
 
   // Clear cache on app start (aggressive approach)
   useEffect(() => {

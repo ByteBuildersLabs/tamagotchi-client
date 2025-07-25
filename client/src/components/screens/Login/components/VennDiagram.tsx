@@ -1,33 +1,42 @@
 import type { CircleType } from '../../../types/login.types';
 import { SVGDefinitions, BackgroundElements } from './SVGComponents';
 import { InteractiveCircles } from './InteractiveCircles';
-import { useStarknetConnect } from '../../../../dojo/hooks/useStarknetConnect';
+// PASO 1: Desconectando Cartridge Controller
+// import { useStarknetConnect } from '../../../../dojo/hooks/useStarknetConnect';
 
 interface VennDiagramProps {
   currentCircle: CircleType;
   onConnect?: () => void;
+  isProcessing?: boolean;
+  authStatus?: 'disconnected' | 'verifying' | 'verified' | 'creating_wallet' | 'ready';
 }
 
-export const VennDiagram = ({ currentCircle, onConnect }: VennDiagramProps) => {
-  // Get connection state for button styling
-  const { status, isConnecting } = useStarknetConnect();
-
+export const VennDiagram = ({ currentCircle, onConnect, isProcessing, authStatus }: VennDiagramProps) => {
+  // PASO 2: World ID verification handler
   const handleConnect = () => {
-    console.log('🎮 ByteBeasts Connect button clicked');
+    console.log('🌍 ByteBeasts World ID verification clicked');
     onConnect?.();
   };
 
-  // Determine button state and text
+  // Determine button state and text based on auth status
   const getButtonState = () => {
-    if (isConnecting || status === 'connecting') {
-      return { text: 'CONNECTING...', disabled: true };
+    if (authStatus === 'verifying' || isProcessing) {
+      return { text: 'VERIFYING WORLD ID...', disabled: true };
     }
     
-    if (status === 'connected') {
-      return { text: 'CONNECTED', disabled: true };
+    if (authStatus === 'creating_wallet') {
+      return { text: 'CREATING WALLET...', disabled: true };
     }
     
-    return { text: 'CONNECT', disabled: false };
+    if (authStatus === 'verified') {
+      return { text: 'VERIFIED ✅', disabled: true };
+    }
+    
+    if (authStatus === 'ready') {
+      return { text: 'READY TO PLAY 🎮', disabled: true };
+    }
+    
+    return { text: 'VERIFY WORLD ID', disabled: false };
   };
 
   const buttonState = getButtonState();
@@ -76,12 +85,16 @@ export const VennDiagram = ({ currentCircle, onConnect }: VennDiagramProps) => {
           </button>
         </div>
 
-        {/* Loading indicator for connecting state */}
-        {isConnecting && (
+        {/* Loading indicator for processing state */}
+        {(isProcessing || authStatus === 'verifying' || authStatus === 'creating_wallet') && (
           <div className="flex justify-center mt-4">
             <div className="flex items-center space-x-2 text-text-primary/80">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-text-primary"></div>
-              <span className="text-sm font-medium">Opening Cartridge Controller...</span>
+              <span className="text-sm font-medium">
+                {authStatus === 'verifying' ? 'Verifying World ID...' : 
+                 authStatus === 'creating_wallet' ? 'Creating Starknet wallet...' : 
+                 'Processing...'}
+              </span>
             </div>
           </div>
         )}

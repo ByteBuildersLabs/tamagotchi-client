@@ -1,12 +1,16 @@
-import { useStarknetConnect } from '../../../dojo/hooks/useStarknetConnect';
-import { usePlayerInitialization } from '../../../dojo/hooks/usePlayerInitialization';
-import { useAccount } from '@starknet-react/core';
+// PASO 1: Desconectando Cartridge Controller temporalmente
+// import { useStarknetConnect } from '../../../dojo/hooks/useStarknetConnect';
+// import { usePlayerInitialization } from '../../../dojo/hooks/usePlayerInitialization';
+// import { useAccount } from '@starknet-react/core';
 import { useLoginAnimations } from './components/useLoginAnimations';
 import { UniverseView, GameView } from './components/CoverViews';
 import { VennDiagram } from './components/VennDiagram';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import useAppStore from '../../../zustand/store'; 
+import { MiniKit } from '@worldcoin/minikit-js';
+// import { VerificationLevel } from '@worldcoin/minikit-js'; // Will be used when types are fixed
+import { useCreateWallet } from '@chipi-pay/chipi-sdk';
+// import useAppStore from '../../../zustand/store'; 
 
 interface LoginScreenProps {
   onLoginSuccess: (destination: 'hatch' | 'cover') => void;
@@ -20,167 +24,147 @@ interface LoginScreenProps {
 export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const { view, currentCircle } = useLoginAnimations();
   
-  // Integrate useStarknetConnect hook 
-  const { 
-    status, 
-    handleConnect: connectWallet, 
-    error: connectionError,
-    address,
-    hasTriedConnect
-  } = useStarknetConnect();
-
-  // Integrate player initialization coordinator hook 
-  const { 
-    initializeComplete,
-    error: initializationError,
-    completed,
-    playerExists,
-    hasLiveBeast,
-    shouldGoToHatch,
-    shouldGoToHome,
-    playerSpawnTxHash,
-    playerSpawnTxStatus,
-  } = usePlayerInitialization();
-
-  const { account } = useAccount();
-
-  // Get player from store 
-  const storePlayer = useAppStore(state => state.player);
-
-  // Ref to prevent multiple initializations 
-  const hasInitialized = useRef(false);
-
-  // Handle connect button click - trigger Cartridge Controller
+  // PASO 2: Estado de autenticación Worldcoin  
+  const [authStatus, setAuthStatus] = useState<'disconnected' | 'verifying' | 'verified' | 'creating_wallet' | 'ready'>('disconnected');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [userInfo, setUserInfo] = useState<{nullifier_hash: string, verification_level: string} | null>(null);
+  
+  // PASO 3: Chipi wallet creation
+  const { createWalletAsync, createWalletResponse } = useCreateWallet();
+  // const [walletData, setWalletData] = useState<{address: string, pin: string} | null>(null);
+  
+  // Helper: Generate PIN from wallet address (last 6 digits) - TODO: Use after debugging
+  // const generatePinFromAddress = (address: string): string => {
+  //   const cleanAddress = address.replace('0x', '');
+  //   const lastChars = cleanAddress.slice(-6);
+  //   const numericPin = parseInt(lastChars, 16).toString().padStart(6, '0').slice(-6);
+  //   return numericPin;
+  // };
+  
+  // Handle Worldcoin authentication
   const handleConnect = async () => {
     try {
-      await connectWallet();
+      setIsProcessing(true);
+      setAuthStatus('verifying');
+      
+      console.log('🌍 PASO 2: Iniciando World ID verification...');
+      
+      // Check if running in World App
+      if (!MiniKit.isInstalled()) {
+        toast.error('This game requires World App to play!');
+        setIsProcessing(false);
+        setAuthStatus('disconnected');
+        return;
+      }
+
+      // World ID verification payload (will be used when MiniKit types are fixed)
+      // const verifyPayload = {
+      //   action: 'bytebeasts-login', 
+      //   verification_level: VerificationLevel.Orb,
+      //   signal: '', 
+      // };
+
+      // Simulate World ID verification for now (tipos MiniKit tienen issues)
+      console.log('🔄 Simulating World ID verification...');
+      
+      // Temporary simulation while we fix MiniKit types
+      setTimeout(async () => {
+        if (MiniKit.isInstalled()) {
+          console.log('✅ World ID verification successful (simulated)');
+          
+          const simulatedUserInfo = {
+            nullifier_hash: 'simulated_nullifier_' + Date.now(),
+            verification_level: 'orb'
+          };
+          
+          setUserInfo(simulatedUserInfo);
+          setAuthStatus('verified');
+          toast.success('🌍 World ID verified!');
+          
+          // PASO 3: Create Chipi wallet automatically after World ID verification
+          console.log('🔄 Creating Starknet wallet with Chipi...');
+          setAuthStatus('creating_wallet');
+          setIsProcessing(true);
+          
+          try {
+            // DEBUGGING: Test what createWalletAsync actually accepts
+            console.log('🧪 Testing createWalletAsync parameters...');
+            
+            // Try to call with different parameter combinations to see what works
+            const tempPin = simulatedUserInfo.nullifier_hash.slice(-6);
+            
+            // Test with correct API based on TypeScript errors
+            console.log('Test: Calling createWalletAsync with required params');
+            try {
+              const result = await createWalletAsync({ 
+                encryptKey: tempPin,
+                bearerToken: 'debug_bearer_token_123' // Temporary for testing
+              });
+              console.log('✅ createWalletAsync worked:', result);
+              console.log('✅ createWalletResponse:', createWalletResponse);
+              
+              // Check what properties are available in the response
+              if (createWalletResponse) {
+                console.log('📋 createWalletResponse keys:', Object.keys(createWalletResponse));
+                console.log('📋 Full response:', JSON.stringify(createWalletResponse, null, 2));
+              }
+              
+            } catch (e: any) {
+              console.log('❌ createWalletAsync failed:', e?.message || e);
+            }
+            
+            // For now, just simulate success
+            setAuthStatus('ready');
+            setIsProcessing(false);
+            toast.success('🔍 API debugging complete! Check console.');
+            
+            // Navigate after debugging
+            setTimeout(() => {
+              onLoginSuccess('hatch');
+            }, 2000);
+            
+          } catch (walletErr) {
+            console.error('❌ Wallet API testing failed:', walletErr);
+            toast.error('API testing failed. Check console for details.');
+            setAuthStatus('verified');
+            setIsProcessing(false);
+          }
+          
+        } else {
+          console.error('❌ Not in World App');
+          toast.error('Please open this game in World App');
+          setIsProcessing(false);
+          setAuthStatus('disconnected');
+        }
+      }, 2000);
+      
     } catch (error) {
-      console.error('Connection failed:', error);
+      console.error('❌ Worldcoin authentication error:', error);
+      toast.error('Authentication failed. Please try again.');
+      setIsProcessing(false);
+      setAuthStatus('disconnected');
     }
   };
 
-  // Trigger complete player initialization on wallet connect
+  // PASO 3: Debug Chipi API
   useEffect(() => {
-    if (status === 'connected' && hasTriedConnect && account && !hasInitialized.current) {
-      hasInitialized.current = true;
-      
-      // Enhanced: Show validation loading toast
-      toast.loading('Validating player and beast status...', {
-        id: 'init-validation',
-        duration: 0
-      });
-      
-      initializeComplete().then(() => {
-        // Enhanced: Dismiss loading toast and show success
-        toast.dismiss('init-validation');
-        toast.success('Validation completed!', { duration: 2000 });
-      }).catch(error => {
-        console.error("Initialization failed:", error);
-        toast.dismiss('init-validation');
-        toast.error('Validation failed');
-        hasInitialized.current = false; // Reset on error
-      });
-    }
-  }, [status, hasTriedConnect, account, initializeComplete]);
+    console.log('🔍 Debugging Chipi API:');
+    console.log('createWalletAsync:', createWalletAsync);
+    console.log('createWalletAsync.toString():', createWalletAsync.toString());
+    console.log('createWalletResponse:', createWalletResponse);
+    
+    // Check if createWalletAsync has any properties or prototype info
+    console.log('createWalletAsync keys:', Object.keys(createWalletAsync));
+    console.log('createWalletAsync prototype:', Object.getPrototypeOf(createWalletAsync));
+  }, [createWalletAsync, createWalletResponse]);
 
-  /**
-   * Enhanced navigation logic with validated beast status
-   * Now the beast status has been validated with fetchStatus + updateBeast
-   */
+  // PASO 2: Log del estado de autenticación
   useEffect(() => {
-    // Only navigate when initialization is complete
-    if (status === 'connected' && address && completed && storePlayer) {
-      console.log('🎯 Navigation with validated beast status:', {
-        shouldGoToHome,
-        shouldGoToHatch,
-        hasLiveBeast
-      });
-      
-      // Navigate based on VALIDATED beast status
-      setTimeout(() => {
-        if (shouldGoToHome) {
-          console.log('✅ Navigating to cover - beast validated as alive');
-          onLoginSuccess('cover');
-        } else if (shouldGoToHatch) {
-          console.log('🥚 Navigating to hatch - beast validated as dead/nonexistent');
-          onLoginSuccess('hatch');
-        }
-      }, 1500);
+    console.log('🔄 LoginScreen authStatus:', authStatus);
+    if (userInfo) {
+      console.log('👤 User info:', userInfo);
     }
-  }, [
-    status, 
-    address, 
-    completed, 
-    storePlayer, 
-    playerExists, 
-    hasLiveBeast, 
-    shouldGoToHatch, 
-    shouldGoToHome, 
-    onLoginSuccess
-  ]);
-
-  /**
-   * Handle connection errors 
-   */
-  useEffect(() => {
-    if (connectionError) {
-      console.error('Connection error:', connectionError);
-      toast.error(`Connection failed: ${connectionError}`, {
-        duration: 4000,
-        position: 'top-center'
-      });
-    }
-  }, [connectionError]);
-
-  /**
-   * Handle initialization errors 
-   */
-  useEffect(() => {
-    if (initializationError && initializationError !== "Already initializing") {
-      console.error('Initialization error:', initializationError);
-      toast.error(`Initialization failed: ${initializationError}`, {
-        duration: 4000,
-        position: 'top-center'
-      });
-    }
-  }, [initializationError]);
-
-  /**
-   * Show transaction progress toasts 
-   */
-  useEffect(() => {
-    if (playerSpawnTxHash && playerSpawnTxStatus === 'SUCCESS') {
-      toast.success('Player spawned successfully!', {
-        duration: 3000,
-        position: 'top-center'
-      });
-    } else if (playerSpawnTxHash && playerSpawnTxStatus === 'REJECTED') {
-      toast.error('Transaction failed', {
-        duration: 4000,
-        position: 'top-center'
-      });
-    }
-  }, [playerSpawnTxHash, playerSpawnTxStatus]);
-
-  /**
-   * Enhanced beast status information with validation context
-   */
-  useEffect(() => {
-    if (completed) {
-      if (hasLiveBeast) {
-        toast.success('🐾 Beast validated and ready!', {
-          duration: 2000,
-          position: 'top-center'
-        });
-      } else {
-        toast('🥚 No live beast found. Time to hatch!', {
-          duration: 2000,
-          position: 'top-center',
-          icon: '🥚'
-        });
-      }
-    }
-  }, [completed, hasLiveBeast]);
+  }, [authStatus, userInfo]);
 
   // Render different views based on animation state 
   switch (view) {
@@ -194,6 +178,8 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
           <VennDiagram 
             currentCircle={currentCircle} 
             onConnect={handleConnect}
+            isProcessing={isProcessing}
+            authStatus={authStatus}
           />
           
           {/* Enhanced Toast Container with loading support */}
