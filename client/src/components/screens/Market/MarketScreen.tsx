@@ -1,6 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
+
+// Dojo hooks
+import { useAccount } from "@starknet-react/core";
+
+// Market purchase hook
+import { useMarketPurchase } from "./hooks/useMarketPurchase";
 
 // Layout components
 import { TamagotchiTopBar } from "../../layout/TopBar";
@@ -38,17 +44,26 @@ interface MarketScreenProps {
 }
 
 export function MarketScreen({onNavigation}: MarketScreenProps) {
+  // Account and responsive state
+  const { account } = useAccount();
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
+  
+  // Toast position based on screen size
+  const position = isMobile ? 'bottom-center' : 'top-right';
+  
+  // Market purchase hook
+  const { purchaseFood, isPurchasing, canPurchase } = useMarketPurchase({ 
+    account, 
+    toastPosition: position 
+  });
+  
   // Store player data
   const storePlayer = useAppStore(state => state.player);
   
-  // Market state
+  // Market animation state
   const [selectedFood, setSelectedFood] = useState<MarketFoodItem | null>(null);
   const [showPurchaseAnimation, setShowPurchaseAnimation] = useState(false);
   const [showInsufficientBalance, setShowInsufficientBalance] = useState(false);
-  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
-  
-  // Transaction state (simulated)
-  const [isProcessing, setIsProcessing] = useState(false);
 
   // Responsive design
   useEffect(() => {
@@ -56,9 +71,6 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  // Toast position based on screen size
-  const position = isMobile ? 'bottom-center' : 'top-right';
 
   // Static food data - no inventory integration
   const marketFoods: MarketFoodItem[] = useMemo(() => {
@@ -91,35 +103,22 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
     return grouped;
   }, [marketFoods]);
 
-  // Handle food purchase - simplified
+  // Handle food purchase using the custom hook
   const handlePurchase = async (food: MarketFoodItem) => {
-    // Check player balance
-    const playerBalance = storePlayer?.total_coins || 0;
-    if (playerBalance < food.price) {
+    // Check if player can afford the item first
+    if (!canPurchase(food)) {
       setSelectedFood(food);
       setShowInsufficientBalance(true);
       return;
     }
 
-    // Simulate purchase process
-    try {
-      setIsProcessing(true);
-      
-      // Simulate transaction delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Show success animation
+    // Execute purchase using the hook
+    const success = await purchaseFood(food);
+    
+    if (success) {
+      // Show success animation on successful purchase
       setSelectedFood(food);
       setShowPurchaseAnimation(true);
-      
-      // Show success toast
-      toast.success(`${food.name} purchased successfully!`, { position });
-      
-    } catch (error) {
-      console.error("Purchase error:", error);
-      toast.error("Purchase failed", { position });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -219,7 +218,7 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
       )}
 
       {/* Loading indicator for transaction */}
-      {isProcessing && (
+      {isPurchasing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
           <div className="bg-cream p-6 rounded-xl shadow-lg">
             <div className="flex flex-col items-center">
