@@ -13,7 +13,7 @@ interface DragonDisplayProps {
   lighting?: 'bright' | 'dim' | 'sleep';
   style?: React.CSSProperties;
   rotation?: [number, number, number];
-  triggerAction?: 'cleaning' | 'feeding' | 'sleeping' | null; // Changed to action-based triggers
+  triggerAction?: 'cleaning' | 'feeding' | 'sleeping' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty' | null;
 }
 
 // Simple dragon component - reusable across screens
@@ -28,7 +28,7 @@ const SimpleDragonModel = ({
   position?: [number, number, number];
   animationSpeed?: number;
   rotation?: [number, number, number];
-  triggerAnimation?: 'cleaning' | 'feeding' | 'sleeping' | null;
+  triggerAnimation?: 'cleaning' | 'feeding' | 'sleeping' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty' | null;
 }) => {
   const group = useRef<THREE.Group>(null);
   
@@ -50,22 +50,27 @@ const SimpleDragonModel = ({
         
         // Define tamagotchi animation mappings
         const animationMap = {
-          // Idle state animations (random rotation)
+          // Idle state animations (random rotation for lively behavior)
           idle: [
-            'Excited Waggle',
-            'Moving Around', 
-            'Smiling',
-            'Standing_Idle',
-            'Walk in circles'
+            'Standing_Idle',    // Base idle pose
+            'Excited Waggle',   // Happy/energetic movement
+            'Smiling',          // Content expression
+            'Moving Around',    // Casual movement
+            'Walk in circles'   // Playful behavior
           ],
           // Action animations (triggered by user interactions)
           cleaning: ['Cleaning'],
           feeding: ['Eating'], 
           sleeping: ['Sleeping', 'Laying Down'],
-          // Mood animations
+          // Interaction animations
+          interaction: ['Interaction Response'],
+          // Mood/State animations
           happy: ['Excited Waggle', 'Smiling', 'Jumping'],
           sad: ['Sad', 'Tired'],
-          dirty: ['Dirty.001']
+          dirty: ['Dirty.001'],
+          // Special actions
+          jumping: ['Jumping'],
+          laying: ['Laying Down']
         };
         
         // Filter available animations for each state
@@ -74,9 +79,12 @@ const SimpleDragonModel = ({
           cleaning: animationMap.cleaning.filter(name => names.includes(name)),
           feeding: animationMap.feeding.filter(name => names.includes(name)),
           sleeping: animationMap.sleeping.filter(name => names.includes(name)),
+          interaction: animationMap.interaction.filter(name => names.includes(name)),
           happy: animationMap.happy.filter(name => names.includes(name)),
           sad: animationMap.sad.filter(name => names.includes(name)),
-          dirty: animationMap.dirty.filter(name => names.includes(name))
+          dirty: animationMap.dirty.filter(name => names.includes(name)),
+          jumping: animationMap.jumping.filter(name => names.includes(name)),
+          laying: animationMap.laying.filter(name => names.includes(name))
         };
         
         console.info("🎮 Available tamagotchi animations:", availableAnimations);
@@ -126,7 +134,7 @@ const SimpleDragonModel = ({
         };
         
         // Function to play action animation
-        const playActionAnimation = (actionType: 'cleaning' | 'feeding' | 'sleeping') => {
+        const playActionAnimation = (actionType: 'cleaning' | 'feeding' | 'sleeping' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty') => {
           const actionAnimations = availableAnimations[actionType];
           if (actionAnimations.length === 0) {
             console.warn(`⚠️ No animations available for action: ${actionType}`);
@@ -150,22 +158,34 @@ const SimpleDragonModel = ({
             const randomIndex = Math.floor(Math.random() * actionAnimations.length);
             const selectedAnimation = actionAnimations[randomIndex];
             
-            // Play action animation once
-            currentAction = playAnimation(selectedAnimation, false, 0.5);
+            // Determine if animation should loop based on action type
+            const shouldLoop = actionType === 'sleeping' || actionType === 'dirty';
+            const loopDuration = shouldLoop ? 8000 : null; // 8 seconds for looping actions
+            
+            // Play action animation
+            currentAction = playAnimation(selectedAnimation, shouldLoop, 0.5);
             
             if (currentAction) {
-              // Calculate duration and return to idle after completion
-              const animationDuration = animations?.find(anim => anim.name === selectedAnimation)?.duration || 3;
+              // Calculate duration - use fixed duration for looping actions or animation duration for single actions
+              const animationDuration = shouldLoop && loopDuration ? 
+                loopDuration / 1000 : 
+                (animations?.find(anim => anim.name === selectedAnimation)?.duration || 3);
               
               setTimeout(() => {
                 console.info(`✅ ${actionType} action completed, returning to idle`);
+                
+                // For looping actions, fade out manually
+                if (shouldLoop && currentAction) {
+                  currentAction.fadeOut(0.5);
+                }
+                
                 currentState = 'idle';
                 
                 // Return to idle after action completes
                 setTimeout(() => {
                   playRandomIdleAnimation();
                   startIdleRotation();
-                }, 500);
+                }, shouldLoop ? 500 : 300);
               }, animationDuration * 1000);
             }
           }, 500);
