@@ -101,6 +101,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             // Try to call with different parameter combinations to see what works
             const tempPin = response.address.slice(0, -6);
             const bearerToken = await getToken({template: 'Tamagotchi'});
+            console.log('🔑 bearerToken:', bearerToken);
             if (!bearerToken) {
               throw new Error('No bearer token available');
             }
