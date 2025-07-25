@@ -3,6 +3,16 @@ import { createRoot } from "react-dom/client";
 import { posthogInstance } from "./context/PosthogConfig";
 import { PostHogProvider } from 'posthog-js/react';
 import { MusicProvider } from "./context/MusicContext";
+import { MiniKitProvider } from "./context/MiniKitProvider";
+import { ChipiProvider } from "./context/ChipiProvider";
+
+// 🧪 Eruda for World App console debugging (recommended by Worldcoin docs)
+if (import.meta.env.VITE_ENABLE_ERUDA === 'true') {
+  import('eruda').then(eruda => {
+    eruda.default.init();
+    console.log('🧪 Eruda console activated for World App debugging');
+  });
+}
 
 // Dojo & Starknet
 import { init } from "@dojoengine/sdk";
@@ -10,7 +20,9 @@ import { DojoSdkProvider } from "@dojoengine/sdk/react";
 import { dojoConfig } from "./dojo/dojoConfig";
 import type { SchemaType } from "./dojo/models.gen";
 import { setupWorld } from "./dojo/contracts.gen";
-import StarknetProvider from "./dojo/starknet-provider";
+// PASO 1: Desconectando Cartridge Controller temporalmente
+// import StarknetProvider from "./dojo/starknet-provider";
+import EmptyStarknetProvider from "./dojo/EmptyStarknetProvider";
 
 // App Entry
 import Main from "../src/app/App";
@@ -56,17 +68,22 @@ async function main() {
   createRoot(rootElement).render(
     <StrictMode>
         <DojoSdkProvider sdk={sdk} dojoConfig={dojoConfig} clientFn={setupWorld}>
-          <StarknetProvider> 
-            <MusicProvider>
-              {posthogInstance.initialized && posthogInstance.client ? (
-                <PostHogProvider client={posthogInstance.client}>
-                  <Main />
-                </PostHogProvider>
-              ) : (
-                <Main />
-              )}
-            </MusicProvider>
-          </StarknetProvider>
+          {/* PASO 1: EmptyStarknetProvider para prevenir crashes */}
+          <EmptyStarknetProvider>
+            <MiniKitProvider>
+              <ChipiProvider>
+                <MusicProvider>
+                  {posthogInstance.initialized && posthogInstance.client ? (
+                    <PostHogProvider client={posthogInstance.client}>
+                      <Main />
+                    </PostHogProvider>
+                  ) : (
+                    <Main />
+                  )}
+                </MusicProvider>
+              </ChipiProvider>
+            </MiniKitProvider>
+          </EmptyStarknetProvider>
         </DojoSdkProvider>
     </StrictMode>
   );

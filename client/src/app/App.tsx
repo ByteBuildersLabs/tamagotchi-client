@@ -21,9 +21,12 @@ import type { BeastSpawnParams } from "../utils/beastHelpers";
 // Sleep logic for navigation blocking
 import { useSleepLogic } from "../components/screens/Sleep/components/hooks/useSleepLogic";
 
-// Wallet and cache management
-import { useAccount } from "@starknet-react/core";
+// Wallet and cache management - PASO 1: Desconectando Cartridge
+// import { useAccount } from "@starknet-react/core";
 import useAppStore from "../zustand/store";
+
+// World App integration
+import { useWorldApp } from "../hooks/useWorldApp";
 
 function AppContent() {
   const [currentScreen, setCurrentScreenState] = useState<Screen>("login");
@@ -36,11 +39,15 @@ function AppContent() {
   // Get sleep logic for navigation blocking
   const { shouldBlockNavigation } = useSleepLogic();
 
-  // Wallet and cache management
-  const { account } = useAccount();
+  // Wallet and cache management - PASO 1: Desconectando Cartridge
+  // const { account } = useAccount();
   const resetStore = useAppStore(state => state.resetStore);
 
-  // Clear cache on wallet change
+  // World App integration
+  const { isInWorldApp, username } = useWorldApp();
+
+  // Clear cache on wallet change - PASO 1: Desconectando Cartridge
+  /*
   useEffect(() => {
     if (account?.address) {
       console.log('🔄 Wallet connected/changed, cleaning cache for:', account.address);
@@ -67,10 +74,21 @@ function AppContent() {
       }
     }
   }, [account?.address, resetStore]);
+  */
 
   // Clear cache on app start (aggressive approach)
   useEffect(() => {
     console.log('🚀 App started, performing initial cache cleanup...');
+    
+    // Log World App status
+    if (isInWorldApp) {
+      console.log('🌍 ByteBeasts running inside World App!');
+      if (username) {
+        console.log(`👋 World App user: ${username}`);
+      }
+    } else {
+      console.log('🌐 ByteBeasts running in regular browser');
+    }
     
     // Clear all tamagotchi cache on app start
     const keysToRemove: string[] = [];
@@ -91,7 +109,7 @@ function AppContent() {
     if (keysToRemove.length > 0) {
       console.log('✅ Initial cache cleanup completed');
     }
-  }, []); // Only run once on mount
+  }, [isInWorldApp, username]); // Re-run if World App status changes
 
   // Updated navigation handler to support games
   const handleNavigation = (screen: Screen, gameId?: GameId) => {
