@@ -25,6 +25,7 @@ export const Beast = ({
   
   const [triggerAction, setTriggerAction] = useState<'feeding' | null>(null);
   const [previousFeedingState, setPreviousFeedingState] = useState(false);
+  const [clickTrigger, setClickTrigger] = useState<'jumping' | null>(null);
   
   // Trigger feeding animation only when isFeeding changes from false to true
   useEffect(() => {
@@ -42,6 +43,19 @@ export const Beast = ({
     // Update previous state for next comparison
     setPreviousFeedingState(isFeeding);
   }, [isFeeding, previousFeedingState]);
+
+  const handleDragonClick = () => {
+    console.info("🦘 Dragon clicked! Triggering jumping animation");
+    setClickTrigger('jumping');
+    
+    // Clear the trigger after a short delay to allow re-triggering
+    setTimeout(() => {
+      setClickTrigger(null);
+    }, 100);
+  };
+
+  // Combine feeding trigger with click trigger - feeding takes priority
+  const finalTrigger = triggerAction || clickTrigger;
   
   React.useEffect(() => {
     // Force canvas to be 100% width and height
@@ -92,9 +106,9 @@ export const Beast = ({
         whileHover={dragonContainerAnimation.whileHover}
       >
         {/* Dragon Display with feeding effects */}
-        <div className={`relative transition-all duration-300 ${
+        <div className={`h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] relative transition-all duration-300 cursor-pointer ${
           isFeeding ? 'brightness-110 saturate-110' : '' // Brighten when feeding
-        }`} style={{ zIndex: 7 }}>
+        }`} style={{ zIndex: 7 }} onClick={handleDragonClick}>
           <DragonDisplay 
             className="w-full h-full dragon-display"
             scale={0.5}
@@ -102,13 +116,12 @@ export const Beast = ({
             animationSpeed={isFeeding ? 1.5 : 1} // Faster animation when feeding
             autoRotateSpeed={isFeeding ? 1.0 : 0.5} // Faster rotation when feeding
             lighting="bright"
-            triggerAction={triggerAction} // Pass the feeding trigger
+            triggerAction={finalTrigger} // Pass the feeding trigger
             style={{
               filter: isFeeding ? 'brightness(1.3) saturate(1.1)' : 'brightness(1.2) saturate(1.05)',
               transition: 'filter 0.3s ease',
               overflow: 'visible',
-              position: 'relative',
-              top: '100px'
+              position: 'relative'
             }}
           />
         </div>

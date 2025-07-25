@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useState } from "react";
 import { DragonDisplay } from "../../../shared/DragonDisplay";
 
 const beastAnimation = {
@@ -21,6 +21,8 @@ const beastAnimation = {
 };
 
 export const BeastPlayDisplay = () => {
+  const [clickTrigger, setClickTrigger] = useState<'jumping' | null>(null);
+
   React.useEffect(() => {
     // Force canvas to be 100% width and height
     const style = document.createElement('style');
@@ -37,14 +39,25 @@ export const BeastPlayDisplay = () => {
     };
   }, []);
 
+  const handleDragonClick = () => {
+    console.info("🦘 Dragon clicked! Triggering jumping animation");
+    setClickTrigger('jumping');
+    
+    // Clear the trigger after a short delay to allow re-triggering
+    setTimeout(() => {
+      setClickTrigger(null);
+    }, 100);
+  };
+
   return (
     <div className="flex-1 flex items-center justify-center w-full pointer-events-none select-none z-0 relative">
       <motion.div
-        className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] pointer-events-auto relative"
+        className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] pointer-events-auto relative cursor-pointer"
         initial={beastAnimation.initial}
         animate={beastAnimation.animate}
         whileHover={beastAnimation.whileHover}
         style={{ overflow: 'visible' }}
+        onClick={handleDragonClick}
       >
         <DragonDisplay 
           className="w-full h-full dragon-display"
@@ -53,6 +66,7 @@ export const BeastPlayDisplay = () => {
           animationSpeed={1}
           autoRotateSpeed={0.5}
           lighting="bright"
+          triggerAction={clickTrigger}
           style={{
             filter: 'brightness(1.2) saturate(1.05)',
             overflow: 'visible',
