@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FOOD_UI_CONFIG } from '../../../../constants/feed.constants';
 import { DragonDisplay } from '../../../shared/DragonDisplay';
 
@@ -22,6 +22,26 @@ export const Beast = ({
   beastImage, 
   beastName 
 }: BeastAnimationProps) => {
+  
+  const [triggerAction, setTriggerAction] = useState<'feeding' | null>(null);
+  const [previousFeedingState, setPreviousFeedingState] = useState(false);
+  
+  // Trigger feeding animation only when isFeeding changes from false to true
+  useEffect(() => {
+    // Only trigger when isFeeding goes from false to true (start of feeding)
+    if (isFeeding && !previousFeedingState) {
+      console.info("🍖 Feed started! Triggering eating animation once");
+      setTriggerAction('feeding');
+      
+      // Clear the trigger after a short delay to allow re-triggering for next feed
+      setTimeout(() => {
+        setTriggerAction(null);
+      }, 200);
+    }
+    
+    // Update previous state for next comparison
+    setPreviousFeedingState(isFeeding);
+  }, [isFeeding, previousFeedingState]);
   
   React.useEffect(() => {
     // Force canvas to be 100% width and height
@@ -82,6 +102,7 @@ export const Beast = ({
             animationSpeed={isFeeding ? 1.5 : 1} // Faster animation when feeding
             autoRotateSpeed={isFeeding ? 1.0 : 0.5} // Faster rotation when feeding
             lighting="bright"
+            triggerAction={triggerAction} // Pass the feeding trigger
             style={{
               filter: isFeeding ? 'brightness(1.3) saturate(1.1)' : 'brightness(1.2) saturate(1.05)',
               transition: 'filter 0.3s ease',

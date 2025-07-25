@@ -8,12 +8,12 @@ interface DragonDisplayProps {
   className?: string;
   scale?: number;
   position?: [number, number, number];
+  rotation?: [number, number, number];
   animationSpeed?: number;
   autoRotateSpeed?: number;
-  lighting?: 'bright' | 'dim' | 'sleep';
+  lighting?: "bright" | "dim" | "sleep";
+  triggerAction?: 'cleaning' | 'feeding' | 'sleeping' | 'wake' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty' | null;
   style?: React.CSSProperties;
-  rotation?: [number, number, number];
-  triggerAction?: 'cleaning' | 'feeding' | 'sleeping' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty' | null;
 }
 
 // Simple dragon component - reusable across screens
@@ -28,7 +28,7 @@ const SimpleDragonModel = ({
   position?: [number, number, number];
   animationSpeed?: number;
   rotation?: [number, number, number];
-  triggerAnimation?: 'cleaning' | 'feeding' | 'sleeping' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty' | null;
+  triggerAnimation?: 'cleaning' | 'feeding' | 'sleeping' | 'wake' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty' | null;
 }) => {
   const group = useRef<THREE.Group>(null);
   
@@ -91,7 +91,7 @@ const SimpleDragonModel = ({
         
         let currentAction: THREE.AnimationAction | null = null;
         let idleInterval: NodeJS.Timeout | null = null;
-        let currentState: 'idle' | 'action' = 'idle';
+        let currentState: 'idle' | 'action' | 'sleeping' = 'idle';
         
         // Function to stop current animation smoothly
         const stopCurrentAnimation = (fadeTime = 0.5) => {
@@ -127,6 +127,9 @@ const SimpleDragonModel = ({
           stopCurrentAnimation(0.8);
           
           setTimeout(() => {
+            // Double check state hasn't changed during timeout
+            if (currentState !== 'idle') return;
+            
             const randomIndex = Math.floor(Math.random() * availableAnimations.idle.length);
             const selectedAnimation = availableAnimations.idle[randomIndex];
             currentAction = playAnimation(selectedAnimation, true, 0.8);
@@ -134,7 +137,19 @@ const SimpleDragonModel = ({
         };
         
         // Function to play action animation
-        const playActionAnimation = (actionType: 'cleaning' | 'feeding' | 'sleeping' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty') => {
+        const playActionAnimation = (actionType: 'cleaning' | 'feeding' | 'sleeping' | 'wake' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty') => {
+          // Handle wake action separately
+          if (actionType === 'wake') {
+            console.info(`🌅 Waking up beast, returning to idle`);
+            currentState = 'idle';
+            stopCurrentAnimation(0.5);
+            setTimeout(() => {
+              playRandomIdleAnimation();
+              startIdleRotation();
+            }, 500);
+            return;
+          }
+          
           const actionAnimations = availableAnimations[actionType];
           if (actionAnimations.length === 0) {
             console.warn(`⚠️ No animations available for action: ${actionType}`);
@@ -166,6 +181,14 @@ const SimpleDragonModel = ({
             currentAction = playAnimation(selectedAnimation, shouldLoop, 0.5);
             
             if (currentAction) {
+              // Special handling for sleeping - don't return to idle
+              if (actionType === 'sleeping') {
+                console.info(`😴 Beast is now sleeping, staying in sleep state`);
+                currentState = 'sleeping'; // Keep in sleeping state
+                // Don't set any timeout - stay sleeping until wake is triggered
+                return;
+              }
+              
               // Calculate duration - use fixed duration for looping actions or animation duration for single actions
               const animationDuration = shouldLoop && loopDuration ? 
                 loopDuration / 1000 : 
@@ -195,8 +218,14 @@ const SimpleDragonModel = ({
         const startIdleRotation = () => {
           if (idleInterval) clearInterval(idleInterval);
           
+          // Don't start idle rotation if beast is sleeping
+          if (currentState === 'sleeping') return;
+          
           idleInterval = setInterval(() => {
-            playRandomIdleAnimation();
+            // Check if still in idle state before playing next animation
+            if (currentState === 'idle') {
+              playRandomIdleAnimation();
+            }
           }, Math.random() * 3000 + 4000); // 4-7 seconds
         };
         

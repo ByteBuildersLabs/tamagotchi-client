@@ -56,6 +56,9 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
     isLoading
   } = useBeastDisplay();
 
+  // State for triggered animations
+  const [triggerAction, setTriggerAction] = useState<'sleeping' | 'wake' | null>(null);
+
   // Set current screen for music control
   useEffect(() => {
     setCurrentScreen("sleep");
@@ -65,7 +68,7 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
   const {
     isBeastSleeping,
     isSleepTransactionInProgress,
-    handleCampfireClick,
+    handleCampfireClick: originalHandleCampfireClick,
     isInteractionDisabled
   } = useSleepLogic();
 
@@ -129,9 +132,25 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
     if (previousCampfireState !== isCampfireOn) {
       
       if (!isCampfireOn) {
+        // Beast is going to sleep - trigger sleeping animation
+        console.info("😴 Beast going to sleep! Triggering sleeping animation");
+        setTriggerAction('sleeping');
         setIsDarkened(true);
+        
+        // Clear the trigger after a short delay to allow re-triggering
+        setTimeout(() => {
+          setTriggerAction(null);
+        }, 200);
       } else {
+        // Beast is waking up - trigger wake action
+        console.info("🌅 Beast waking up! Triggering wake action");
+        setTriggerAction('wake');
         setIsDarkened(false);
+        
+        // Clear the trigger after a short delay
+        setTimeout(() => {
+          setTriggerAction(null);
+        }, 200);
       }
       
       // Update previous state
@@ -142,7 +161,7 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
   // Simple click handler - no animation manipulation
   const handleCampfireClickWithAnimation = async () => {
     if (isInteractionDisabled) return;
-    await handleCampfireClick();
+    await originalHandleCampfireClick();
   };
 
   // Loading state
@@ -247,7 +266,7 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
       {/* Center: Beast and Campfire together */}
       <div className="flex-grow flex items-center justify-center w-full pointer-events-none select-none z-0 relative">
         {/* Beast Display - Now using 3D Dragon instead of static image */}
-        <BeastSleepDisplay />
+        <BeastSleepDisplay triggerAction={triggerAction} />
 
         {/* Campfire Controller */}
         <CampfireController
