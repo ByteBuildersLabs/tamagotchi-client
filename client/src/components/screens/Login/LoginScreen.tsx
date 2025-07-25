@@ -7,8 +7,7 @@ import { UniverseView, GameView } from './components/CoverViews';
 import { VennDiagram } from './components/VennDiagram';
 import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { MiniKit } from '@worldcoin/minikit-js';
-// import { VerificationLevel } from '@worldcoin/minikit-js'; // Will be used when types are fixed
+import { MiniKit, VerificationLevel } from '@worldcoin/minikit-js';
 import { useCreateWallet } from '@chipi-pay/chipi-sdk';
 // import useAppStore from '../../../zustand/store'; 
 
@@ -64,20 +63,26 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
       //   signal: '', 
       // };
 
-      // Simulate World ID verification for now (tipos MiniKit tienen issues)
-      console.log('🔄 Simulating World ID verification...');
+      // Always use real World ID verification modal
+      console.log('🌍 Iniciando World ID verification real...');
       
-      // Temporary simulation while we fix MiniKit types
-      setTimeout(async () => {
-        if (MiniKit.isInstalled()) {
-          console.log('✅ World ID verification successful (simulated)');
+      try {
+        // Real World ID verification using MiniKit
+        const response = await MiniKit.commands.verify({
+          action: 'bytebeasts-login',
+          verification_level: VerificationLevel.Orb,
+          signal: ''
+        });
+        
+        if (response && response.verification_level) {
+          console.log('✅ World ID verification successful!', response);
           
-          const simulatedUserInfo = {
-            nullifier_hash: 'simulated_nullifier_' + Date.now(),
-            verification_level: 'orb'
+          const realUserInfo = {
+            nullifier_hash: (response as any).nullifier_hash || 'temp_nullifier_' + Date.now(),
+            verification_level: response.verification_level
           };
           
-          setUserInfo(simulatedUserInfo);
+          setUserInfo(realUserInfo);
           setAuthStatus('verified');
           toast.success('🌍 World ID verified!');
           
@@ -91,7 +96,7 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             console.log('🧪 Testing createWalletAsync parameters...');
             
             // Try to call with different parameter combinations to see what works
-            const tempPin = simulatedUserInfo.nullifier_hash.slice(-6);
+            const tempPin = realUserInfo.nullifier_hash.slice(-6);
             
             // Test with correct API based on TypeScript errors
             console.log('Test: Calling createWalletAsync with required params');
@@ -131,15 +136,20 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
           }
           
         } else {
-          console.error('❌ Not in World App');
-          toast.error('Please open this game in World App');
+          console.error('❌ World ID verification failed');
+          toast.error('World ID verification failed');
           setIsProcessing(false);
           setAuthStatus('disconnected');
         }
-      }, 2000);
-      
-    } catch (error) {
-      console.error('❌ Worldcoin authentication error:', error);
+        
+      } catch (error) {
+        console.error('❌ Worldcoin authentication error:', error);
+        toast.error('Authentication failed. Please try again.');
+        setIsProcessing(false);
+        setAuthStatus('disconnected');
+      }
+    } catch (mainError) {
+      console.error('❌ Main authentication error:', mainError);
       toast.error('Authentication failed. Please try again.');
       setIsProcessing(false);
       setAuthStatus('disconnected');

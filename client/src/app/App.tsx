@@ -109,7 +109,7 @@ function AppContent() {
     if (keysToRemove.length > 0) {
       console.log('✅ Initial cache cleanup completed');
     }
-  }, [isInWorldApp, username]); // Re-run if World App status changes
+  }, []); // Only run once on app initialization - don't re-run on World App detection changes
 
   // Updated navigation handler to support games
   const handleNavigation = (screen: Screen, gameId?: GameId) => {
