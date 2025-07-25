@@ -30,14 +30,7 @@ const SimpleDragonModel = ({
   const group = useRef<THREE.Group>(null);
   
   try {
-    const { scene, animations } = useGLTF("./models/dragon.glb");
-    
-    // Log available animations for debugging
-    console.info("🐉 Dragon GLB Animations:", animations?.map(anim => ({
-      name: anim.name,
-      duration: anim.duration,
-      tracks: anim.tracks.length
-    })) || 'No animations found');
+    const { scene, animations } = useGLTF("./3dBeasts/red.glb");
     
     // Clone scene for independent instance
     const clonedScene = useMemo(() => {
@@ -49,17 +42,16 @@ const SimpleDragonModel = ({
     
     useEffect(() => {
       if (actions && names && names.length > 0) {
-        console.info("🎭 Available animation names:", names);
+        // Only show animation names list
+        console.info("🎭 Red Beast Animations:", names);
         
         // Play first available animation
         const firstAnimation = names[0];
-        console.info("🎭 Using animation:", firstAnimation);
         
         if (actions[firstAnimation]) {
           actions[firstAnimation].reset().play();
           actions[firstAnimation].setLoop(THREE.LoopRepeat, Infinity);
           actions[firstAnimation].timeScale = animationSpeed;
-          console.info("✅ Animation started successfully:", firstAnimation);
         }
       }
     }, [actions, names, animationSpeed]);
@@ -74,7 +66,6 @@ const SimpleDragonModel = ({
       </group>
     );
   } catch (error) {
-    console.error("🐉 Dragon model loading failed:", error);
     return <DragonPlaceholder scale={scale} position={position} />;
   }
 };
@@ -358,11 +349,9 @@ export const DragonDisplay: React.FC<DragonDisplayProps> = ({
 // Preload dragon model
 const preloadDragonModel = () => {
   try {
-    console.log('🚀 Preloading dragon model...');
-    useGLTF.preload("./models/dragon.glb");
-    console.log('✅ Dragon model preloaded successfully');
+    useGLTF.preload("./3dBeasts/red.glb");
   } catch (error) {
-    console.warn('⚠️ Dragon model preload failed, will load on demand:', error);
+    // Silent preload failure
   }
 };
 
