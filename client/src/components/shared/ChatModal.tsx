@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { useBeastDisplay } from '../../dojo/hooks/useBeastDisplay';
-import { ChatService, type ChatAgent } from '../../services/chatService';
 import { useAccount } from '@starknet-react/core';
+import { useBeastDisplay } from '../../dojo/hooks/useBeastDisplay';
+import { ChatService } from '../../services/chatService';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -16,15 +16,17 @@ interface Message {
   timestamp: Date;
 }
 
+const INITIAL_MESSAGE: Message = {
+  id: 1,
+  text: "¡Hola! 👋 Soy tu asistente virtual de ByteBeasts. ¿En qué puedo ayudarte?",
+  sender: 'bot',
+  timestamp: new Date()
+};
+
+const ERROR_MESSAGE = "Lo siento, hubo un problema al procesar tu mensaje. ¿Puedes intentar de nuevo? 😅";
+
 export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "¡Hola! 👋 Soy tu asistente virtual de ByteBeasts. ¿En qué puedo ayudarte?",
-      sender: 'bot',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -33,13 +35,64 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
   const { currentBeastDisplay } = useBeastDisplay();
   const { account } = useAccount();
 
-  const scrollToBottom = () => {
+  const currentAgent = ChatService.getAgentForBeastType(currentBeastDisplay?.beastTypeString);
+
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
+
+  const addMessage = useCallback((text: string, sender: 'user' | 'bot') => {
+    const newMessage: Message = {
+      id: Date.now() + (sender === 'bot' ? 1 : 0),
+      text,
+      sender,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, newMessage]);
+  }, []);
+
+  const handleSendMessage = useCallback(async () => {
+    if (!inputMessage.trim() || isTyping) return;
+
+    const messageText = inputMessage.trim();
+    addMessage(messageText, 'user');
+    setInputMessage('');
+    setIsTyping(true);
+
+    try {
+      const userId = account?.address || 'anonymous';
+      const response = await ChatService.sendMessage(messageText, userId, currentAgent);
+      addMessage(response, 'bot');
+    } catch (error) {
+      console.error('Chat error:', error);
+      addMessage(ERROR_MESSAGE, 'bot');
+    } finally {
+      setIsTyping(false);
+    }
+  }, [inputMessage, isTyping, account?.address, currentAgent, addMessage]);
+
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  }, [handleSendMessage]);
+
+  const handleClose = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onClose();
+  }, [onClose]);
+
+  const handleBackdropClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (e.target === e.currentTarget) {
+      handleClose(e);
+    }
+  }, [handleClose]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -48,87 +101,51 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   useEffect(() => {
+    const bodyStyle = document.body.style;
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
+      bodyStyle.overflow = 'hidden';
+      bodyStyle.touchAction = 'none';
     } else {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
+      bodyStyle.overflow = '';
+      bodyStyle.touchAction = '';
     }
     
     return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
+      bodyStyle.overflow = '';
+      bodyStyle.touchAction = '';
     };
   }, [isOpen]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now(),
-      text: inputMessage,
-      sender: 'user',
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
-    setIsTyping(true);
-
-    try {
-      const userId = account?.address || 'anonymous';
-      const agent = ChatService.getAgentForBeastType(currentBeastDisplay?.beastTypeString);
-      const botResponse = await ChatService.sendMessage(inputMessage, userId, agent);
-      
-      const botMessage: Message = {
-        id: Date.now() + 1,
-        text: botResponse,
-        sender: 'bot',
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, botMessage]);
-    } catch (error) {
-      console.error('Error sending message to chat API:', error);
-      
-      const errorMessage: Message = {
-        id: Date.now() + 1,
-        text: "Lo siento, hubo un problema al procesar tu mensaje. ¿Puedes intentar de nuevo? 😅",
-        sender: 'bot',
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const handleCloseClick = (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    onClose();
-  };
-
-  const handleBackdropClick = (e: React.MouseEvent | React.TouchEvent) => {
-    if (e.target === e.currentTarget) {
-      e.stopPropagation();
-      e.preventDefault();
-      onClose();
-    }
-  };
-
   if (!isOpen) return null;
 
-  const currentAgent = ChatService.getAgentForBeastType(currentBeastDisplay?.beastTypeString);
+  const BeastAvatar = () => (
+    <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gold/30 bg-gold/10 flex items-center justify-center flex-shrink-0">
+      {currentBeastDisplay?.asset ? (
+        <img
+          src={currentBeastDisplay.asset}
+          alt="Beast Avatar"
+          className="w-12 h-12 object-cover object-center"
+          style={{ transform: 'translateY(10%)' }}
+        />
+      ) : (
+        <span className="text-xs">🐾</span>
+      )}
+    </div>
+  );
+
+  const TypingIndicator = () => (
+    <div className="bg-surface/40 text-gray-700 rounded-lg rounded-bl-none border border-gold/20 p-3 font-rubik text-sm">
+      <div className="flex space-x-1">
+        {[0, 0.1, 0.2].map((delay, i) => (
+          <div 
+            key={i}
+            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" 
+            style={{ animationDelay: `${delay}s` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div 
@@ -161,8 +178,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
             </span>
           </div>
           <motion.button 
-            onClick={handleCloseClick}
-            onTouchStart={handleCloseClick}
+            onClick={handleClose}
+            onTouchStart={handleClose}
             className="text-gray-800 transition-colors font-luckiest text-2xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-gold/10 touch-manipulation"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
@@ -181,22 +198,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
               key={message.id}
               className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start items-start space-x-2'}`}
             >
-              {message.sender === 'bot' && (
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gold/30 bg-gold/10 flex items-center justify-center">
-                    {currentBeastDisplay?.asset ? (
-                      <img
-                        src={currentBeastDisplay.asset}
-                        alt="Beast Avatar"
-                        className="w-12 h-12 object-cover object-center"
-                        style={{ transform: 'translateY(10%)' }}
-                      />
-                    ) : (
-                      <span className="text-xs">🐾</span>
-                    )}
-                  </div>
-                </div>
-              )}
+              {message.sender === 'bot' && <BeastAvatar />}
               
               <div
                 className={`max-w-[80%] p-3 rounded-lg font-rubik text-sm ${
@@ -215,28 +217,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
           
           {isTyping && (
             <div className="flex justify-start items-start space-x-2">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gold/30 bg-gold/10 flex items-center justify-center">
-                  {currentBeastDisplay?.asset ? (
-                    <img
-                      src={currentBeastDisplay.asset}
-                      alt="Beast Avatar"
-                      className="w-12 h-12 object-cover object-center"
-                      style={{ transform: 'translateY(10%)' }}
-                    />
-                  ) : (
-                    <span className="text-xs">🐾</span>
-                  )}
-                </div>
-              </div>
-              
-              <div className="bg-surface/40 text-gray-700 rounded-lg rounded-bl-none border border-gold/20 p-3 font-rubik text-sm">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                </div>
-              </div>
+              <BeastAvatar />
+              <TypingIndicator />
             </div>
           )}
           
