@@ -168,7 +168,7 @@ export const CleanScreen = ({
       />
 
       {/* Main Content */}
-      <div className="flex flex-col items-center mt-8 space-y-6 z-10 pointer-events-none select-none">
+      <div className="flex flex-col items-center mt-4 space-y-3 z-10 pointer-events-none select-none">
         {/* Header */}
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
