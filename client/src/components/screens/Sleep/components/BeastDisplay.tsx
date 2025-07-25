@@ -54,7 +54,9 @@ export const BeastSleepDisplay = () => {
         lighting="bright"
         style={{
           filter: 'brightness(1.2) saturate(1.05)',
-          overflow: 'visible'
+          overflow: 'visible',
+          position: 'relative',
+          top: '100px'
         }}
       />
     </motion.div>
