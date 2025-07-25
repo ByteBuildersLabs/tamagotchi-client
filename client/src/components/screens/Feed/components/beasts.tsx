@@ -85,7 +85,9 @@ export const Beast = ({
             style={{
               filter: isFeeding ? 'brightness(1.3) saturate(1.1)' : 'brightness(1.2) saturate(1.05)',
               transition: 'filter 0.3s ease',
-              overflow: 'visible'
+              overflow: 'visible',
+              position: 'relative',
+              top: '100px'
             }}
           />
         </div>
