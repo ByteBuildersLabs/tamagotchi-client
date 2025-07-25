@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import React from "react";
 import { FOOD_UI_CONFIG } from '../../../../constants/feed.constants';
 import { DragonDisplay } from '../../../shared/DragonDisplay';
 
@@ -22,6 +23,22 @@ export const Beast = ({
   beastName 
 }: BeastAnimationProps) => {
   
+  React.useEffect(() => {
+    // Force canvas to be 100% width and height
+    const style = document.createElement('style');
+    style.textContent = `
+      .dragon-display canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Enhanced animation configuration for the dragon container
   const dragonContainerAnimation = {
     initial: { scale: 0.8, opacity: 0 },
@@ -59,7 +76,7 @@ export const Beast = ({
           isFeeding ? 'brightness-110 saturate-110' : '' // Brighten when feeding
         }`} style={{ zIndex: 7 }}>
           <DragonDisplay 
-            className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px]"
+            className="w-full h-full dragon-display"
             scale={0.5}
             position={[0, 0, 0]}
             animationSpeed={isFeeding ? 1.5 : 1} // Faster animation when feeding

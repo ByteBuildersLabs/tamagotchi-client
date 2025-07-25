@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import React from "react";
 import { DragonDisplay } from "../../../shared/DragonDisplay";
 
 const beastAnimation = {
@@ -20,6 +21,22 @@ const beastAnimation = {
 };
 
 export const BeastDisplay = () => {
+  React.useEffect(() => {
+    // Force canvas to be 100% width and height
+    const style = document.createElement('style');
+    style.textContent = `
+      .dragon-display canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   return (
     <div className="flex items-center justify-center w-full relative">
       <motion.div
@@ -30,7 +47,7 @@ export const BeastDisplay = () => {
         style={{ overflow: 'visible' }}
       >
         <DragonDisplay 
-          className="w-full h-full"
+          className="w-full h-full dragon-display"
           scale={0.5}
           position={[0, 0, 0]}
           animationSpeed={1}
