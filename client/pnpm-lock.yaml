@@ -17,6 +17,9 @@ importers:
       '@chipi-pay/chipi-sdk':
         specifier: ^3.2.2
         version: 3.2.2(@tanstack/react-query@5.77.2(react@18.3.1))(ethers@6.15.0)(express@5.1.0)(qs@6.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(starknet@6.23.1(encoding@0.1.13))
+      '@clerk/clerk-react':
+        specifier: ^5.36.0
+        version: 5.36.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@dojoengine/core':
         specifier: 1.5.6
         version: 1.5.6(encoding@0.1.13)(typescript@5.8.3)
@@ -773,6 +776,13 @@ packages:
   '@clerk/backend@2.5.2':
     resolution: {integrity: sha512-m3AsF3lOGUmzZOmMg7ovL5l8lzNHExM3mgRGguaOz9vAenRLPT9U+h+GVGP7URv6IPWVI5jhywlU8+MOK5tUIg==}
     engines: {node: '>=18.17.0'}
+
+  '@clerk/clerk-react@5.36.0':
+    resolution: {integrity: sha512-w4aSKQqTZMzjtxqOcUC4Rr8G1F4qmIOaHmgmmI/co2j3FqlqSv1bYeBgklThEquyfHTBVC6l7Hb5zLUTqp/DtA==}
+    engines: {node: '>=18.17.0'}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
 
   '@clerk/express@1.7.12':
     resolution: {integrity: sha512-ChAqUVa8G0QJWlUJcbe698HBemAup6R4QskWEM5rS0JDfB7oBCyFxmllhNvt9FDikKa8LYtIV0ZiE6r4MjOsHQ==}
@@ -4974,6 +4984,14 @@ snapshots:
     transitivePeerDependencies:
       - react
       - react-dom
+
+  '@clerk/clerk-react@5.36.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@clerk/shared': 3.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@clerk/types': 4.70.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      tslib: 2.8.1
 
   '@clerk/express@1.7.12(express@5.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:

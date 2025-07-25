@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { MiniKit, } from '@worldcoin/minikit-js';
 import { useCreateWallet } from '@chipi-pay/chipi-sdk';
+import {useAuth} from '@clerk/clerk-react';
 // import useAppStore from '../../../zustand/store'; 
 
 interface LoginScreenProps {
@@ -22,6 +23,7 @@ interface LoginScreenProps {
  */
 export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const { view, currentCircle } = useLoginAnimations();
+  const { getToken } = useAuth();
 
   // PASO 2: Estado de autenticación Worldcoin  
   const [authStatus, setAuthStatus] = useState<'disconnected' | 'verifying' | 'verified' | 'creating_wallet' | 'ready'>('disconnected');
@@ -98,13 +100,17 @@ export const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
             // Try to call with different parameter combinations to see what works
             const tempPin = response.address.slice(0, -6);
+            const bearerToken = await getToken({template: 'Tamagotchi'});
+            if (!bearerToken) {
+              throw new Error('No bearer token available');
+            }
 
             // Test with correct API based on TypeScript errors
             console.log('Test: Calling createWalletAsync with required params');
             try {
               const result = await createWalletAsync({
                 encryptKey: tempPin,
-                bearerToken: 'debug_bearer_token_123' // Temporary for testing
+                bearerToken // Temporary for testing
               });
               console.log('✅ createWalletAsync worked:', result);
               console.log('✅ createWalletResponse:', createWalletResponse);
