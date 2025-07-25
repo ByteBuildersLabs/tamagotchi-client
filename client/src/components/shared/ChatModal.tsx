@@ -28,10 +28,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Get beast display information
   const { currentBeastDisplay } = useBeastDisplay();
 
-  // Auto scroll to bottom when new messages arrive
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -40,14 +38,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Focus input when modal opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isOpen]);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -77,7 +73,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate bot response
     setTimeout(() => {
       const botResponses = [
         "¡Interesante! 🤔 ¿Te gustaría saber más sobre cuidar a tu ByteBeast?",
@@ -145,7 +140,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
         onTouchStart={(e) => e.stopPropagation()}
         style={{ touchAction: 'auto' }}
       >
-        {/* Header */}
         <div className="bg-gold/20 p-4 border-b-4 border-gold/40 flex justify-between items-center flex-shrink-0">
           <h2 className="text-gray-800 font-luckiest text-2xl tracking-wide drop-shadow-[2px_2px_0px_rgba(0,0,0,0.1)]">
             💬 CHAT ASISTENTE
@@ -165,14 +159,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
           </motion.button>
         </div>
 
-        {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-cream to-cream/80 space-y-3">
           {messages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start items-start space-x-2'}`}
             >
-              {/* Beast Avatar for bot messages */}
               {message.sender === 'bot' && (
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gold/30 bg-gold/10 flex items-center justify-center">
@@ -207,7 +199,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
           
           {isTyping && (
             <div className="flex justify-start items-start space-x-2">
-              {/* Beast Avatar for typing indicator */}
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gold/30 bg-gold/10 flex items-center justify-center">
                   {currentBeastDisplay?.asset ? (
@@ -236,7 +227,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
         <div className="p-4 bg-gold/10 border-t-4 border-gold/30 flex-shrink-0">
           <div className="flex gap-2">
             <input

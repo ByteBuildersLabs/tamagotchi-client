@@ -13,7 +13,7 @@ import { useBeastDisplay } from "../../../../dojo/hooks/useBeastDisplay";
 
 // Assets
 import menuIcon from "../../../../assets/icons/menu/icon-menu.webp";
-import chatIcon from "../../../../assets/icons/menu/svg/icon-menu.svg"; // Using menu icon for chat
+import chatIcon from "../../../../assets/icons/chat/chat.png";
 import closeIcon from "../../../../assets/icons/extras/icon-close.png";
 import profileIcon from "../../../../assets/icons/menu/svg/icon-profile.svg";
 import shareIcon from "../../../../assets/icons/menu/svg/icon-share.svg";
