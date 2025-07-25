@@ -147,6 +147,12 @@ export default defineConfig(({ command }) => {
         host: true,
         cors: true,
       }),
+      // Permitir hosts de Cloudflare Tunnel
+      allowedHosts: [
+        'localhost',
+        '.trycloudflare.com',
+        'generates-four-phases-hamburg.trycloudflare.com'
+      ]
     },
     define: {
       global: 'globalThis',
