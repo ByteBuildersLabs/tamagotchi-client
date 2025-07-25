@@ -2,6 +2,10 @@ import { motion } from "framer-motion";
 import React from "react";
 import { DragonDisplay } from "../../../shared/DragonDisplay";
 
+interface BeastSleepDisplayProps {
+  triggerAction?: 'sleeping' | 'wake' | null;
+}
+
 const beastAnimation = {
   initial: { scale: 0.3, opacity: 0, rotate: -15 },
   animate: {
@@ -20,7 +24,7 @@ const beastAnimation = {
   whileHover: { scale: 1.03, rotate: 2 },
 };
 
-export const BeastSleepDisplay = () => {
+export const BeastSleepDisplay = ({ triggerAction }: BeastSleepDisplayProps) => {
   React.useEffect(() => {
     // Force canvas to be 100% width and height
     const style = document.createElement('style');
@@ -52,6 +56,7 @@ export const BeastSleepDisplay = () => {
         animationSpeed={1}
         autoRotateSpeed={0.5}
         lighting="bright"
+        triggerAction={triggerAction}
         style={{
           filter: 'brightness(1.2) saturate(1.05)',
           overflow: 'visible',
