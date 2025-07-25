@@ -485,7 +485,7 @@ const LightingSetup = ({ lighting = 'bright' }: { lighting: 'bright' | 'dim' | '
 export const DragonDisplay: React.FC<DragonDisplayProps> = ({
   className = "h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px]",
   scale = 0.5,
-  position = [0, 0, 0],
+  position = [0, -0.5, 0],
   animationSpeed = 1,
   autoRotateSpeed = 0.5,
   lighting = 'bright',
