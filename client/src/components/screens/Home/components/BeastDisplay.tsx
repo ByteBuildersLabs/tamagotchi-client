@@ -2,10 +2,26 @@ import React from "react";
 import { DragonDisplay } from "../../../shared/DragonDisplay";
 
 export const BeastHomeDisplay = () => {
+  React.useEffect(() => {
+    // Force canvas to be 100% width and height
+    const style = document.createElement('style');
+    style.textContent = `
+      .dragon-display canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   return (
     <div className="flex-grow flex items-center justify-center w-full pointer-events-none select-none z-0 relative">
       <DragonDisplay 
-        className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px]"
+        className="w-full h-full dragon-display"
         scale={0.5}
         position={[0, 0, 0]}
         animationSpeed={1}
