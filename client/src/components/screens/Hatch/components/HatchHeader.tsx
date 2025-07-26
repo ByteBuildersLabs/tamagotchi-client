@@ -16,7 +16,7 @@ export const HatchHeader = ({ showBeast, beastType, eggState }: HatchHeaderProps
 			transition: {
 				delay: 0.2,
 				duration: 0.6,
-				ease: "easeOut"
+				ease: "easeOut" as const
 			}
 		}
 	};
@@ -29,7 +29,7 @@ export const HatchHeader = ({ showBeast, beastType, eggState }: HatchHeaderProps
 			transition: {
 				delay: 0.4,
 				duration: 0.5,
-				ease: "easeOut"
+				ease: "easeOut" as const
 			}
 		}
 	};

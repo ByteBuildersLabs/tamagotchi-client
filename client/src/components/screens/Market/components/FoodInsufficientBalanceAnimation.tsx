@@ -44,7 +44,7 @@ export function FoodInsufficientBalanceAnimation({
           scale: 1, 
           y: 0,
           transition: { 
-            type: "spring", 
+            type: "spring" as const, 
             stiffness: 300, 
             damping: 15
           } 
@@ -55,7 +55,7 @@ export function FoodInsufficientBalanceAnimation({
         <motion.div
           animate={{
             x: [0, -10, 10, -10, 0],
-            transition: { duration: 0.5, ease: "easeInOut" }
+            transition: { duration: 0.5, ease: "easeInOut" as const }
           }}
           className="relative w-32 h-32 mb-4 flex items-center justify-center"
         >

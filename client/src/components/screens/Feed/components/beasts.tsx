@@ -18,9 +18,7 @@ interface BeastAnimationProps {
  */
 export const Beast = ({ 
   isDragging, 
-  isFeeding = false, // NEW: Default to false
-  beastImage, 
-  beastName 
+  isFeeding = false // NEW: Default to false
 }: BeastAnimationProps) => {
   
   const [triggerAction, setTriggerAction] = useState<'feeding' | null>(null);
@@ -79,14 +77,16 @@ export const Beast = ({
       opacity: 1,
       rotate: isFeeding ? [0, -2, 2, -2, 0] : 0, // Gentle shake when feeding
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: isFeeding ? 200 : 150, // More responsive when feeding
         damping: isFeeding ? 15 : 12,
-        rotate: isFeeding ? {
-          repeat: Infinity,
-          duration: 0.5,
-          ease: "easeInOut"
-        } : {}
+        ...(isFeeding && {
+          rotate: {
+            repeat: Infinity,
+            duration: 0.5,
+            ease: "easeInOut" as const
+          }
+        })
       },
     },
     whileHover: { 

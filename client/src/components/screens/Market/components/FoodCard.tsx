@@ -44,7 +44,7 @@ export function FoodCard({ food, onPurchase }: FoodCardProps) {
       className="bg-cream p-4 rounded-xl shadow-md flex flex-col items-center"
       variants={item}
       whileHover={{ y: -5 }}
-      transition={{ type: "spring", stiffness: 300 }}
+      transition={{ type: "spring" as const, stiffness: 300 }}
     >
       {/* Food image - Using transform scale to enlarge it */}
       <div className="h-32 flex items-center justify-center mb-2 overflow-visible">
@@ -85,7 +85,7 @@ export function FoodCard({ food, onPurchase }: FoodCardProps) {
         className="btn-cr-store w-full flex items-center justify-center gap-2"
         whileTap={{ scale: 0.95 }}
         whileHover={{ scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 300, damping: 15 }}
+        transition={{ type: "spring" as const, stiffness: 300, damping: 15 }}
       >
         <span>Buy</span>
         <img src={coinIcon} alt="Coin" className="h-5 w-5" />

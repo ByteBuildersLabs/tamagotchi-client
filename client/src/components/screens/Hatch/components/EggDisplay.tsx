@@ -37,7 +37,7 @@ export const EggDisplay = ({
       opacity: 1,
       rotate: eggState === 'hatching' ? [0, -2, 2, 0] : 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 100,
         damping: 10,
         delay: 0.6,
@@ -45,7 +45,7 @@ export const EggDisplay = ({
           delay: 0.8,
           repeat: Infinity,
           duration: 2.5,
-          ease: "easeInOut"
+          ease: "easeInOut" as const
         } : { delay: 0.6, duration: 0.7 },
         opacity: {
           delay: 0.6,
@@ -54,7 +54,7 @@ export const EggDisplay = ({
         rotate: eggState === 'hatching' ? {
           repeat: Infinity,
           duration: 0.3,
-          ease: "easeInOut"
+          ease: "easeInOut" as const
         } : { delay: 0.6, duration: 0.3 }
       },
     },
@@ -63,7 +63,7 @@ export const EggDisplay = ({
       rotate: [0, -3, 3, 0],
       transition: {
         scale: { duration: 0.3 },
-        rotate: { repeat: Infinity, duration: 1.5, ease: "easeInOut" }
+        rotate: { repeat: Infinity, duration: 1.5, ease: "easeInOut" as const }
       }
     } : {},
     whileTap: canClick ? {

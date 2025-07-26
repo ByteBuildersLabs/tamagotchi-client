@@ -149,14 +149,14 @@ export function MarketScreen({onNavigation}: MarketScreenProps) {
         className="relative mt-12 mb-3"
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.5, ease: "easeOut" as const }}
       >
         {/* Animated Chef Icon */}
         <motion.div
           className="absolute -top-11 right-3 z-10 w-40 h-40"
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+          transition={{ delay: 0.4, type: "spring" as const, stiffness: 200 }}
         >
           <img 
             src={sellertIcon}

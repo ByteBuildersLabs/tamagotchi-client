@@ -15,14 +15,14 @@ export const ContinueButton = ({ onContinue }: ContinueButtonProps) => {
       transition: {
         delay: 0.5,
         duration: 0.8,
-        ease: "easeOut",
-        type: "spring",
+        ease: "easeOut" as const,
+        type: "spring" as const,
         stiffness: 300,
         damping: 25,
         y: {
           repeat: Infinity,
           duration: 2,
-          ease: "easeInOut"
+          ease: "easeInOut" as const
         }
       }
     }
@@ -33,7 +33,7 @@ export const ContinueButton = ({ onContinue }: ContinueButtonProps) => {
       scale: 1.1,
       y: -8,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 400,
         damping: 15
       }
@@ -42,7 +42,7 @@ export const ContinueButton = ({ onContinue }: ContinueButtonProps) => {
       scale: 0.95,
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 400,
         damping: 20
       }

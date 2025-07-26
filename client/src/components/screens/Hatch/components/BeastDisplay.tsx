@@ -15,7 +15,7 @@ export const BeastDisplay = ({ beastAsset, beastType }: BeastDisplayProps) => {
       rotate: 0,
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 200,
         damping: 15,
         delay: 0.2,
@@ -27,7 +27,7 @@ export const BeastDisplay = ({ beastAsset, beastType }: BeastDisplayProps) => {
       transition: {
         repeat: Infinity,
         duration: 3,
-        ease: "easeInOut"
+        ease: "easeInOut" as const
       }
     }
   };

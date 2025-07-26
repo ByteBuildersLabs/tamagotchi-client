@@ -4,8 +4,8 @@ import { ActionButtonsProps } from "../../../types/home.types";
 import shopIcon from "../../../../assets/icons/shop/icon-general-shop.webp";
 
 const buttonInteractionProps = {
-  whileHover: { scale: 1.1, transition: { type: "spring", stiffness: 300, damping: 15 } },
-  whileTap: { scale: 0.95, transition: { type: "spring", stiffness: 400, damping: 20 } },
+  whileHover: { scale: 1.1, transition: { type: "spring" as const, stiffness: 300, damping: 15 } },
+  whileTap: { scale: 0.95, transition: { type: "spring" as const, stiffness: 400, damping: 20 } },
 };
 
 export const ActionButtons = ({ onShopClick }: ActionButtonsProps) => {
@@ -17,7 +17,7 @@ export const ActionButtons = ({ onShopClick }: ActionButtonsProps) => {
       <motion.button
         onClick={onShopClick}
         initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0, transition: { delay: 0.4, duration: 0.5, ease: "easeOut" } }}
+        animate={{ opacity: 1, x: 0, transition: { delay: 0.4, duration: 0.5, ease: "easeOut" as const } }}
         {...buttonInteractionProps}
         className="fixed bottom-[calc(theme(spacing.16)+0.75rem+env(safe-area-inset-bottom))] left-3 sm:left-4 md:left-5 lg:left-6 z-30 p-3 bg-cream/80 rounded-full focus:outline-none active:scale-90"
         aria-label="Open Shop"
@@ -29,7 +29,7 @@ export const ActionButtons = ({ onShopClick }: ActionButtonsProps) => {
       {/* <motion.button
         onClick={onDailyQuestsClick}
         initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0, transition: { delay: 0.45, duration: 0.5, ease: "easeOut" } }}
+        animate={{ opacity: 1, x: 0, transition: { delay: 0.45, duration: 0.5, ease: "easeOut" as const } }}
         {...buttonInteractionProps}
         className="fixed bottom-[calc(theme(spacing.16)+0.75rem+env(safe-area-inset-bottom))] right-3 sm:right-4 md:right-5 lg:right-6 z-30 p-3 bg-cream/80 rounded-full focus:outline-none active:scale-90"
         aria-label="Open Daily Quests"

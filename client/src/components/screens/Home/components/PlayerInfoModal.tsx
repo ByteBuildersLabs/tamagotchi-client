@@ -124,7 +124,7 @@ export const PlayerInfoModal = ({
             <motion.div
               className="relative"
               whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
+              transition={{ type: "spring" as const, stiffness: 300 }}
             >
               <img
                 src={medalIcon}

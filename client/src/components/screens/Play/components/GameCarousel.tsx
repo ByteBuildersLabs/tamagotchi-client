@@ -18,7 +18,7 @@ export const GameCarousel = ({ games, onGameSelect }: GameCarouselProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0, transition: { delay: 0.8, duration: 0.6, ease: "easeOut" } }}
+      animate={{ opacity: 1, y: 0, transition: { delay: 0.8, duration: 0.6, ease: "easeOut" as const } }}
       className="w-full max-w-sm px-2 pb-32 z-10"
     >
       <div className="flex items-center justify-center space-x-1">

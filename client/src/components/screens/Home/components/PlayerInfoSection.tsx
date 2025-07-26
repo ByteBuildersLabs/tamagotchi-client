@@ -5,8 +5,8 @@ import bannerImg from "../../../../assets/banners/banner-dragon.png";
 import treeOfLifeIcon from "../../../../assets/icons/age/icon-age-tree-of-life.webp";
 
 const buttonInteractionProps = {
-  whileHover: { scale: 1.1, transition: { type: "spring", stiffness: 300, damping: 15 } },
-  whileTap: { scale: 0.95, transition: { type: "spring", stiffness: 400, damping: 20 } },
+  whileHover: { scale: 1.1, transition: { type: "spring" as const, stiffness: 300, damping: 15 } },
+  whileTap: { scale: 0.95, transition: { type: "spring" as const, stiffness: 400, damping: 20 } },
 };
 
 export const PlayerInfoSection = ({
@@ -20,7 +20,7 @@ export const PlayerInfoSection = ({
       {/* Left: Banner & Player Name */}
       <motion.div
         initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0, transition: { delay: 0.2, duration: 0.5, ease: "easeOut" } }}
+        animate={{ opacity: 1, x: 0, transition: { delay: 0.2, duration: 0.5, ease: "easeOut" as const } }}
         className="flex flex-col items-center space-y-1 md:space-y-1.5"
       >
         <motion.button
@@ -40,7 +40,7 @@ export const PlayerInfoSection = ({
       <div className="flex items-center space-x-3 md:space-x-4 lg:space-x-5 pt-1">
         <motion.div
           initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0, transition: { delay: 0.3, duration: 0.5, ease: "easeOut" } }}
+          animate={{ opacity: 1, x: 0, transition: { delay: 0.3, duration: 0.5, ease: "easeOut" as const } }}
           className="flex items-center space-x-1 md:space-x-1.5"
         >
           <img src={treeOfLifeIcon} alt="Tree of Life" className="h-10 w-10 lg:h-12 lg:w-12" />
@@ -51,7 +51,7 @@ export const PlayerInfoSection = ({
 
         <motion.div
           initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0, transition: { delay: 0.35, duration: 0.5, ease: "easeOut" } }}
+          animate={{ opacity: 1, x: 0, transition: { delay: 0.35, duration: 0.5, ease: "easeOut" as const } }}
           className="z-50"
         >
           <DropdownMenu 

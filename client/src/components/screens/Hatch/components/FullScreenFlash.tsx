@@ -9,7 +9,7 @@ export const FullScreenFlash = () => {
       transition: {
         times: [0, 0.1, 0.9, 1], // Fast flash, hold, slow fade out
         duration: 2.5,
-        ease: "easeInOut"
+        ease: "easeInOut" as const
       }
     },
     exit: {

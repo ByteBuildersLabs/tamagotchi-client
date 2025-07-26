@@ -25,7 +25,7 @@ export const DragPortal = ({
       }}
       initial={{ scale: 1 }}
       animate={{ scale: 1.3, rotate: 10 }}
-      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      transition={{ type: "spring" as const, stiffness: 500, damping: 30 }}
     />,
     portalRoot
   );

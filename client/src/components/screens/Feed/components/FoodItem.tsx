@@ -51,7 +51,7 @@ export const FoodItem = ({
                 x: 0,
                 y: 0,
                 transition: {
-                  type: "spring",
+                  type: "spring" as const,
                   stiffness: 200,
                   damping: 15,
                   delay: 0.1
@@ -61,7 +61,7 @@ export const FoodItem = ({
               whileTap={food.count > 0 ? { scale: 0.9 } : {}}
               whileDrag={{ scale: 1.3, rotate: 10, zIndex: 99999 }}
               transition={{
-                type: "spring",
+                type: "spring" as const,
                 stiffness: 500,
                 damping: 30
               }}

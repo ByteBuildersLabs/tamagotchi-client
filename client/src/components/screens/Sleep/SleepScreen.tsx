@@ -229,7 +229,7 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
         }}
         transition={{ 
           duration: 1.5, 
-          ease: "easeInOut" 
+          ease: "easeInOut" as const 
         }}
       />
 

@@ -12,7 +12,7 @@ const cloudAnimation = {
         repeat: Infinity,
         repeatType: "loop" as const,
         duration: 1.5,
-        ease: "easeInOut",
+        ease: "easeInOut" as const,
         delay: 0.6,
       },
       opacity: { delay: 0.6, duration: 0.4 },
