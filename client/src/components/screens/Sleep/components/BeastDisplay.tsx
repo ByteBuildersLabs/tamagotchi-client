@@ -1,5 +1,10 @@
 import { motion } from "framer-motion";
-import { BeastSleepDisplayProps } from "../../../types/sleep.types";
+import React, { useState } from "react";
+import { DragonDisplay } from "../../../shared/DragonDisplay";
+
+interface BeastSleepDisplayProps {
+  triggerAction?: 'sleeping' | 'wake' | null;
+}
 
 const beastAnimation = {
   initial: { scale: 0.3, opacity: 0, rotate: -15 },
@@ -19,15 +24,60 @@ const beastAnimation = {
   whileHover: { scale: 1.03, rotate: 2 },
 };
 
-export const BeastSleepDisplay = ({ beastImage, altText }: BeastSleepDisplayProps) => {
+export const BeastSleepDisplay = ({ triggerAction }: BeastSleepDisplayProps) => {
+  const [clickTrigger, setClickTrigger] = useState<'jumping' | null>(null);
+
+  React.useEffect(() => {
+    // Force canvas to be 100% width and height
+    const style = document.createElement('style');
+    style.textContent = `
+      .dragon-display canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  const handleDragonClick = () => {
+    setClickTrigger('jumping');
+    
+    // Clear the trigger after a short delay to allow re-triggering
+    setTimeout(() => {
+      setClickTrigger(null);
+    }, 100);
+  };
+
+  // Combine external trigger with click trigger - external trigger takes priority
+  const finalTrigger = triggerAction || clickTrigger;
+
   return (
-    <motion.img
-      src={beastImage}
-      alt={altText}
-      className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] pointer-events-auto"
+    <motion.div
+      className="h-96 w-96 sm:h-[420px] sm:w-[420px] md:h-[480px] md:w-[480px] lg:h-[560px] lg:w-[560px] xl:h-[600px] xl:w-[600px] pointer-events-auto cursor-pointer"
       initial={beastAnimation.initial}
       animate={beastAnimation.animate}
       whileHover={beastAnimation.whileHover}
-    />
+      style={{ overflow: 'visible' }}
+      onClick={handleDragonClick}
+    >
+      <DragonDisplay 
+        className="w-full h-full dragon-display"
+        scale={0.35}
+        position={[0, 0, 0]}
+        animationSpeed={1}
+        autoRotateSpeed={0.5}
+        lighting="bright"
+        triggerAction={finalTrigger}
+        style={{
+          filter: 'brightness(1.2) saturate(1.05)',
+          overflow: 'visible',
+          position: 'relative'
+        }}
+      />
+    </motion.div>
   );
 };

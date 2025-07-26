@@ -1,5 +1,5 @@
 import { TamagotchiTopBar } from "../../layout/TopBar";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import cleanBackground from "../../../assets/backgrounds/bg-clean.png";
 import MagicalSparkleParticles from "../../shared/MagicalSparkleParticles";
@@ -43,6 +43,9 @@ export const CleanScreen = ({
     isLoading
   } = useBeastDisplay();
 
+  // State for triggered actions
+  const [triggerAction, setTriggerAction] = useState<'cleaning' | 'feeding' | 'sleeping' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty' | null>(null);
+
   // Set current screen for music control
   useEffect(() => {
     setCurrentScreen("clean");
@@ -52,9 +55,23 @@ export const CleanScreen = ({
   const {
     isRainActive,
     canClean,
-    handleCloudClick,
+    handleCloudClick: originalHandleCloudClick,
     isInteractionDisabled
   } = useCleanLogic(rainDuration);
+
+  // Enhanced cloud click handler to trigger cleaning action
+  const handleCloudClick = useCallback(() => {
+    // Trigger the cleaning action
+    setTriggerAction('cleaning');
+    
+    // Clear the trigger after the animation completes (typical animation duration is 3-4 seconds)
+    setTimeout(() => {
+      setTriggerAction(null);
+    }, 4000);
+    
+    // Call the original cloud click handler
+    originalHandleCloudClick();
+  }, [originalHandleCloudClick]);
 
   // Cloud frames for animation
   const cloudFrames = [cloudOff];
@@ -150,7 +167,7 @@ export const CleanScreen = ({
       />
 
       {/* Main Content */}
-      <div className="flex flex-col items-center mt-8 space-y-6 z-10 pointer-events-none select-none">
+      <div className="flex flex-col items-center mt-4 space-y-3 z-10 pointer-events-none select-none">
         {/* Header */}
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
@@ -171,11 +188,8 @@ export const CleanScreen = ({
           disabled={isInteractionDisabled}
         />
         
-        {/* Beast Display */}
-        <BeastDisplay 
-          beastImage={currentBeastDisplay.asset}
-          altText={`${currentBeastDisplay.displayName} ready for cleaning`}
-        />
+        {/* Beast Display - Now using 3D Dragon instead of static image */}
+        <BeastDisplay triggerAction={triggerAction} />
 
         {/* Status indicator */}
         {!canClean && (

@@ -16,8 +16,7 @@ export interface CloudControllerProps {
 }
 
 export interface BeastDisplayProps {
-  beastImage: string;
-  altText: string;
+  // No props needed for 3D dragon component
 }
 
 /**
