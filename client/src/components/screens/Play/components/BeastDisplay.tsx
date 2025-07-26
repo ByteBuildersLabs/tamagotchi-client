@@ -40,7 +40,6 @@ export const BeastPlayDisplay = () => {
   }, []);
 
   const handleDragonClick = () => {
-    console.info("🦘 Dragon clicked! Triggering jumping animation");
     setClickTrigger('jumping');
     
     // Clear the trigger after a short delay to allow re-triggering
@@ -52,7 +51,7 @@ export const BeastPlayDisplay = () => {
   return (
     <div className="flex-1 flex items-center justify-center w-full pointer-events-none select-none z-0 relative">
       <motion.div
-        className="h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80 lg:h-[360px] lg:w-[360px] pointer-events-auto relative cursor-pointer"
+        className="h-96 w-96 sm:h-[420px] sm:w-[420px] md:h-[480px] md:w-[480px] lg:h-[560px] lg:w-[560px] xl:h-[600px] xl:w-[600px] pointer-events-auto relative cursor-pointer"
         initial={beastAnimation.initial}
         animate={beastAnimation.animate}
         whileHover={beastAnimation.whileHover}
