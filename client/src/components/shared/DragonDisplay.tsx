@@ -3,6 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations, OrbitControls } from "@react-three/drei";
 import { SkeletonUtils } from "three-stdlib";
 import * as THREE from "three";
+import useAppStore from "../../zustand/store";
 
 interface DragonDisplayProps {
   className?: string;
@@ -31,6 +32,11 @@ const SimpleDragonModel = ({
   triggerAnimation?: 'cleaning' | 'feeding' | 'sleeping' | 'wake' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty' | null;
 }) => {
   const group = useRef<THREE.Group>(null);
+  
+  // Get global sleeping state
+  const realTimeStatus = useAppStore(state => state.realTimeStatus);
+  const currentBeastAwakeStatus = realTimeStatus.length >= 4 ? Boolean(realTimeStatus[3]) : null;
+  const isBeastSleeping = currentBeastAwakeStatus === false;
   
   try {
     const { scene, animations } = useGLTF("./3dBeasts/red.glb");
@@ -122,13 +128,30 @@ const SimpleDragonModel = ({
         
         // Function to play random idle animation
         const playRandomIdleAnimation = () => {
+          // If beast is sleeping, force sleeping animation instead of idle
+          if (isBeastSleeping && availableAnimations.sleeping.length > 0) {
+            if (currentState !== 'sleeping') {
+              console.info(`😴 Beast is sleeping globally, forcing sleeping animation`);
+              currentState = 'sleeping';
+              stopCurrentAnimation(0.8);
+              setTimeout(() => {
+                const sleepingAnimations = availableAnimations.sleeping;
+                const randomIndex = Math.floor(Math.random() * sleepingAnimations.length);
+                const selectedAnimation = sleepingAnimations[randomIndex];
+                currentAction = playAnimation(selectedAnimation, true, 0.8);
+              }, 800);
+            }
+            return;
+          }
+          
+          // Regular idle behavior when awake
           if (currentState !== 'idle' || availableAnimations.idle.length === 0) return;
           
           stopCurrentAnimation(0.8);
           
           setTimeout(() => {
-            // Double check state hasn't changed during timeout
-            if (currentState !== 'idle') return;
+            // Double check state hasn't changed during timeout and beast is still awake
+            if (currentState !== 'idle' || isBeastSleeping) return;
             
             const randomIndex = Math.floor(Math.random() * availableAnimations.idle.length);
             const selectedAnimation = availableAnimations.idle[randomIndex];
@@ -138,6 +161,12 @@ const SimpleDragonModel = ({
         
         // Function to play action animation
         const playActionAnimation = (actionType: 'cleaning' | 'feeding' | 'sleeping' | 'wake' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty') => {
+          // If beast is sleeping globally, ignore all actions except wake
+          if (isBeastSleeping && actionType !== 'wake') {
+            console.info(`😴 Beast is sleeping globally, ignoring ${actionType} action`);
+            return;
+          }
+          
           // Handle wake action separately
           if (actionType === 'wake') {
             console.info(`🌅 Waking up beast, returning to idle`);
@@ -219,11 +248,11 @@ const SimpleDragonModel = ({
           if (idleInterval) clearInterval(idleInterval);
           
           // Don't start idle rotation if beast is sleeping
-          if (currentState === 'sleeping') return;
+          if (currentState === 'sleeping' || isBeastSleeping) return;
           
           idleInterval = setInterval(() => {
-            // Check if still in idle state before playing next animation
-            if (currentState === 'idle') {
+            // Check if still in idle state and awake before playing next animation
+            if (currentState === 'idle' && !isBeastSleeping) {
               playRandomIdleAnimation();
             }
           }, Math.random() * 3000 + 4000); // 4-7 seconds
@@ -256,6 +285,21 @@ const SimpleDragonModel = ({
         };
       }
     }, [actions, names, animationSpeed, animations]);
+    
+    // Effect to handle changes in global sleeping state
+    useEffect(() => {
+      if (group.current && (group.current as any).tamagotchiState) {
+        const { playRandomIdleAnimation, playActionAnimation } = (group.current as any).tamagotchiState;
+        
+        if (isBeastSleeping) {
+          console.info(`😴 Global sleeping state detected, forcing sleeping animation`);
+          playActionAnimation('sleeping');
+        } else if (currentBeastAwakeStatus === true) {
+          console.info(`🌅 Global awake state detected, returning to idle`);
+          playActionAnimation('wake');
+        }
+      }
+    }, [isBeastSleeping, currentBeastAwakeStatus]);
     
     // Effect to handle triggered actions
     useEffect(() => {
@@ -512,8 +556,8 @@ const LightingSetup = ({ lighting = 'bright' }: { lighting: 'bright' | 'dim' | '
 
 // Main reusable Dragon Display component
 export const DragonDisplay: React.FC<DragonDisplayProps> = ({
-  className = "h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px]",
-  scale = 0.5,
+  className = "h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80 lg:h-[360px] lg:w-[360px]",
+  scale = 0.35,
   position = [0, -0.5, 0],
   animationSpeed = 1,
   autoRotateSpeed = 0.5,
@@ -523,7 +567,7 @@ export const DragonDisplay: React.FC<DragonDisplayProps> = ({
   triggerAction = null // Add trigger animation prop
 }) => {
   return (
-    <div className={className} style={style}>
+    <div className={className} style={{ ...style, overflow: 'visible' }}>
       <Canvas
         camera={{ position: [0, 0, 4], fov: 45 }}
         shadows
