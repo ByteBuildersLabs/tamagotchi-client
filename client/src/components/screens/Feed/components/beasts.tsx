@@ -106,12 +106,12 @@ export const Beast = ({
         whileHover={dragonContainerAnimation.whileHover}
       >
         {/* Dragon Display with feeding effects */}
-        <div className={`h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] relative transition-all duration-300 cursor-pointer ${
+        <div className={`h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80 lg:h-[360px] lg:w-[360px] relative transition-all duration-300 cursor-pointer ${
           isFeeding ? 'brightness-110 saturate-110' : '' // Brighten when feeding
-        }`} style={{ zIndex: 7 }} onClick={handleDragonClick}>
+        }`} style={{ zIndex: 7, overflow: 'visible' }} onClick={handleDragonClick}>
           <DragonDisplay 
             className="w-full h-full dragon-display"
-            scale={0.5}
+            scale={0.35}
             position={[0, 0, 0]}
             animationSpeed={isFeeding ? 1.5 : 1} // Faster animation when feeding
             autoRotateSpeed={isFeeding ? 1.0 : 0.5} // Faster rotation when feeding

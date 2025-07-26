@@ -33,12 +33,13 @@ export const BeastHomeDisplay = () => {
   return (
     <div className="flex-grow flex items-center justify-center w-full pointer-events-none select-none z-0 relative">
       <div 
-        className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 lg:h-[280px] lg:w-[280px] pointer-events-auto cursor-pointer"
+        className="h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80 lg:h-[360px] lg:w-[360px] pointer-events-auto cursor-pointer"
         onClick={handleDragonClick}
+        style={{ overflow: 'visible' }}
       >
         <DragonDisplay 
           className="w-full h-full dragon-display"
-          scale={0.5}
+          scale={0.35}
           position={[0, 0, 0]}
           animationSpeed={1}
           autoRotateSpeed={0.5}
