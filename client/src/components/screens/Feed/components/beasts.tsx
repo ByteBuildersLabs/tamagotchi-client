@@ -7,8 +7,6 @@ import { DragonDisplay } from '../../../shared/DragonDisplay';
 interface BeastAnimationProps {
   isDragging: boolean;
   isFeeding?: boolean; 
-  beastImage?: string;
-  beastName?: string;
 }
 
 /**
@@ -18,9 +16,7 @@ interface BeastAnimationProps {
  */
 export const Beast = ({ 
   isDragging, 
-  isFeeding = false, // NEW: Default to false
-  beastImage, 
-  beastName 
+  isFeeding = false // NEW: Default to false
 }: BeastAnimationProps) => {
   
   const [triggerAction, setTriggerAction] = useState<'feeding' | null>(null);

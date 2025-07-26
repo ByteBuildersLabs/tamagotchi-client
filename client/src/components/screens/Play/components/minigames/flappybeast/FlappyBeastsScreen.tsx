@@ -54,7 +54,6 @@ const GAME_NAME = "Flappy Beasts";
 
 const FlappyBirdMiniGame = forwardRef<any, MiniGameScreenProps>(({
   onExitGame,
-  beastImage, // Still receive this for compatibility but won't use it
   handleAction,
   client,
   account,
