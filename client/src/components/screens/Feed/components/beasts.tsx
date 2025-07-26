@@ -31,13 +31,12 @@ export const Beast = ({
   useEffect(() => {
     // Only trigger when isFeeding goes from false to true (start of feeding)
     if (isFeeding && !previousFeedingState) {
-      console.info("🍖 Feed started! Triggering eating animation once");
       setTriggerAction('feeding');
       
       // Clear the trigger after a short delay to allow re-triggering for next feed
       setTimeout(() => {
         setTriggerAction(null);
-      }, 200);
+      }, 3500);
     }
     
     // Update previous state for next comparison
@@ -45,7 +44,6 @@ export const Beast = ({
   }, [isFeeding, previousFeedingState]);
 
   const handleDragonClick = () => {
-    console.info("🦘 Dragon clicked! Triggering jumping animation");
     setClickTrigger('jumping');
     
     // Clear the trigger after a short delay to allow re-triggering
@@ -106,7 +104,7 @@ export const Beast = ({
         whileHover={dragonContainerAnimation.whileHover}
       >
         {/* Dragon Display with feeding effects */}
-        <div className={`h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80 lg:h-[360px] lg:w-[360px] relative transition-all duration-300 cursor-pointer ${
+        <div className={`h-96 w-96 sm:h-[420px] sm:w-[420px] md:h-[480px] md:w-[480px] lg:h-[560px] lg:w-[560px] xl:h-[600px] xl:w-[600px] relative transition-all duration-300 cursor-pointer ${
           isFeeding ? 'brightness-110 saturate-110' : '' // Brighten when feeding
         }`} style={{ zIndex: 7, overflow: 'visible' }} onClick={handleDragonClick}>
           <DragonDisplay 

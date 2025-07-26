@@ -4,6 +4,7 @@ import { useGLTF, useAnimations, OrbitControls } from "@react-three/drei";
 import { SkeletonUtils } from "three-stdlib";
 import * as THREE from "three";
 import useAppStore from "../../zustand/store";
+import { useDragonVoice } from "../../hooks/useDragonVoice";
 
 interface DragonDisplayProps {
   className?: string;
@@ -38,6 +39,9 @@ const SimpleDragonModel = ({
   const currentBeastAwakeStatus = realTimeStatus.length >= 4 ? Boolean(realTimeStatus[3]) : null;
   const isBeastSleeping = currentBeastAwakeStatus === false;
   
+  // Get voice system
+  const { playVoiceForAnimation } = useDragonVoice();
+
   try {
     const { scene, animations } = useGLTF("./3dBeasts/red.glb");
     
@@ -52,22 +56,26 @@ const SimpleDragonModel = ({
     // Tamagotchi animation state management
     useEffect(() => {
       if (actions && names && names.length > 0) {
-        console.info("🎭 Tamagotchi Animations:", names);
         
         // Define tamagotchi animation mappings
         const animationMap = {
-          // Idle state animations (random rotation for lively behavior)
+          // Idle state animations (random rotation for lively behavior) - EXCLUDING sleeping, cleaning, feeding, jumping
           idle: [
-            'Standing_Idle',    // Base idle pose
-            'Excited Waggle',   // Happy/energetic movement
-            'Smiling',          // Content expression
-            'Moving Around',    // Casual movement
-            'Walk in circles'   // Playful behavior
+            'Standing_Idle',        // Base idle pose
+            'Excited Waggle',       // Happy/energetic movement
+            'Smiling',              // Content expression
+            'Moving Around',        // Casual movement
+            'Walk in circles',      // Playful behavior
+            'Interaction Response', // Can be part of idle behavior
+            'Sad',                  // Mood expression
+            'Tired',                // Mood expression
+            'Angry'                 // Mood expression (if available)
           ],
           // Action animations (triggered by user interactions)
-          cleaning: ['Cleaning'],
-          feeding: ['Eating'], 
-          sleeping: ['Sleeping', 'Laying Down'],
+          cleaning: ['Cleaning'],           // ONLY for cleaning trigger
+          feeding: ['Eating'],              // ONLY for feeding trigger
+          sleeping: ['Sleeping', 'Laying Down'], // ONLY for sleeping state
+          jumping: ['Jumping'],             // ONLY for click trigger
           // Interaction animations
           interaction: ['Interaction Response'],
           // Mood/State animations
@@ -75,7 +83,6 @@ const SimpleDragonModel = ({
           sad: ['Sad', 'Tired'],
           dirty: ['Dirty.001'],
           // Special actions
-          jumping: ['Jumping'],
           laying: ['Laying Down']
         };
         
@@ -85,15 +92,13 @@ const SimpleDragonModel = ({
           cleaning: animationMap.cleaning.filter(name => names.includes(name)),
           feeding: animationMap.feeding.filter(name => names.includes(name)),
           sleeping: animationMap.sleeping.filter(name => names.includes(name)),
+          jumping: animationMap.jumping.filter(name => names.includes(name)),
           interaction: animationMap.interaction.filter(name => names.includes(name)),
           happy: animationMap.happy.filter(name => names.includes(name)),
           sad: animationMap.sad.filter(name => names.includes(name)),
           dirty: animationMap.dirty.filter(name => names.includes(name)),
-          jumping: animationMap.jumping.filter(name => names.includes(name)),
           laying: animationMap.laying.filter(name => names.includes(name))
         };
-        
-        console.info("🎮 Available tamagotchi animations:", availableAnimations);
         
         let currentAction: THREE.AnimationAction | null = null;
         let idleInterval: NodeJS.Timeout | null = null;
@@ -109,7 +114,6 @@ const SimpleDragonModel = ({
         // Function to play animation by name
         const playAnimation = (animationName: string, loop = true, fadeInTime = 0.5) => {
           if (!names.includes(animationName)) {
-            console.warn(`⚠️ Animation "${animationName}" not found`);
             return null;
           }
           
@@ -120,7 +124,10 @@ const SimpleDragonModel = ({
             action.timeScale = animationSpeed;
             action.play();
             action.fadeIn(fadeInTime);
-            console.info(`✅ Playing: ${animationName} (loop: ${loop})`);
+            
+            // Play voice sound for the animation
+            playVoiceForAnimation(animationName);
+            
             return action;
           }
           return null;
@@ -128,10 +135,9 @@ const SimpleDragonModel = ({
         
         // Function to play random idle animation
         const playRandomIdleAnimation = () => {
-          // If beast is sleeping, force sleeping animation instead of idle
+          // If beast is sleeping globally, force sleeping animation instead of any idle
           if (isBeastSleeping && availableAnimations.sleeping.length > 0) {
             if (currentState !== 'sleeping') {
-              console.info(`😴 Beast is sleeping globally, forcing sleeping animation`);
               currentState = 'sleeping';
               stopCurrentAnimation(0.8);
               setTimeout(() => {
@@ -143,6 +149,9 @@ const SimpleDragonModel = ({
             }
             return;
           }
+          
+          // Don't play idle animations if beast is sleeping
+          if (isBeastSleeping || currentState === 'sleeping') return;
           
           // Regular idle behavior when awake
           if (currentState !== 'idle' || availableAnimations.idle.length === 0) return;
@@ -163,38 +172,47 @@ const SimpleDragonModel = ({
         const playActionAnimation = (actionType: 'cleaning' | 'feeding' | 'sleeping' | 'wake' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty') => {
           // If beast is sleeping globally, ignore all actions except wake
           if (isBeastSleeping && actionType !== 'wake') {
-            console.info(`😴 Beast is sleeping globally, ignoring ${actionType} action`);
             return;
           }
           
           // Handle wake action separately
           if (actionType === 'wake') {
-            console.info(`🌅 Waking up beast, returning to idle`);
+            // Force state change to idle
             currentState = 'idle';
-            stopCurrentAnimation(0.5);
+            
+            // Stop any current animation immediately
+            stopCurrentAnimation(0.3);
+            
+            // Clear any intervals that might be running
+            if (idleInterval) {
+              clearInterval(idleInterval);
+              idleInterval = null;
+            }
+            
+            // Start fresh idle behavior after a short delay
             setTimeout(() => {
-              playRandomIdleAnimation();
-              startIdleRotation();
-            }, 500);
+              if (!isBeastSleeping && currentState === 'idle') {
+                playRandomIdleAnimation();
+                startIdleRotation();
+              }
+            }, 400);
             return;
           }
           
           const actionAnimations = availableAnimations[actionType];
           if (actionAnimations.length === 0) {
-            console.warn(`⚠️ No animations available for action: ${actionType}`);
             return;
           }
           
-          console.info(`🎯 Triggering ${actionType} action`);
           currentState = 'action';
           
-          // Stop idle interval
+          // Stop idle interval to prevent conflicts
           if (idleInterval) {
             clearInterval(idleInterval);
             idleInterval = null;
           }
           
-          // Stop current animation
+          // Stop current animation completely
           stopCurrentAnimation(0.5);
           
           setTimeout(() => {
@@ -204,28 +222,26 @@ const SimpleDragonModel = ({
             
             // Determine if animation should loop based on action type
             const shouldLoop = actionType === 'sleeping' || actionType === 'dirty';
+            const isOneTimeAction = actionType === 'cleaning' || actionType === 'feeding' || actionType === 'jumping' || actionType === 'interaction' || actionType === 'happy' || actionType === 'sad';
             const loopDuration = shouldLoop ? 8000 : null; // 8 seconds for looping actions
             
-            // Play action animation
+            // Play action animation - one-time actions (cleaning, feeding, jumping) should not loop
             currentAction = playAnimation(selectedAnimation, shouldLoop, 0.5);
             
             if (currentAction) {
-              // Special handling for sleeping - don't return to idle
+              // Special handling for sleeping - don't return to idle, stay sleeping
               if (actionType === 'sleeping') {
-                console.info(`😴 Beast is now sleeping, staying in sleep state`);
                 currentState = 'sleeping'; // Keep in sleeping state
-                // Don't set any timeout - stay sleeping until wake is triggered
+                // Play sleeping animation and stay there until awake=true
                 return;
               }
               
               // Calculate duration - use fixed duration for looping actions or animation duration for single actions
               const animationDuration = shouldLoop && loopDuration ? 
                 loopDuration / 1000 : 
-                (animations?.find(anim => anim.name === selectedAnimation)?.duration || 3);
+                (isOneTimeAction ? 3 : (animations?.find(anim => anim.name === selectedAnimation)?.duration || 3));
               
               setTimeout(() => {
-                console.info(`✅ ${actionType} action completed, returning to idle`);
-                
                 // For looping actions, fade out manually
                 if (shouldLoop && currentAction) {
                   currentAction.fadeOut(0.5);
@@ -258,10 +274,24 @@ const SimpleDragonModel = ({
           }, Math.random() * 3000 + 4000); // 4-7 seconds
         };
         
-        // Initialize with idle state
-        currentState = 'idle';
-        playRandomIdleAnimation();
-        startIdleRotation();
+        // Initialize with appropriate state based on beast awake status
+        if (isBeastSleeping) {
+          // Beast is sleeping globally - start in sleeping state
+          currentState = 'sleeping';
+          setTimeout(() => {
+            if (availableAnimations.sleeping.length > 0 && isBeastSleeping) {
+              const sleepingAnimations = availableAnimations.sleeping;
+              const randomIndex = Math.floor(Math.random() * sleepingAnimations.length);
+              const selectedAnimation = sleepingAnimations[randomIndex];
+              currentAction = playAnimation(selectedAnimation, true, 0.8);
+            }
+          }, 100);
+        } else {
+          // Beast is awake - start in idle state with idle animations only
+          currentState = 'idle';
+          playRandomIdleAnimation();
+          startIdleRotation();
+        }
         
         // Store functions for cleanup and external access
         const tamagotchiState = {
@@ -289,14 +319,18 @@ const SimpleDragonModel = ({
     // Effect to handle changes in global sleeping state
     useEffect(() => {
       if (group.current && (group.current as any).tamagotchiState) {
-        const { playRandomIdleAnimation, playActionAnimation } = (group.current as any).tamagotchiState;
+        const { playActionAnimation, stopCurrentAnimation } = (group.current as any).tamagotchiState;
         
         if (isBeastSleeping) {
-          console.info(`😴 Global sleeping state detected, forcing sleeping animation`);
           playActionAnimation('sleeping');
         } else if (currentBeastAwakeStatus === true) {
-          console.info(`🌅 Global awake state detected, returning to idle`);
-          playActionAnimation('wake');
+          // Force immediate transition to idle state
+          stopCurrentAnimation(0.3);
+          
+          // Ensure we return to idle with a slight delay to allow cleanup
+          setTimeout(() => {
+            playActionAnimation('wake');
+          }, 300);
         }
       }
     }, [isBeastSleeping, currentBeastAwakeStatus]);
@@ -556,7 +590,7 @@ const LightingSetup = ({ lighting = 'bright' }: { lighting: 'bright' | 'dim' | '
 
 // Main reusable Dragon Display component
 export const DragonDisplay: React.FC<DragonDisplayProps> = ({
-  className = "h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80 lg:h-[360px] lg:w-[360px]",
+  className = "h-96 w-96 sm:h-[420px] sm:w-[420px] md:h-[480px] md:w-[480px] lg:h-[560px] lg:w-[560px] xl:h-[600px] xl:w-[600px]",
   scale = 0.35,
   position = [0, -0.5, 0],
   animationSpeed = 1,

@@ -44,7 +44,7 @@ export const CleanScreen = ({
   } = useBeastDisplay();
 
   // State for triggered actions
-  const [triggerAction, setTriggerAction] = useState<'cleaning' | 'feeding' | 'sleeping' | null>(null);
+  const [triggerAction, setTriggerAction] = useState<'cleaning' | 'feeding' | 'sleeping' | 'happy' | 'sad' | 'jumping' | 'interaction' | 'dirty' | null>(null);
 
   // Set current screen for music control
   useEffect(() => {
@@ -63,12 +63,11 @@ export const CleanScreen = ({
   const handleCloudClick = useCallback(() => {
     // Trigger the cleaning action
     setTriggerAction('cleaning');
-    console.info("🧽 Triggering cleaning action");
     
-    // Clear the trigger after a short delay to allow re-triggering
+    // Clear the trigger after the animation completes (typical animation duration is 3-4 seconds)
     setTimeout(() => {
       setTriggerAction(null);
-    }, 100);
+    }, 4000);
     
     // Call the original cloud click handler
     originalHandleCloudClick();

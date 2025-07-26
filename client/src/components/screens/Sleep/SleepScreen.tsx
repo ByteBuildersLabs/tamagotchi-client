@@ -133,7 +133,6 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
       
       if (!isCampfireOn) {
         // Beast is going to sleep - trigger sleeping animation
-        console.info("😴 Beast going to sleep! Triggering sleeping animation");
         setTriggerAction('sleeping');
         setIsDarkened(true);
         
@@ -143,7 +142,6 @@ export const SleepScreen = ({ onNavigation }: SleepScreenProps) => {
         }, 200);
       } else {
         // Beast is waking up - trigger wake action
-        console.info("🌅 Beast waking up! Triggering wake action");
         setTriggerAction('wake');
         setIsDarkened(false);
         
